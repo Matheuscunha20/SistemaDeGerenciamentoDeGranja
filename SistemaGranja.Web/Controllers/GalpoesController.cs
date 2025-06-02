@@ -22,7 +22,7 @@ public class GalpoesController : Controller
         return View(galpoes); // Passa a lista de galpões para a View Index
     }
 
-    // GET: Galpoes/Details/5 (Opcional por agora)
+    // GET: Galpoes/Details/5
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null) return NotFound();

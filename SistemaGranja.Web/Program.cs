@@ -30,6 +30,9 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 builder.Services.AddControllersWithViews(); // Para MVC
 builder.Services.AddRazorPages(); // Para Razor Pages e/ou UI do Identity
 builder.Services.AddScoped<IGalpaoService, GalpaoService>();
+builder.Services.AddScoped<ITipoAlimentoService, TipoAlimentoService>();
+builder.Services.AddScoped<ILoteService, LoteService>();
+builder.Services.AddScoped<IAnimalService, AnimalService>();
 
 var app = builder.Build();
 

@@ -1,0 +1,13 @@
+@* Opções da conta: Minha conta, Equipe, Dados da fazenda e Sair *@
+@if (User.EhDono())
+{
+    <li><a class="dropdown-item" asp-area="" asp-controller="Equipe" asp-action="Index">@Icones.Svg("equipe", 18) Equipe</a></li>
+    <li><a class="dropdown-item" asp-area="" asp-controller="Fazenda" asp-action="Index">@Icones.Svg("galpoes", 18) Dados da fazenda</a></li>
+}
+<li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">@Icones.Svg("conta", 18) Minha conta</a></li>
+<li><hr class="dropdown-divider" /></li>
+<li>
+    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+        <button type="submit" class="dropdown-item">@Icones.Svg("sair", 18) Sair</button>
+    </form>
+</li>

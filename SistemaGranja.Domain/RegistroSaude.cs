@@ -35,7 +35,7 @@ namespace SistemaGranja.Domain
             TipoOcorrenciaSaude.TratamentoConcluido => "bg-success",
             TipoOcorrenciaSaude.ExameRealizado => "bg-info text-dark",
             TipoOcorrenciaSaude.Parto => "bg-secondary",
-            _ => "bg-light text-dark border"
+            _ => "bg-body-secondary text-body border"
         };
     }
 

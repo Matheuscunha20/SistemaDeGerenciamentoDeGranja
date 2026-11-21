@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
@@ -12,7 +13,9 @@ using SistemaGranja.Domain;
 namespace SistemaGranja.Data
 {
     // Herda de IdentityDbContext para incluir as tabelas de login (AspNetUsers etc.)
-    public class AppDbContext : IdentityDbContext<ApplicationUser>
+    // IDataProtectionKeyContext: guarda no banco as chaves que protegem o login e os links de e-mail
+    // (em hospedagens sem disco permanente, como o Render grátis, elas se perderiam a cada reinício)
+    public class AppDbContext : IdentityDbContext<ApplicationUser>, IDataProtectionKeyContext
     {
         private readonly IFazendaAtual? _fazendaAtual;
         private int? _fazendaDefinida;
@@ -41,6 +44,7 @@ namespace SistemaGranja.Data
         public DbSet<Especie> Especies { get; set; }
         public DbSet<Raca> Racas { get; set; }
         public DbSet<Convite> Convites { get; set; }
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
         public DbSet<CategoriaFinanceira> CategoriasFinanceiras { get; set; }
         public DbSet<LancamentoFinanceiro> LancamentosFinanceiros { get; set; }
 

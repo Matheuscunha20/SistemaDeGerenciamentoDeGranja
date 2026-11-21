@@ -32,8 +32,6 @@ services:
       Email__Usuario: "${EMAIL_USUARIO:-}"
       Email__Senha: "${EMAIL_SENHA:-}"
       Email__Remetente: "${EMAIL_REMETENTE:-}"
-    volumes:
-      - agroarca-chaves:/app/chaves
 
   mysql:
     image: mysql:8.0
@@ -54,5 +52,4 @@ services:
 volumes:
   caddy-dados:
   caddy-config:
-  agroarca-chaves:
   agroarca-mysql:

@@ -65,6 +65,9 @@ jobs:
           [ "$codigo" = "404" ] || exit 1
           curl -sI http://localhost:8080/Identity/Account/Login | grep -i "x-content-type-options: nosniff"
 
+      - name: Criar uma conta de teste (grava no banco)
+        run: bash .github/scripts/testar-cadastro.sh http://localhost:8080
+
       - name: Mostrar o log do sistema
         if: always()
         run: docker compose -f docker-compose.producao.yml logs app | tail -n 80
@@ -76,3 +79,46 @@ jobs:
           docker run --rm -e DOMINIO=exemplo.com.br \
             -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile
           bash -n deploy/preparar-servidor.sh
+
+  # Sobe o AgroArca com um banco TiDB (o mesmo tipo do TiDB Cloud, usado no portfólio grátis)
+  # e confere se todas as atualizações do banco funcionam nele
+  sistema-com-tidb:
+    runs-on: ubuntu-latest
+    needs: build-e-testes
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Subir TiDB e AgroArca
+        run: |
+          docker network create agroarca
+          docker run -d --name tidb --network agroarca pingcap/tidb:v8.5.0
+          docker build -t agroarca .
+          docker run -d --name app --network agroarca -p 8080:8080 \
+            -e "ConnectionStrings__DefaultConnection=Server=tidb;Port=4000;Database=AgroArcaDB;User=root;Password=;" \
+            agroarca
+
+      - name: Esperar o sistema ficar no ar (/saude)
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/saude; then echo; echo "No ar com TiDB!"; exit 0; fi
+            sleep 3
+          done
+          echo "O sistema não ficou no ar a tempo."
+          exit 1
+
+      - name: Conferir páginas principais
+        run: |
+          for pagina in / /Identity/Account/Login /Identity/Account/Register; do
+            codigo=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8080$pagina")
+            echo "$pagina -> $codigo"
+            [ "$codigo" = "200" ] || exit 1
+          done
+
+      - name: Criar uma conta de teste (grava no TiDB)
+        run: bash .github/scripts/testar-cadastro.sh http://localhost:8080
+
+      - name: Mostrar o log do sistema
+        if: always()
+        run: docker logs app 2>&1 | tail -n 80

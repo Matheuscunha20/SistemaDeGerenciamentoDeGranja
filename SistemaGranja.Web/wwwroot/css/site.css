@@ -73,3 +73,8 @@ dl.detalhes dt {
   color: #6c757d;
   font-weight: 500;
 }
+
+/* Títulos das tabelas numa linha só */
+.table thead th {
+  white-space: nowrap;
+}

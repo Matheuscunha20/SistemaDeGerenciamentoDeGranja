@@ -1,0 +1,92 @@
+@model SistemaGranja.Domain.Funcionario
+
+@{
+    ViewData["Title"] = Model.NomeCompleto;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="d-inline-block me-2">@Model.NomeCompleto</h1>
+        @if (Model.Ativo)
+        {
+            <span class="badge bg-success align-top">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary align-top">Desligado</span>
+        }
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-agro">Editar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para a lista</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <dl class="row detalhes mb-0">
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Cargo)</dt>
+                    <dd class="col-sm-8">@Model.Cargo</dd>
+                    <dt class="col-sm-4">CPF</dt>
+                    <dd class="col-sm-8">@Model.CpfFormatado</dd>
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Rg)</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Rg) ? "—" : Model.Rg)</dd>
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Telefone)</dt>
+                    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Telefone) ? "—" : Model.Telefone)</dd>
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Email)</dt>
+                    <dd class="col-sm-8">
+                        @if (string.IsNullOrEmpty(Model.Email))
+                        {
+                            <span>—</span>
+                        }
+                        else
+                        {
+                            <a href="mailto:@Model.Email">@Model.Email</a>
+                        }
+                    </dd>
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DataAdmissao)</dt>
+                    <dd class="col-sm-8">@Html.DisplayFor(m => m.DataAdmissao)</dd>
+                    @if (Model.DataDemissao.HasValue)
+                    {
+                        <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DataDemissao)</dt>
+                        <dd class="col-sm-8">@Html.DisplayFor(m => m.DataDemissao)</dd>
+                    }
+                    <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TempoDeCasa)</dt>
+                    <dd class="col-sm-8">@Model.TempoDeCasa</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                @if (Model.Ativo)
+                {
+                    <h2 class="h6">Desligar funcionário</h2>
+                    <p class="small text-muted">
+                        O funcionário deixa de aparecer na lista de ativos, mas o cadastro e o histórico de registros são mantidos.
+                    </p>
+                    <form asp-action="Desligar" asp-route-id="@Model.Id" method="post"
+                          onsubmit="return confirm('Confirmar o desligamento deste funcionário?');">
+                        <label for="dataDesligamento" class="form-label small">Data do desligamento</label>
+                        <div class="d-flex gap-2">
+                            <input type="date" id="dataDesligamento" name="dataDesligamento" class="form-control"
+                                   value="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                            <button type="submit" class="btn btn-outline-danger text-nowrap">Desligar</button>
+                        </div>
+                    </form>
+                }
+                else
+                {
+                    <h2 class="h6">Funcionário desligado</h2>
+                    <p class="small text-muted">Se ele voltou a trabalhar na propriedade, reative o cadastro.</p>
+                    <form asp-action="Reativar" asp-route-id="@Model.Id" method="post">
+                        <button type="submit" class="btn btn-outline-success">Reativar</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>

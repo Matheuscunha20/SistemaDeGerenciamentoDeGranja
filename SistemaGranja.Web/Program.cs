@@ -50,6 +50,7 @@ builder.Services.AddScoped<ILoteService, LoteService>();
 builder.Services.AddScoped<IAnimalService, AnimalService>();
 builder.Services.AddScoped<IEspecieService, EspecieService>();
 builder.Services.AddScoped<IRacaService, RacaService>();
+builder.Services.AddScoped<IFuncionarioService, FuncionarioService>();
 
 var app = builder.Build();
 

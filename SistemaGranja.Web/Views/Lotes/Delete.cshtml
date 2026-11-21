@@ -1,0 +1,35 @@
+@model SistemaGranja.Domain.Lote
+
+@{
+    ViewData["Title"] = "Excluir";
+    var quantidade = Model.Animais.Count;
+}
+
+<div class="page-header">
+    <h1>Excluir lote</h1>
+</div>
+
+@if (quantidade > 0)
+{
+    <div class="alert alert-info">
+        O lote <strong>@Model.CodigoLote</strong> tem @quantidade animal(is) e não pode ser excluído.
+        Retire os animais do lote ou, se o lote já terminou, apenas <strong>encerre</strong> o lote para manter o histórico.
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-agro">Ver lote</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        Tem certeza que deseja excluir o lote <strong>@Model.CodigoLote</strong>? Esta ação não pode ser desfeita.
+    </div>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+}

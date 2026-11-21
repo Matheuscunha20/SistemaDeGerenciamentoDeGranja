@@ -1,0 +1,119 @@
+@model SistemaGranja.Domain.Lote
+
+@{
+    ViewData["Title"] = Model.CodigoLote;
+    var animais = Model.Animais.OrderBy(a => a.TagIdentificacao).ToList();
+    var pesoTotal = animais.Sum(a => a.PesoAtual);
+    var pesoMedio = animais.Count > 0 ? pesoTotal / animais.Count : 0;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="d-inline-block me-2">@Model.CodigoLote</h1>
+        @if (Model.Ativo)
+        {
+            <span class="badge bg-success align-top">Ativo</span>
+        }
+        else
+        {
+            <span class="badge bg-secondary align-top">Encerrado</span>
+        }
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        @if (Model.Ativo)
+        {
+            <a asp-action="AdicionarAnimais" asp-route-id="@Model.Id" class="btn btn-agro">+ Adicionar animais</a>
+        }
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Editar</a>
+        <form asp-action="AlterarSituacao" asp-route-id="@Model.Id" method="post" class="d-inline">
+            <input type="hidden" name="ativo" value="@(Model.Ativo ? "false" : "true")" />
+            <button type="submit" class="btn btn-outline-secondary">@(Model.Ativo ? "Encerrar lote" : "Reabrir lote")</button>
+        </form>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="small text-muted">Criado em</div>
+            <div class="fs-5 fw-semibold">@Html.DisplayFor(m => m.DataCriacao)</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="small text-muted">Animais</div>
+            <div class="fs-5 fw-semibold">@animais.Count</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="small text-muted">Peso total</div>
+            <div class="fs-5 fw-semibold">@pesoTotal.ToString("N1") kg</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="small text-muted">Peso médio</div>
+            <div class="fs-5 fw-semibold">@pesoMedio.ToString("N1") kg</div>
+        </div></div>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.Descricao))
+{
+    <p class="text-muted">@Model.Descricao</p>
+}
+
+<div class="card shadow-sm">
+    <div class="card-header bg-white fw-semibold">Animais do lote</div>
+    @if (animais.Count == 0)
+    {
+        <div class="lista-vazia">
+            <p class="mb-3">Nenhum animal neste lote.</p>
+            @if (Model.Ativo)
+            {
+                <a asp-action="AdicionarAnimais" asp-route-id="@Model.Id" class="btn btn-agro">Adicionar animais</a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Brinco / Tag</th>
+                        <th>Espécie</th>
+                        <th>Raça</th>
+                        <th>Sexo</th>
+                        <th>Idade</th>
+                        <th>Peso (kg)</th>
+                        <th>Galpão</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var animal in animais)
+                {
+                    <tr>
+                        <td><a asp-controller="Animais" asp-action="Details" asp-route-id="@animal.Id" class="fw-semibold">@animal.TagIdentificacao</a></td>
+                        <td>@(animal.Raca?.Especie?.Nome ?? "—")</td>
+                        <td>@(animal.Raca?.Nome ?? "—")</td>
+                        <td>@animal.Sexo</td>
+                        <td>@animal.IdadeDescricao</td>
+                        <td>@animal.PesoAtual.ToString("N2")</td>
+                        <td>@(animal.Galpao?.NomeOuNumero ?? "—")</td>
+                        <td class="text-end">
+                            <form asp-action="RemoverAnimal" asp-route-id="@Model.Id" asp-route-animalId="@animal.Id" method="post" class="d-inline"
+                                  onsubmit="return confirm('Retirar @animal.TagIdentificacao deste lote? O animal não será excluído.');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Retirar do lote</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

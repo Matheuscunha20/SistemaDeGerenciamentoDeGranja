@@ -1,0 +1,53 @@
+@model SistemaGranja.Domain.Galpao
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="NomeOuNumero" class="form-label"></label>
+            <input asp-for="NomeOuNumero" class="form-control" />
+            <span asp-validation-for="NomeOuNumero" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        @{
+            var opcoesTipoInstalacao = new List<string> { "Engorda", "Maternidade", "Creche", "Recria", "Ordenha", "Aviário", "Pocilga", "Aprisco", "Baia", "Quarentena", "Outro" };
+            if (!string.IsNullOrEmpty(Model?.TipoInstalacao) && !opcoesTipoInstalacao.Contains(Model.TipoInstalacao)) opcoesTipoInstalacao.Add(Model.TipoInstalacao);
+        }
+        <div class="mb-3">
+            <label asp-for="TipoInstalacao" class="form-label"></label>
+            <select asp-for="TipoInstalacao" class="form-select">
+                <option value="">-- Selecione --</option>
+                @foreach (var opcao in opcoesTipoInstalacao)
+                {
+                    <option value="@opcao">@opcao</option>
+                }
+            </select>
+            <span asp-validation-for="TipoInstalacao" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="CapacidadeMaxima" class="form-label"></label>
+            <input asp-for="CapacidadeMaxima" class="form-control" />
+            <span asp-validation-for="CapacidadeMaxima" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="LocalizacaoDescricao" class="form-label"></label>
+            <input asp-for="LocalizacaoDescricao" class="form-control" />
+            <span asp-validation-for="LocalizacaoDescricao" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="mb-3">
+            <label asp-for="Observacoes" class="form-label"></label>
+            <textarea asp-for="Observacoes" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Observacoes" class="text-danger"></span>
+        </div>
+    </div>
+</div>

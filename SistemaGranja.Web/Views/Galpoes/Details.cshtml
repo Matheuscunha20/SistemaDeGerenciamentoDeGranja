@@ -1,48 +1,30 @@
-﻿@model SistemaGranja.Domain.Galpao
+@model SistemaGranja.Domain.Galpao
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalhes";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>Galpao</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NomeOuNumero)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NomeOuNumero)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.TipoInstalacao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.TipoInstalacao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CapacidadeMaxima)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CapacidadeMaxima)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LocalizacaoDescricao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LocalizacaoDescricao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Observacoes)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Observacoes)
-        </dd>
-    </dl>
+<div class="page-header">
+    <h1>@Model.NomeOuNumero</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-agro">Editar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para a lista</a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="card shadow-sm form-card">
+    <div class="card-body">
+        <dl class="row detalhes mb-0">
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.NomeOuNumero)</dt>
+            <dd class="col-sm-8">@Model.NomeOuNumero</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TipoInstalacao)</dt>
+            <dd class="col-sm-8">@Model.TipoInstalacao</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CapacidadeMaxima)</dt>
+            <dd class="col-sm-8">@Model.CapacidadeMaxima animais</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LocalizacaoDescricao)</dt>
+            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.LocalizacaoDescricao) ? "—" : Model.LocalizacaoDescricao)</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Observacoes)</dt>
+            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Observacoes) ? "—" : Model.Observacoes)</dd>
+        </dl>
+    </div>
 </div>

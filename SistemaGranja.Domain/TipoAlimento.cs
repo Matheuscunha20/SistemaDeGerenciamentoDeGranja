@@ -1,24 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-// Arquivo: TipoAlimento.cs
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace SistemaGranja.Domain
 {
     public class TipoAlimento
     {
         public int Id { get; set; }
-        public string Nome { get; set; } // Ex: "Ração Crescimento XPTO", "Milho Moído Fino", "Sal Mineral Premium"
-        public string Descricao { get; set; } // Detalhes, composição, etc.
-        public string UnidadeMedidaPadrao { get; set; } // Ex: "Kg", "Saco 25Kg", "Litro"
-        public string Fabricante { get; set; }
-        public string CodigoInterno { get; set; } // Código de controle seu, se houver
 
-        // Propriedade de navegação para movimentações de estoque
+        [Display(Name = "Nome")]
+        [Required(ErrorMessage = "Informe o nome do alimento.")]
+        public string Nome { get; set; } // Ex: "Ração Crescimento", "Milho Moído", "Sal Mineral"
+
+        [Display(Name = "Descrição")]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        public string Descricao { get; set; }
+
+        [Display(Name = "Unidade de medida")]
+        [Required(ErrorMessage = "Informe a unidade de medida.")]
+        public string UnidadeMedidaPadrao { get; set; } // Ex: "Kg", "Saco 25 kg", "Litro"
+
+        [Display(Name = "Fabricante")]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        public string Fabricante { get; set; }
+
+        [Display(Name = "Código interno")]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        public string CodigoInterno { get; set; }
+
         public virtual ICollection<MovimentacaoEstoqueAlimento> MovimentacoesEstoque { get; set; }
 
         public TipoAlimento()
@@ -32,4 +40,3 @@ namespace SistemaGranja.Domain
         }
     }
 }
-

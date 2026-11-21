@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Data;
 using System;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure; // Usado pelo Pomelo para MySqlServerVersion
 using SistemaGranja.Services;
 
@@ -27,7 +29,20 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 // --- FIM DAS SUAS ADIÇÕES DE SERVIÇO ---
 
 // Serviços padrão
-builder.Services.AddControllersWithViews(); // Para MVC
+builder.Services.AddControllersWithViews(options =>
+{
+    // Só são obrigatórios os campos marcados com [Required] nas entidades
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+
+    // Mensagens de validação em português
+    var mensagens = options.ModelBindingMessageProvider;
+    mensagens.SetValueMustNotBeNullAccessor(campo => $"O campo {campo} é obrigatório.");
+    mensagens.SetMissingBindRequiredValueAccessor(campo => $"O campo {campo} é obrigatório.");
+    mensagens.SetValueMustBeANumberAccessor(campo => $"O campo {campo} deve ser um número.");
+    mensagens.SetAttemptedValueIsInvalidAccessor((valor, campo) => $"O valor '{valor}' não é válido para {campo}.");
+    mensagens.SetValueIsInvalidAccessor(valor => $"O valor '{valor}' é inválido.");
+    mensagens.SetUnknownValueIsInvalidAccessor(campo => $"O valor informado para {campo} é inválido.");
+});
 builder.Services.AddRazorPages(); // Para Razor Pages e/ou UI do Identity
 builder.Services.AddScoped<IGalpaoService, GalpaoService>();
 builder.Services.AddScoped<ITipoAlimentoService, TipoAlimentoService>();
@@ -52,6 +67,15 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Datas, números e moeda no padrão brasileiro (dd/MM/aaaa, vírgula decimal)
+var culturaBrasil = new CultureInfo("pt-BR");
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(culturaBrasil),
+    SupportedCultures = new[] { culturaBrasil },
+    SupportedUICultures = new[] { culturaBrasil }
+});
 app.UseStaticFiles();
 
 app.UseRouting();

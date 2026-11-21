@@ -1,4 +1,4 @@
-﻿// Arquivo: AnimaisController.cs
+// Arquivo: AnimaisController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering; // Para SelectList
@@ -44,7 +44,7 @@ public class AnimaisController : Controller
         // Prepara dados para os dropdowns (listas suspensas)
         ViewData["GalpaoId"] = new SelectList(await _galpaoService.ObterTodosAsync(), "Id", "NomeOuNumero");
         ViewData["LoteId"] = new SelectList(await _loteService.ObterTodosAsync(), "Id", "CodigoLote");
-        return View();
+        return View(new Animal());
     }
 
     // POST: Animais/Create
@@ -64,6 +64,7 @@ public class AnimaisController : Controller
         if (ModelState.IsValid)
         {
             await _animalService.AdicionarAsync(animal);
+            TempData["Sucesso"] = $"Animal {animal.TagIdentificacao} cadastrado com sucesso.";
             return RedirectToAction(nameof(Index));
         }
         // Se inválido, precisa recarregar os dropdowns
@@ -107,6 +108,7 @@ public class AnimaisController : Controller
                 if (await _animalService.ObterPorIdComRelacionamentosAsync(animal.Id) == null) return NotFound();
                 else throw;
             }
+            TempData["Sucesso"] = $"Animal {animal.TagIdentificacao} atualizado com sucesso.";
             return RedirectToAction(nameof(Index));
         }
         ViewData["GalpaoId"] = new SelectList(await _galpaoService.ObterTodosAsync(), "Id", "NomeOuNumero", animal.GalpaoId);
@@ -129,6 +131,7 @@ public class AnimaisController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         await _animalService.RemoverAsync(id);
+        TempData["Sucesso"] = "Animal excluído com sucesso.";
         return RedirectToAction(nameof(Index));
     }
 }

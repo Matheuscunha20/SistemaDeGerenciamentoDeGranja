@@ -1,7 +1,7 @@
 // Service worker do AgroArca: deixa o app instalável e mostra uma tela amigável sem internet.
 // Só guarda arquivos públicos (estilos, scripts, ícones e a tela offline).
 // As páginas com dados da fazenda NUNCA ficam salvas no aparelho.
-const VERSAO = 'agroarca-v2';
+const VERSAO = 'agroarca-v3';
 const ARQUIVOS = [
     '/offline.html',
     '/css/site.css',

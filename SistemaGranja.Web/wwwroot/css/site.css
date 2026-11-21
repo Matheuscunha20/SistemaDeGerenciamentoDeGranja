@@ -20,3 +20,19 @@ html {
 body {
   margin-bottom: 60px;
 }
+/* Cores da Granja Sol */
+.navbar-granja {
+  background-color: #2f6b3a;
+}
+
+.btn-granja {
+  background-color: #2f6b3a;
+  border-color: #2f6b3a;
+  color: #fff;
+}
+
+.btn-granja:hover {
+  background-color: #24542d;
+  border-color: #24542d;
+  color: #fff;
+}

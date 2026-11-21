@@ -48,6 +48,11 @@ Generated\ Files/
 # NUnit
 *.VisualState.xml
 TestResult.xml
+
+# Segredos locais - nunca versionar
+**/appsettings.Development.json
+**/appsettings.*.local.json
+*.pfx
 nunit-*.xml
 
 # Build Results of an ATL Project

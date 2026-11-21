@@ -55,6 +55,16 @@ namespace SistemaGranja.Services
                 .FirstOrDefaultAsync(l => l.Id == id);
         }
 
+        public async Task<List<Animal>> ObterAnimaisQueSairamAsync(int loteId)
+        {
+            return await _context.Animais
+                .Include(a => a.Raca)
+                .Where(a => a.LoteId == loteId && !a.Ativo)
+                .OrderByDescending(a => a.DataSaida)
+                .ThenBy(a => a.TagIdentificacao)
+                .ToListAsync();
+        }
+
         public async Task<Dictionary<int, int>> ObterQuantidadeAnimaisAsync()
         {
             return await _context.Animais

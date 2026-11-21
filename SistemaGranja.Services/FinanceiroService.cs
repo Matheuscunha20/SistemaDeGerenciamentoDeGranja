@@ -271,6 +271,96 @@ namespace SistemaGranja.Services
             return fluxo;
         }
 
+        // ---------- Resultados ----------
+
+        public async Task<List<ResultadoLote>> ObterResultadosPorLoteAsync(bool somenteComLancamentos = true)
+        {
+            var lotes = await _context.Lotes.AsNoTracking().OrderByDescending(l => l.Ativo).ThenBy(l => l.CodigoLote).ToListAsync();
+
+            var totais = await _context.LancamentosFinanceiros
+                .Where(l => l.LoteId != null)
+                .GroupBy(l => new { LoteId = l.LoteId!.Value, l.Tipo, l.Pago })
+                .Select(g => new { g.Key.LoteId, g.Key.Tipo, g.Key.Pago, Total = g.Sum(l => l.Valor) })
+                .ToListAsync();
+
+            var animais = await _context.Animais
+                .Where(a => a.LoteId != null)
+                .GroupBy(a => new { LoteId = a.LoteId!.Value, a.Ativo })
+                .Select(g => new { g.Key.LoteId, g.Key.Ativo, Quantidade = g.Count() })
+                .ToListAsync();
+
+            var resultados = lotes.Select(lote =>
+            {
+                var doLote = totais.Where(t => t.LoteId == lote.Id).ToList();
+                return new ResultadoLote
+                {
+                    Lote = lote,
+                    Receitas = doLote.Where(t => t.Tipo == TipoLancamento.Receita).Sum(t => t.Total),
+                    Despesas = doLote.Where(t => t.Tipo == TipoLancamento.Despesa).Sum(t => t.Total),
+                    EmAberto = doLote.Where(t => !t.Pago).Sum(t => t.Total),
+                    AnimaisNoLote = animais.Where(a => a.LoteId == lote.Id && a.Ativo).Sum(a => a.Quantidade),
+                    AnimaisQueSairam = animais.Where(a => a.LoteId == lote.Id && !a.Ativo).Sum(a => a.Quantidade)
+                };
+            });
+
+            if (somenteComLancamentos)
+                resultados = resultados.Where(r => r.Receitas > 0 || r.Despesas > 0);
+
+            return resultados.ToList();
+        }
+
+        public async Task<ResultadoLote?> ObterResultadoDoLoteAsync(int loteId)
+        {
+            var lote = await _context.Lotes.AsNoTracking().FirstOrDefaultAsync(l => l.Id == loteId);
+            if (lote == null) return null;
+
+            var lancamentos = await _context.LancamentosFinanceiros
+                .Include(l => l.Categoria)
+                .AsNoTracking()
+                .Where(l => l.LoteId == loteId)
+                .OrderByDescending(l => l.Data)
+                .ThenByDescending(l => l.Id)
+                .ToListAsync();
+
+            return new ResultadoLote
+            {
+                Lote = lote,
+                Receitas = lancamentos.Where(l => l.Tipo == TipoLancamento.Receita).Sum(l => l.Valor),
+                Despesas = lancamentos.Where(l => l.Tipo == TipoLancamento.Despesa).Sum(l => l.Valor),
+                EmAberto = lancamentos.Where(l => !l.Pago).Sum(l => l.Valor),
+                AnimaisNoLote = await _context.Animais.CountAsync(a => a.LoteId == loteId && a.Ativo),
+                AnimaisQueSairam = await _context.Animais.CountAsync(a => a.LoteId == loteId && !a.Ativo),
+                Lancamentos = lancamentos
+            };
+        }
+
+        public async Task<List<TotaisDoMes>> ObterTotaisMensaisAsync(DateTime hoje, int meses = 6)
+        {
+            var mesAtual = new DateTime(hoje.Year, hoje.Month, 1);
+            var primeiro = mesAtual.AddMonths(-(meses - 1));
+            var fim = mesAtual.AddMonths(1);
+
+            var pagos = await _context.LancamentosFinanceiros
+                .Where(l => l.Pago && l.DataPagamento >= primeiro && l.DataPagamento < fim)
+                .Select(l => new { l.Tipo, l.Valor, Data = l.DataPagamento!.Value })
+                .ToListAsync();
+
+            var lista = new List<TotaisDoMes>();
+            for (var mes = primeiro; mes < fim; mes = mes.AddMonths(1))
+            {
+                var proximo = mes.AddMonths(1);
+                var inicio = mes;
+                var doMes = pagos.Where(p => p.Data >= inicio && p.Data < proximo).ToList();
+                lista.Add(new TotaisDoMes
+                {
+                    Mes = mes,
+                    Receitas = doMes.Where(p => p.Tipo == TipoLancamento.Receita).Sum(p => p.Valor),
+                    Despesas = doMes.Where(p => p.Tipo == TipoLancamento.Despesa).Sum(p => p.Valor)
+                });
+            }
+            return lista;
+        }
+
         // ---------- Categorias ----------
 
         public Task GarantirCategoriasPadraoAsync() => SemeadorDeDados.SemearCategoriasFinanceirasAsync(_context);

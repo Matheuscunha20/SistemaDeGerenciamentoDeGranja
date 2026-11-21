@@ -124,3 +124,103 @@
         </div>
     }
 </div>
+
+@{
+    var queSairam = ViewData["QueSairam"] as List<Animal> ?? new();
+    var resultado = ViewData["Resultado"] as SistemaGranja.Services.ResultadoLote;
+}
+
+@if (queSairam.Count > 0)
+{
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">Animais que saíram do rebanho (@queSairam.Count)</div>
+        <div class="table-responsive">
+            <table class="table tabela-cartoes table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Brinco / Tag</th>
+                        <th>Raça</th>
+                        <th>Saída</th>
+                        <th class="text-end">Valor da venda</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var animal in queSairam)
+                {
+                    <tr>
+                        <td><a asp-controller="Animais" asp-action="Details" asp-route-id="@animal.Id" class="fw-semibold">@animal.TagIdentificacao</a></td>
+                        <td>@(animal.Raca?.Nome ?? "—")</td>
+                        <td>@animal.DataSaida?.ToString("dd/MM/yyyy") · @animal.MotivoSaida?.NomeExibicao()</td>
+                        <td class="text-end">@(animal.ValorVenda?.ToString("C") ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@if (resultado != null)
+{
+    var culturaBr = new System.Globalization.CultureInfo("pt-BR");
+    <div class="card shadow-sm mt-4">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <span>Financeiro do lote</span>
+            <span class="d-flex flex-wrap gap-2">
+                <a asp-controller="Financeiro" asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" asp-route-loteId="@Model.Id" class="btn btn-sm btn-outline-danger">+ Despesa do lote</a>
+                <a asp-controller="Financeiro" asp-action="Create" asp-route-tipo="@TipoLancamento.Receita" asp-route-loteId="@Model.Id" class="btn btn-sm btn-outline-success">+ Receita do lote</a>
+            </span>
+        </div>
+        <div class="card-body">
+            <section class="painel-avisos mb-3" aria-label="Resultado do lote">
+                <div class="aviso aviso-sucesso">
+                    <span class="aviso-titulo">Receitas</span>
+                    <span class="aviso-numero">@resultado.Receitas.ToString("C")</span>
+                </div>
+                <div class="aviso aviso-perigo">
+                    <span class="aviso-titulo">Custos</span>
+                    <span class="aviso-numero">@resultado.Despesas.ToString("C")</span>
+                    @if (resultado.CustoPorAnimal.HasValue)
+                    {
+                        <span class="aviso-texto">@resultado.CustoPorAnimal.Value.ToString("C") por animal</span>
+                    }
+                </div>
+                <div class="aviso @(resultado.Lucro >= 0 ? "aviso-neutro" : "aviso-atencao")">
+                    <span class="aviso-titulo">@(resultado.Lucro >= 0 ? "Lucro" : "Prejuízo")</span>
+                    <span class="aviso-numero @(resultado.Lucro < 0 ? "text-danger-emphasis" : "")">@resultado.Lucro.ToString("C")</span>
+                    @if (resultado.Margem.HasValue)
+                    {
+                        <span class="aviso-texto">Margem de @resultado.Margem.Value.ToString("P0", culturaBr)</span>
+                    }
+                </div>
+            </section>
+            @if (resultado.EmAberto > 0)
+            {
+                <p class="small text-muted">Inclui @resultado.EmAberto.ToString("C") em contas ainda em aberto.</p>
+            }
+            @if (!resultado.Lancamentos.Any())
+            {
+                <p class="text-muted mb-0">Nenhuma receita ou despesa ligada a este lote. Use os botões acima, ou escolha o lote ao lançar no financeiro.</p>
+            }
+            else
+            {
+                <ul class="lista-painel">
+                    @foreach (var l in resultado.Lancamentos)
+                    {
+                        var receita = l.Tipo == TipoLancamento.Receita;
+                        var detalhe = (l.Categoria?.Nome ?? "") + (l.Pago ? "" : " · em aberto");
+                        <li>
+                            <span class="selo @(receita ? "selo-sucesso" : "selo-perigo") lista-painel-data">@l.Data.ToString("dd/MM/yy")</span>
+                            <span class="lista-painel-texto">
+                                <span class="fw-semibold">@l.Descricao</span>
+                                <span class="small text-muted">@detalhe</span>
+                            </span>
+                            <span class="fw-semibold text-nowrap @(receita ? "text-success-emphasis" : "text-danger-emphasis")">@(receita ? "+" : "−") @l.Valor.ToString("C")</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+}
+

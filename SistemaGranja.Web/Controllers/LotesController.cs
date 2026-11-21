@@ -15,9 +15,11 @@ public class LotesController : Controller
     private readonly IEspecieService _especieService;
     private readonly IGalpaoService _galpaoService;
     private readonly ISaidaDeAnimaisService _saidaService;
+    private readonly IFinanceiroService _financeiro;
 
-    public LotesController(ILoteService loteService, IEspecieService especieService, IGalpaoService galpaoService, ISaidaDeAnimaisService saidaService)
+    public LotesController(ILoteService loteService, IEspecieService especieService, IGalpaoService galpaoService, ISaidaDeAnimaisService saidaService, IFinanceiroService financeiro)
     {
+        _financeiro = financeiro;
         _saidaService = saidaService;
         _loteService = loteService;
         _especieService = especieService;
@@ -45,6 +47,11 @@ public class LotesController : Controller
         if (id == null) return NotFound();
         var lote = await _loteService.ObterComAnimaisAsync(id.Value);
         if (lote == null) return NotFound();
+
+        ViewData["QueSairam"] = await _loteService.ObterAnimaisQueSairamAsync(lote.Id);
+        // Custo e lucro do lote: só para quem vê o financeiro
+        if (User.PodeGerenciar())
+            ViewData["Resultado"] = await _financeiro.ObterResultadoDoLoteAsync(lote.Id);
         return View(lote);
     }
 

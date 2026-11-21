@@ -1,0 +1,35 @@
+@model SistemaGranja.Domain.LancamentoFinanceiro
+
+@{
+    ViewData["Title"] = "Excluir lançamento";
+    var receita = Model.Tipo == TipoLancamento.Receita;
+}
+
+<div class="page-header">
+    <h1>Excluir lançamento</h1>
+</div>
+
+<div class="card shadow-sm form-card">
+    <div class="card-body">
+        <p>Tem certeza de que deseja excluir este lançamento? Esta ação não pode ser desfeita.</p>
+        <dl class="row detalhes mb-4">
+            <dt class="col-sm-4">Tipo</dt>
+            <dd class="col-sm-8">@Model.Tipo.NomeExibicao()</dd>
+            <dt class="col-sm-4">Descrição</dt>
+            <dd class="col-sm-8">@Model.Descricao</dd>
+            <dt class="col-sm-4">Valor</dt>
+            <dd class="col-sm-8 fw-semibold @(receita ? "text-success-emphasis" : "text-danger-emphasis")">@Model.Valor.ToString("C")</dd>
+            <dt class="col-sm-4">Data</dt>
+            <dd class="col-sm-8">@Model.Data.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-4">Categoria</dt>
+            <dd class="col-sm-8">@Model.Categoria?.Nome</dd>
+        </dl>
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger">Excluir</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

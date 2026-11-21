@@ -1,0 +1,11 @@
+@model SistemaGranja.Domain.CategoriaFinanceira
+
+<div class="mb-3">
+    <label asp-for="Nome" class="form-label"></label>
+    <input asp-for="Nome" class="form-control" placeholder="Ex.: Sal mineral, Venda de queijo" autofocus />
+    <span asp-validation-for="Nome" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Tipo" class="form-label"></label>
+    <select asp-for="Tipo" class="form-select" asp-items="Html.GetEnumSelectList<TipoLancamento>()"></select>
+</div>

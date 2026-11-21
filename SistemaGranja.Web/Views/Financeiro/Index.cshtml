@@ -1,0 +1,192 @@
+@model FinanceiroController.TelaFinanceiro
+
+@{
+    ViewData["Title"] = "Financeiro";
+    var periodos = new[] { ("mes", "Este mês"), ("mes-passado", "Mês passado"), ("30dias", "Últimos 30 dias"), ("ano", "Este ano") };
+    var maiorCategoria = Model.Resumo.PorCategoria.Count > 0 ? Model.Resumo.PorCategoria.Max(c => c.Total) : 0m;
+    var totalLista = Model.Lancamentos.Sum(l => l.ValorComSinal);
+}
+
+<div class="page-header">
+    <div>
+        <h1>Financeiro</h1>
+        <div class="text-muted small">@Model.De.ToString("dd/MM/yyyy") a @Model.Ate.ToString("dd/MM/yyyy")</div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Receita" class="btn btn-agro">@Icones.Svg("mais", 18) Receita</a>
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-outline-danger">@Icones.Svg("mais", 18) Despesa</a>
+        <a asp-controller="CategoriasFinanceiras" asp-action="Index" class="btn btn-outline-secondary">Categorias</a>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Período">
+    @foreach (var (codigo, nome) in periodos)
+    {
+        <a asp-action="Index" asp-route-periodo="@codigo" class="btn btn-sm @(Model.Periodo == codigo ? "btn-agro" : "btn-outline-secondary")" aria-current="@(Model.Periodo == codigo ? "true" : null)">@nome</a>
+    }
+    @if (Model.Periodo == "personalizado")
+    {
+        <span class="btn btn-sm btn-agro disabled">Período escolhido</span>
+    }
+</div>
+
+<section class="painel-avisos mb-4" aria-label="Resumo do período">
+    <div class="aviso aviso-sucesso">
+        <span class="aviso-titulo">Receitas</span>
+        <span class="aviso-numero">@Model.Resumo.Receitas.ToString("C")</span>
+    </div>
+    <div class="aviso aviso-perigo">
+        <span class="aviso-titulo">Despesas</span>
+        <span class="aviso-numero">@Model.Resumo.Despesas.ToString("C")</span>
+    </div>
+    <div class="aviso @(Model.Resumo.Saldo >= 0 ? "aviso-neutro" : "aviso-atencao")">
+        <span class="aviso-titulo">Saldo do período</span>
+        <span class="aviso-numero @(Model.Resumo.Saldo < 0 ? "text-danger-emphasis" : "")">@Model.Resumo.Saldo.ToString("C")</span>
+        <span class="aviso-texto">@(Model.Resumo.Saldo >= 0 ? "Entrou mais do que saiu" : "Saiu mais do que entrou")</span>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-xl-8">
+        <form asp-action="Index" method="get" class="card shadow-sm mb-3">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small mb-1" for="de">De</label>
+                        <input type="date" class="form-control" id="de" name="de" value="@Model.De.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small mb-1" for="ate">Até</label>
+                        <input type="date" class="form-control" id="ate" name="ate" value="@Model.Ate.ToString("yyyy-MM-dd")" />
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small mb-1" for="tipo">Tipo</label>
+                        <select class="form-select" id="tipo" name="tipo">
+                            <option value="">Receitas e despesas</option>
+                            @foreach (var t in Enum.GetValues<TipoLancamento>())
+                            {
+                                if (Model.Tipo == t)
+                                {
+                                    <option value="@t" selected>@(t == TipoLancamento.Receita ? "Só receitas" : "Só despesas")</option>
+                                }
+                                else
+                                {
+                                    <option value="@t">@(t == TipoLancamento.Receita ? "Só receitas" : "Só despesas")</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small mb-1" for="categoriaId">Categoria</label>
+                        <select class="form-select" id="categoriaId" name="categoriaId">
+                            <option value="">Todas</option>
+                            @foreach (var c in Model.Categorias)
+                            {
+                                var nome = $"{c.Nome} ({c.Tipo.NomeExibicao().ToLower()})";
+                                if (Model.CategoriaId == c.Id)
+                                {
+                                    <option value="@c.Id" selected>@nome</option>
+                                }
+                                else
+                                {
+                                    <option value="@c.Id">@nome</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-lg-9">
+                        <label class="form-label small mb-1" for="busca">Buscar na descrição</label>
+                        <input type="search" class="form-control" id="busca" name="busca" value="@Model.Busca" placeholder="Ex.: ração, venda de bezerros" />
+                    </div>
+                    <div class="col-lg-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-agro flex-fill">Filtrar</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary" title="Limpar filtros">Limpar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        @if (!Model.Lancamentos.Any())
+        {
+            <div class="card shadow-sm">
+                <div class="lista-vazia">
+                    <p class="mb-3">@(Model.FiltroExtra ? "Nenhum lançamento encontrado com esses filtros." : "Nenhuma receita ou despesa neste período.")</p>
+                    <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-agro">Lançar a primeira</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table tabela-cartoes table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Descrição</th>
+                                <th>Data</th>
+                                <th>Categoria</th>
+                                <th>Pagamento</th>
+                                <th>Lote</th>
+                                <th class="text-end">Valor</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var item in Model.Lancamentos)
+                        {
+                            var receita = item.Tipo == TipoLancamento.Receita;
+                            <tr>
+                                <td class="fw-semibold">@item.Descricao</td>
+                                <td>@item.Data.ToString("dd/MM/yyyy")</td>
+                                <td>@item.Categoria?.Nome</td>
+                                <td>@item.FormaPagamento.NomeExibicao()</td>
+                                <td>@(item.Lote?.CodigoLote ?? "—")</td>
+                                <td class="text-end fw-semibold text-nowrap @(receita ? "text-success-emphasis" : "text-danger-emphasis")">@(receita ? "+" : "−") @item.Valor.ToString("C")</td>
+                                <td class="text-end acoes">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a>
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <p class="text-muted mt-2 small">
+                @Model.Lancamentos.Count lançamento(s)
+                @if (Model.FiltroExtra)
+                {
+                    <text>· total da lista: <strong class="@(totalLista >= 0 ? "text-success-emphasis" : "text-danger-emphasis")">@totalLista.ToString("C")</strong></text>
+                }
+            </p>
+        }
+    </div>
+
+    <div class="col-xl-4">
+        <section class="card shadow-sm">
+            <div class="card-body d-flex flex-column gap-2">
+                <h2 class="h5 mb-1">Por categoria</h2>
+                @if (Model.Resumo.PorCategoria.Count == 0)
+                {
+                    <p class="text-muted mb-0">Sem lançamentos no período.</p>
+                }
+                else
+                {
+                    foreach (var (categoria, tipo, total) in Model.Resumo.PorCategoria)
+                    {
+                        var largura = maiorCategoria > 0 ? Math.Max((int)(total / maiorCategoria * 100), 2) : 0;
+                        <div class="py-1">
+                            <div class="d-flex justify-content-between gap-2 small mb-1">
+                                <span class="fw-semibold">@categoria</span>
+                                <span class="text-nowrap @(tipo == TipoLancamento.Receita ? "text-success-emphasis" : "text-danger-emphasis")">@total.ToString("C")</span>
+                            </div>
+                            <div class="barra @(tipo == TipoLancamento.Despesa ? "barra-perigo" : "")" role="progressbar" aria-label="@categoria" aria-valuenow="@largura" aria-valuemin="0" aria-valuemax="100">
+                                <div class="barra-valor" style="width: @largura%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+</div>

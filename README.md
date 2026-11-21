@@ -40,6 +40,12 @@ Desenvolvido em **C# / ASP.NET Core 8 MVC**, **Entity Framework Core** e **MySQL
 - Funcionários com validação de CPF (dígitos verificadores), cargos e tempo de casa
 - Desligamento e reativação mantendo o histórico
 
+**Financeiro**
+- Receitas e despesas com categoria, forma de pagamento e lote (opcional)
+- Resumo do período (receitas, despesas e saldo) e totais por categoria
+- Períodos prontos (este mês, mês passado, 30 dias, ano) e filtros
+- Categorias padrão de fazenda, editáveis
+
 **Acesso e equipe da fazenda**
 - Cada cliente (fazenda) vê apenas os próprios dados
 - Três perfis: **Dono** (tudo, inclusive equipe), **Gerente** (opera tudo, menos a equipe) e **Funcionário** (dia a dia, sem excluir e sem alterar cadastros)

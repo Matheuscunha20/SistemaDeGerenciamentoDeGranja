@@ -1,0 +1,99 @@
+@model SistemaGranja.Domain.LancamentoFinanceiro
+
+@{
+    var categorias = ViewData["Categorias"] as List<CategoriaFinanceira> ?? new();
+    var lotes = ViewData["Lotes"] as List<Lote> ?? new();
+    var receita = Model.Tipo == TipoLancamento.Receita;
+}
+
+<fieldset class="mb-3">
+    <legend class="form-label fs-6">Tipo</legend>
+    <div class="btn-group w-100" role="group">
+        <input type="radio" class="btn-check" name="Tipo" id="tipoReceita" value="Receita" autocomplete="off" checked="@receita" data-tipo-lancamento />
+        <label class="btn btn-outline-success" for="tipoReceita">Receita (entrou dinheiro)</label>
+        <input type="radio" class="btn-check" name="Tipo" id="tipoDespesa" value="Despesa" autocomplete="off" checked="@(!receita)" data-tipo-lancamento />
+        <label class="btn btn-outline-danger" for="tipoDespesa">Despesa (saiu dinheiro)</label>
+    </div>
+</fieldset>
+
+<div class="mb-3">
+    <label asp-for="Descricao" class="form-label"></label>
+    <input asp-for="Descricao" class="form-control" placeholder="Ex.: Compra de ração, Venda de 5 bezerros" />
+    <span asp-validation-for="Descricao" class="text-danger"></span>
+</div>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="mb-3">
+            <label asp-for="Valor" class="form-label"></label>
+            <div class="input-group">
+                <span class="input-group-text">R$</span>
+                <input asp-for="Valor" class="form-control" inputmode="decimal" value="@(Model.Valor > 0 ? Model.Valor.ToString("0.00") : "")" placeholder="0,00" />
+            </div>
+            <span asp-validation-for="Valor" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="mb-3">
+            <label asp-for="Data" class="form-label"></label>
+            <input asp-for="Data" class="form-control" />
+            <span asp-validation-for="Data" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="mb-3">
+            <label asp-for="CategoriaId" class="form-label"></label>
+            <select asp-for="CategoriaId" class="form-select" data-categorias>
+                <option value="">-- Selecione --</option>
+                @foreach (var c in categorias)
+                {
+                    if (c.Id == Model.CategoriaId)
+                    {
+                        <option value="@c.Id" data-tipo="@c.Tipo" selected>@c.Nome</option>
+                    }
+                    else
+                    {
+                        <option value="@c.Id" data-tipo="@c.Tipo">@c.Nome</option>
+                    }
+                }
+            </select>
+            <div class="form-text"><a asp-controller="CategoriasFinanceiras" asp-action="Index">Gerenciar categorias</a></div>
+            <span asp-validation-for="CategoriaId" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="mb-3">
+            <label asp-for="FormaPagamento" class="form-label"></label>
+            <select asp-for="FormaPagamento" class="form-select" asp-items="Html.GetEnumSelectList<FormaPagamento>()"></select>
+            <span asp-validation-for="FormaPagamento" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="LoteId" class="form-label"></label>
+    <select asp-for="LoteId" class="form-select">
+        <option value="">Nenhum (despesa ou receita geral)</option>
+        @foreach (var l in lotes)
+        {
+            if (l.Id == Model.LoteId)
+            {
+                <option value="@l.Id" selected>@l.CodigoLote</option>
+            }
+            else
+            {
+                <option value="@l.Id">@l.CodigoLote</option>
+            }
+        }
+    </select>
+    <div class="form-text">Ligue ao lote para depois ver o custo e o lucro de cada lote.</div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Observacoes" class="form-label"></label>
+    <textarea asp-for="Observacoes" class="form-control" rows="2" placeholder="Opcional"></textarea>
+    <span asp-validation-for="Observacoes" class="text-danger"></span>
+</div>

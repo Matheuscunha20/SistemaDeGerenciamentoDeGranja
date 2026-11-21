@@ -70,6 +70,40 @@ namespace SistemaGranja.Data
         {
             await SemearEspeciesERacasAsync(db);
             await SemearVacinasAsync(db);
+            await SemearCategoriasFinanceirasAsync(db);
+        }
+
+        // Categorias comuns de receitas e despesas de uma fazenda
+        private static readonly (TipoLancamento Tipo, string Nome)[] CategoriasFinanceiras =
+        {
+            (TipoLancamento.Receita, "Venda de animais"),
+            (TipoLancamento.Receita, "Venda de leite"),
+            (TipoLancamento.Receita, "Venda de ovos"),
+            (TipoLancamento.Receita, "Venda de outros produtos"),
+            (TipoLancamento.Receita, "Serviços prestados"),
+            (TipoLancamento.Receita, "Outras receitas"),
+            (TipoLancamento.Despesa, "Ração e alimentação"),
+            (TipoLancamento.Despesa, "Vacinas e medicamentos"),
+            (TipoLancamento.Despesa, "Veterinário"),
+            (TipoLancamento.Despesa, "Mão de obra"),
+            (TipoLancamento.Despesa, "Compra de animais"),
+            (TipoLancamento.Despesa, "Manutenção e reparos"),
+            (TipoLancamento.Despesa, "Energia e água"),
+            (TipoLancamento.Despesa, "Combustível"),
+            (TipoLancamento.Despesa, "Impostos e taxas"),
+            (TipoLancamento.Despesa, "Outras despesas"),
+        };
+
+        // Só cadastra se a fazenda ainda não tiver nenhuma categoria
+        // (fazendas criadas antes do financeiro recebem na primeira vez que abrem a tela)
+        public static async Task SemearCategoriasFinanceirasAsync(AppDbContext db)
+        {
+            if (await db.CategoriasFinanceiras.AnyAsync()) return;
+
+            foreach (var (tipo, nome) in CategoriasFinanceiras)
+                db.CategoriasFinanceiras.Add(new CategoriaFinanceira { Tipo = tipo, Nome = nome });
+
+            await db.SaveChangesAsync();
         }
 
         // Só cadastra as vacinas se a fazenda ainda não tiver nenhuma,

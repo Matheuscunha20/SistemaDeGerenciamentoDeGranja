@@ -1,0 +1,50 @@
+@model List<SistemaGranja.Domain.CategoriaFinanceira>
+
+@{
+    ViewData["Title"] = "Categorias do financeiro";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Categorias do financeiro</h1>
+        <div class="text-muted small">Use para organizar receitas e despesas. Categoria desativada some das opções, mas os lançamentos antigos continuam com ela.</div>
+    </div>
+    <a asp-controller="Financeiro" asp-action="Index" class="btn btn-outline-secondary">Voltar ao financeiro</a>
+</div>
+
+<div class="row g-4">
+    @foreach (var tipo in new[] { TipoLancamento.Receita, TipoLancamento.Despesa })
+    {
+        var lista = Model.Where(c => c.Tipo == tipo).ToList();
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center gap-2">
+                    <span>@(tipo == TipoLancamento.Receita ? "Receitas" : "Despesas")</span>
+                    <a asp-action="Create" asp-route-tipo="@tipo" class="btn btn-sm btn-agro">@Icones.Svg("mais", 16) Nova</a>
+                </div>
+                @if (!lista.Any())
+                {
+                    <div class="card-body text-muted">Nenhuma categoria.</div>
+                }
+                else
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var c in lista)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center gap-2">
+                                <span class="@(c.Ativa ? "" : "text-muted")">
+                                    @c.Nome
+                                    @if (!c.Ativa) { <span class="badge bg-body-secondary text-body border ms-1">desativada</span> }
+                                </span>
+                                <span class="acoes">
+                                    <a asp-action="Edit" asp-route-id="@c.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                                    <a asp-action="Delete" asp-route-id="@c.Id" class="btn btn-sm btn-outline-danger">Excluir</a>
+                                </span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    }
+</div>

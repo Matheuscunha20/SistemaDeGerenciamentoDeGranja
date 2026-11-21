@@ -72,12 +72,19 @@ namespace SistemaGranja.Data
                 .HasIndex(r => new { r.EspecieId, r.Nome })
                 .IsUnique();
 
-            // Animal: raça opcional no banco (animais antigos), obrigatória no formulário.
+            // Animal: raça opcional no banco (animais antigos), obrigatória só no formulário.
+            // O [Required] da entidade faria o EF tratar a raça como obrigatória no banco e
+            // esconder das listas os animais sem raça (INNER JOIN). IsRequired(false) evita isso.
             // Restrict: não deixa excluir uma raça que ainda tem animais.
+            builder.Entity<Animal>()
+                .Property(a => a.RacaId)
+                .IsRequired(false);
+
             builder.Entity<Animal>()
                 .HasOne(a => a.Raca)
                 .WithMany(r => r.Animais)
                 .HasForeignKey(a => a.RacaId)
+                .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

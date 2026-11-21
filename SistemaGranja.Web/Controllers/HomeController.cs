@@ -25,10 +25,19 @@ namespace SistemaGranja.Web.Controllers
             return View("Painel", await _painelService.ObterResumoAsync());
         }
 
+        // Erro inesperado: página amigável. O código ajuda a achar o erro no log.
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        // Páginas de erro por código (404 não encontrada, 403 sem permissão...)
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Status(int codigo)
+        {
+            Response.StatusCode = codigo is >= 400 and <= 599 ? codigo : 404;
+            return View(Response.StatusCode);
         }
     }
 }

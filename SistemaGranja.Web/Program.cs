@@ -1,31 +1,50 @@
 // Arquivo: Program.cs (no projeto SistemaGranja.Web)
+// Configura e inicia o AgroArca. As configurações de produção vêm de variáveis de ambiente
+// (veja a seção "Colocar no ar" do README).
 
+using System.Globalization;
+using System.Reflection;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
+using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using SistemaGranja.Data;
 using SistemaGranja.Domain;
-using System;
-using System.Globalization;
-using Microsoft.AspNetCore.Localization;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure; // Usado pelo Pomelo para MySqlServerVersion
 using SistemaGranja.Services;
-using SistemaGranja.Web.Identidade;
 using SistemaGranja.Web.Emails;
-using Microsoft.AspNetCore.Identity.UI.Services;
-
+using SistemaGranja.Web.Identidade;
+using SistemaGranja.Web.Producao;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- INÍCIO DAS SUAS ADIÇÕES DE SERVIÇO ---
-// 1. Pegar a string de conexão
+// ---------- Registro (logs) ----------
+// Uma linha por evento, com data e hora: fácil de ler no painel da hospedagem
+builder.Logging.ClearProviders();
+builder.Logging.AddSimpleConsole(opcoes =>
+{
+    opcoes.SingleLine = true;
+    opcoes.TimestampFormat = "dd/MM/yyyy HH:mm:ss ";
+});
+
+// ---------- Banco de dados ----------
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Falta a conexão com o banco. Configure ConnectionStrings:DefaultConnection " +
+        "(em desenvolvimento: dotnet user-secrets; no servidor: variável ConnectionStrings__DefaultConnection).");
+}
 
-// 2. Configurar o AppDbContext com Pomelo
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 27)))); // Ajuste para a versão real do seu MySQL, se necessário
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 27))));
 
-// 3. Configurar o ASP.NET Core Identity
+// ---------- Login (ASP.NET Core Identity) ----------
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
@@ -34,13 +53,31 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddErrorDescriber<MensagensIdentityPtBr>() // mensagens de erro do login em português
 .AddClaimsPrincipalFactory<FabricaDeClaimsAgroArca>(); // guarda a fazenda do usuário no login
 
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "AgroArca.Login";
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    // No servidor o cookie de login só trafega por HTTPS
+    options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+        ? CookieSecurePolicy.SameAsRequest
+        : CookieSecurePolicy.Always;
+});
+
+// Chaves que protegem cookies e links de e-mail. No servidor ficam numa pasta que não se perde
+// ao atualizar o sistema (senão todos seriam desconectados a cada atualização).
+var protecaoDeDados = builder.Services.AddDataProtection().SetApplicationName("AgroArca");
+var pastaDasChaves = builder.Configuration["DataProtection:Pasta"];
+if (!string.IsNullOrWhiteSpace(pastaDasChaves))
+    protecaoDeDados.PersistKeysToFileSystem(new DirectoryInfo(pastaDasChaves));
+
 // Fazenda do usuário logado: usada pelo AppDbContext para separar os dados de cada cliente
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IFazendaAtual, FazendaDoUsuarioLogado>();
 
-// E-mails (confirmação, esqueci a senha, convite). Os dados do servidor ficam na seção "Email"
-// (use dotnet user-secrets). Sem servidor configurado, em desenvolvimento os e-mails são salvos
-// como arquivos .html na pasta EmailsDeTeste do projeto, para você abrir e clicar nos links.
+// ---------- E-mails ----------
+// Dados do servidor na seção "Email" (user-secrets ou variáveis Email__Servidor, Email__Usuario...).
+// Sem servidor configurado, em desenvolvimento os e-mails são salvos na pasta EmailsDeTeste.
 builder.Services.Configure<ConfiguracaoEmail>(builder.Configuration.GetSection("Email"));
 builder.Services.PostConfigure<ConfiguracaoEmail>(config =>
 {
@@ -50,7 +87,7 @@ builder.Services.PostConfigure<ConfiguracaoEmail>(config =>
 builder.Services.AddTransient<IEmailSender, EnviadorDeEmail>();
 builder.Services.AddScoped<EmailsDaConta>();
 
-// Perfis de acesso: quem pode fazer o quê
+// ---------- Perfis de acesso ----------
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(Politicas.Gestao, p => p.RequireRole(nameof(PerfilUsuario.Dono), nameof(PerfilUsuario.Gerente)));
@@ -60,9 +97,28 @@ builder.Services.AddAuthorization(options =>
 // A cada minuto o login é conferido com o banco: mudança de perfil vale logo
 // e quem teve o acesso removido sai do sistema
 builder.Services.Configure<SecurityStampValidatorOptions>(o => o.ValidationInterval = TimeSpan.FromMinutes(1));
-// --- FIM DAS SUAS ADIÇÕES DE SERVIÇO ---
 
-// Serviços padrão
+// ---------- Produção ----------
+// Saúde do sistema em /saude (usado pela hospedagem e pelo monitoramento)
+builder.Services.AddHealthChecks().AddCheck<VerificacaoDoBanco>("banco");
+
+// Limite de tentativas no login, cadastro e esqueci a senha
+builder.Services.AddRateLimiter(LimiteDeTentativas.Configurar);
+
+// Atrás de um proxy (Nginx, Caddy, plataforma de hospedagem) que cuida do HTTPS:
+// confia nos cabeçalhos X-Forwarded-* para saber o IP real e que o acesso foi por HTTPS
+var atrasDeProxy = builder.Configuration.GetValue<bool>("Proxy:ConfiarEmCabecalhos");
+if (atrasDeProxy)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
+
+// ---------- Telas ----------
 builder.Services.AddControllersWithViews(options =>
 {
     // Só são obrigatórios os campos marcados com [Required] nas entidades
@@ -77,7 +133,9 @@ builder.Services.AddControllersWithViews(options =>
     mensagens.SetValueIsInvalidAccessor(valor => $"O valor '{valor}' é inválido.");
     mensagens.SetUnknownValueIsInvalidAccessor(campo => $"O valor informado para {campo} é inválido.");
 });
-builder.Services.AddRazorPages(); // Para Razor Pages e/ou UI do Identity
+builder.Services.AddRazorPages(); // Telas de conta (login, cadastro...)
+
+// ---------- Serviços do AgroArca ----------
 builder.Services.AddScoped<IGalpaoService, GalpaoService>();
 builder.Services.AddScoped<ITipoAlimentoService, TipoAlimentoService>();
 builder.Services.AddScoped<ILoteService, LoteService>();
@@ -96,29 +154,35 @@ builder.Services.AddScoped<IFinanceiroService, FinanceiroService>();
 builder.Services.AddScoped<ISaidaDeAnimaisService, SaidaDeAnimaisService>();
 
 var app = builder.Build();
+var logger = app.Logger;
 
-// Prepara o banco de dados ao iniciar
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+// ---------- Ao iniciar ----------
+// Atualiza o banco (migrations). Pode ser desligado com Banco__AplicarMigracoesAoIniciar=false.
+if (app.Configuration.GetValue("Banco:AplicarMigracoesAoIniciar", true))
+    await MigracoesAoIniciar.AplicarAsync(app.Services, logger);
 
-    // Em desenvolvimento, cria o banco e aplica as migrations automaticamente
-    if (app.Environment.IsDevelopment())
-    {
-        db.Database.Migrate();
-    }
-
-    // Espécies, raças e vacinas agora são de cada fazenda:
-    // são cadastradas quando a conta (e a fazenda) é criada.
-}
-
-// Configure o pipeline de requisição HTTP
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error"); // Ou apenas /Error para Razor Pages
+    if (!app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<ConfiguracaoEmail>>().Value.Configurado)
+        logger.LogWarning("Servidor de e-mail não configurado: confirmação de cadastro, esqueci a senha e convites não serão enviados.");
+    if (string.IsNullOrWhiteSpace(pastaDasChaves))
+        logger.LogWarning("DataProtection:Pasta não configurada: os usuários serão desconectados quando o sistema reiniciar.");
+}
+
+// ---------- Caminho de cada requisição ----------
+if (atrasDeProxy)
+    app.UseForwardedHeaders();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error"); // erro inesperado: página amigável (o detalhe vai para o log)
     app.UseHsts();
 }
 
+// Páginas de erro em português (404 página não encontrada, 403...)
+app.UseStatusCodePagesWithReExecute("/Home/Status", "?codigo={0}");
+
+app.UseCabecalhosDeSeguranca();
 app.UseHttpsRedirection();
 
 // Datas, números e moeda no padrão brasileiro (dd/MM/aaaa, vírgula decimal)
@@ -151,6 +215,7 @@ app.Use(async (context, next) =>
 });
 
 app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthentication(); // Autenticação primeiro
 
@@ -169,6 +234,23 @@ app.Use(async (context, next) =>
     await next();
 });
 app.UseAuthorization();  // Depois autorização
+
+// Saúde do sistema: responde 200 (tudo certo) ou 503 (com problema). Não mostra detalhes internos.
+var versao = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
+app.MapHealthChecks("/saude", new HealthCheckOptions
+{
+    ResponseWriter = async (context, relatorio) =>
+    {
+        context.Response.ContentType = "application/json; charset=utf-8";
+        context.Response.Headers.CacheControl = "no-store";
+        await context.Response.WriteAsync(JsonSerializer.Serialize(new
+        {
+            status = relatorio.Status == Microsoft.Extensions.Diagnostics.HealthChecks.HealthStatus.Healthy ? "ok" : "problema",
+            versao,
+            verificacoes = relatorio.Entries.ToDictionary(e => e.Key, e => e.Value.Status.ToString())
+        }));
+    }
+});
 
 // Rotas
 app.MapControllerRoute(

@@ -1,0 +1,20 @@
+@model int
+@{
+    var (titulo, texto) = Model switch
+    {
+        404 => ("Página não encontrada", "O endereço pode estar errado ou a página não existe mais."),
+        403 => ("Sem permissão", "Seu perfil não tem acesso a esta página."),
+        401 => ("Entre na sua conta", "Faça login para continuar."),
+        429 => ("Muitas tentativas", "Por segurança, aguarde um minuto e tente de novo."),
+        >= 500 => ("Algo deu errado", "Não foi possível concluir o que você pediu. Tente de novo em instantes."),
+        _ => ("Não foi possível abrir a página", "Tente de novo ou volte ao início.")
+    };
+    ViewData["Title"] = titulo;
+}
+
+<div class="text-center py-5">
+    <div class="display-4 fw-bold text-muted mb-2">@Model</div>
+    <h1 class="h3 mb-2">@titulo</h1>
+    <p class="text-muted">@texto</p>
+    <a href="~/" class="btn btn-agro">Voltar ao início</a>
+</div>

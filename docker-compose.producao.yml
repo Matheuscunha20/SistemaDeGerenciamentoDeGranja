@@ -1,0 +1,44 @@
+# AgroArca completo (sistema + banco MySQL) em containers.
+# Usado no servidor e no teste automático do GitHub.
+#   Subir:  docker compose -f docker-compose.producao.yml up -d --build
+#   Parar:  docker compose -f docker-compose.producao.yml down
+# As senhas vêm do arquivo .env (copie de .env.example).
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: AgroArcaDB
+      MYSQL_USER: agroarca
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - agroarca-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=AgroArcaDB;User=agroarca;Password=${MYSQL_PASSWORD};"
+      Proxy__ConfiarEmCabecalhos: "${CONFIAR_NO_PROXY:-false}"
+      Email__Servidor: "${EMAIL_SERVIDOR:-}"
+      Email__Porta: "${EMAIL_PORTA:-587}"
+      Email__Usuario: "${EMAIL_USUARIO:-}"
+      Email__Senha: "${EMAIL_SENHA:-}"
+      Email__Remetente: "${EMAIL_REMETENTE:-}"
+    ports:
+      - "8080:8080"
+    volumes:
+      - agroarca-chaves:/app/chaves
+
+volumes:
+  agroarca-mysql:
+  agroarca-chaves:

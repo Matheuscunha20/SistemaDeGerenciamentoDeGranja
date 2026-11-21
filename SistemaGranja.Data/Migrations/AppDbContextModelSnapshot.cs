@@ -561,6 +561,9 @@ namespace SistemaGranja.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<double?>("EstoqueMinimo")
+                        .HasColumnType("double");
+
                     b.Property<string>("Fabricante")
                         .IsRequired()
                         .HasColumnType("longtext");

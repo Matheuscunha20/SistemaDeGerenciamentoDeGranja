@@ -43,6 +43,16 @@
     </div>
 </div>
 <div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="EstoqueMinimo" class="form-label"></label>
+            <input asp-for="EstoqueMinimo" class="form-control" inputmode="decimal" placeholder="Opcional" />
+            <div class="form-text">Quando o saldo chegar a este valor, o estoque aparece como baixo.</div>
+            <span asp-validation-for="EstoqueMinimo" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
     <div class="col-md-12">
         <div class="mb-3">
             <label asp-for="Descricao" class="form-label"></label>

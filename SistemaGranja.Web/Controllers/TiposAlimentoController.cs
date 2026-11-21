@@ -41,7 +41,7 @@ public class TiposAlimentoController : Controller
     // POST: TiposAlimento/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Nome,Descricao,UnidadeMedidaPadrao,Fabricante,CodigoInterno")] TipoAlimento tipoAlimento)
+    public async Task<IActionResult> Create([Bind("Nome,Descricao,UnidadeMedidaPadrao,Fabricante,CodigoInterno,EstoqueMinimo")] TipoAlimento tipoAlimento)
     {
         ModelState.Remove(nameof(TipoAlimento.MovimentacoesEstoque));
         await ValidarAsync(tipoAlimento);
@@ -67,7 +67,7 @@ public class TiposAlimentoController : Controller
     // POST: TiposAlimento/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Nome,Descricao,UnidadeMedidaPadrao,Fabricante,CodigoInterno")] TipoAlimento tipoAlimento)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,Nome,Descricao,UnidadeMedidaPadrao,Fabricante,CodigoInterno,EstoqueMinimo")] TipoAlimento tipoAlimento)
     {
         if (id != tipoAlimento.Id) return NotFound();
 

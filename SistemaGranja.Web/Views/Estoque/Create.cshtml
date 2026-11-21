@@ -1,0 +1,27 @@
+@model SistemaGranja.Domain.MovimentacaoEstoqueAlimento
+
+@{
+    ViewData["Title"] = "Nova movimentação de estoque";
+}
+
+<div class="page-header">
+    <h1>Nova movimentação de estoque</h1>
+</div>
+
+<div class="card shadow-sm" style="max-width: 820px;">
+    <div class="card-body">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <partial name="_Form" model="Model" />
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-agro">Registrar</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script src="~/js/estoque-form.js" asp-append-version="true"></script>
+}

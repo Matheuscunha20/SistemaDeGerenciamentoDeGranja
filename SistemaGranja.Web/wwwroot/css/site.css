@@ -78,3 +78,13 @@ dl.detalhes dt {
 .table thead th {
   white-space: nowrap;
 }
+
+/* Cartões de resumo com uma faixa colorida à esquerda */
+.card-destaque {
+  border-left-width: 4px !important;
+}
+
+.destaque-warning { border-left-color: #ffc107 !important; }
+.destaque-danger { border-left-color: #dc3545 !important; }
+.destaque-info { border-left-color: #0dcaf0 !important; }
+.destaque-success { border-left-color: #198754 !important; }

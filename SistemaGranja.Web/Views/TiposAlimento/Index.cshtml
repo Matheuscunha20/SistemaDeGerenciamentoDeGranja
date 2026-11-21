@@ -29,6 +29,7 @@ else
                     <th>@Html.DisplayNameFor(model => model.UnidadeMedidaPadrao)</th>
                     <th>@Html.DisplayNameFor(model => model.Fabricante)</th>
                     <th>@Html.DisplayNameFor(model => model.CodigoInterno)</th>
+                    <th>@Html.DisplayNameFor(model => model.EstoqueMinimo)</th>
                     <th class="text-end">Ações</th>
                     </tr>
                 </thead>
@@ -40,6 +41,7 @@ else
                         <td>@item.UnidadeMedidaPadrao</td>
                         <td>@(string.IsNullOrEmpty(item.Fabricante) ? "—" : item.Fabricante)</td>
                         <td>@(string.IsNullOrEmpty(item.CodigoInterno) ? "—" : item.CodigoInterno)</td>
+                        <td>@(item.EstoqueMinimo.HasValue ? $"{item.EstoqueMinimo.Value:N2} {item.UnidadeMedidaPadrao}" : "—")</td>
                         <td class="text-end acoes">
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>

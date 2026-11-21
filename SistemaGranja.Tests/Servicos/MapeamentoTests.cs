@@ -1,4 +1,8 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using SistemaGranja.Domain;
 
 namespace SistemaGranja.Tests.Servicos
@@ -38,8 +42,31 @@ namespace SistemaGranja.Tests.Servicos
                 .Options;
             using var db = new SistemaGranja.Data.AppDbContext(opcoes);
 
-            Assert.False(db.Database.HasPendingModelChanges(),
-                "As entidades mudaram e falta uma migration (ou o snapshot está desatualizado).");
+            // Mesmo cálculo do "dotnet ef migrations add", mas listando o que mudou
+            IModel snapshot = db.GetService<IMigrationsAssembly>().ModelSnapshot!.Model;
+            if (snapshot is IMutableModel modelo) snapshot = modelo.FinalizeModel();
+            snapshot = db.GetService<IModelRuntimeInitializer>().Initialize(snapshot);
+            var atual = db.GetService<IDesignTimeModel>().Model;
+
+            var diferencas = db.GetService<IMigrationsModelDiffer>()
+                .GetDifferences(snapshot.GetRelationalModel(), atual.GetRelationalModel());
+
+            Assert.True(diferencas.Count == 0,
+                "Falta migration (ou o snapshot está desatualizado):\n" + string.Join("\n", diferencas.Select(Descrever)));
+        }
+
+        private static string Descrever(MigrationOperation operacao)
+        {
+            string? Ler(string propriedade) =>
+                operacao.GetType().GetProperty(propriedade)?.GetValue(operacao) switch
+                {
+                    null => null,
+                    string texto => texto,
+                    string[] lista => string.Join(",", lista),
+                    var outro => outro.ToString()
+                };
+
+            return $"{operacao.GetType().Name} tabela={Ler("Table")} nome={Ler("Name")} colunas={Ler("Columns")}";
         }
 
         [Fact]

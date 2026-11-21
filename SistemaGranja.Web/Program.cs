@@ -36,6 +36,14 @@ builder.Services.AddScoped<IAnimalService, AnimalService>();
 
 var app = builder.Build();
 
+// Em desenvolvimento, cria o banco e aplica as migrations automaticamente
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
 // Configure o pipeline de requisição HTTP
 if (!app.Environment.IsDevelopment())
 {

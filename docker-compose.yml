@@ -1,0 +1,18 @@
+# Banco de dados MySQL para desenvolvimento local da Granja Sol.
+# Subir:  docker compose up -d
+# Parar:  docker compose down
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: granja-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: SistemaGranjaDB
+    ports:
+      - "3307:3306"   # porta 3307 no seu PC, para não conflitar com outros MySQL
+    volumes:
+      - granja-mysql-data:/var/lib/mysql
+
+volumes:
+  granja-mysql-data:

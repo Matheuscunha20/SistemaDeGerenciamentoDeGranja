@@ -366,3 +366,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Variáveis locais do Docker (senha do banco)
+.env

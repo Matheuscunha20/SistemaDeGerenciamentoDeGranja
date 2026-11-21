@@ -29,6 +29,13 @@ namespace SistemaGranja.Web.Producao
                     logger.LogWarning("Banco ainda não respondeu (tentativa {Tentativa} de {Total}): {Mensagem}", tentativa, tentativas, erro.Message);
                     await Task.Delay(TimeSpan.FromSeconds(segundosEntreTentativas));
                 }
+                catch (Exception erro)
+                {
+                    logger.LogCritical(erro,
+                        "Não foi possível conectar no banco de dados. Confira se o MySQL está ligado " +
+                        "(no computador: abra o Docker Desktop e rode \"docker compose up -d\") e se a conexão está certa.");
+                    throw;
+                }
             }
         }
     }

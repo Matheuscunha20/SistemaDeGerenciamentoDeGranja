@@ -158,8 +158,15 @@ var logger = app.Logger;
 
 // ---------- Ao iniciar ----------
 // Atualiza o banco (migrations). Pode ser desligado com Banco__AplicarMigracoesAoIniciar=false.
+// No computador desiste rápido (o banco do Docker já deveria estar ligado);
+// no servidor espera até 1 minuto, porque o MySQL pode estar subindo junto.
 if (app.Configuration.GetValue("Banco:AplicarMigracoesAoIniciar", true))
-    await MigracoesAoIniciar.AplicarAsync(app.Services, logger);
+{
+    if (app.Environment.IsDevelopment())
+        await MigracoesAoIniciar.AplicarAsync(app.Services, logger, tentativas: 2, segundosEntreTentativas: 2);
+    else
+        await MigracoesAoIniciar.AplicarAsync(app.Services, logger);
+}
 
 if (!app.Environment.IsDevelopment())
 {

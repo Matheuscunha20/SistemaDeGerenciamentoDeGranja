@@ -1,0 +1,78 @@
+@model SistemaGranja.Domain.Funcionario
+
+@{
+    var cargos = FuncionariosController.Cargos.ToList();
+    if (!string.IsNullOrEmpty(Model?.Cargo) && !cargos.Contains(Model.Cargo)) cargos.Add(Model.Cargo);
+}
+
+<div class="mb-3">
+    <label asp-for="NomeCompleto" class="form-label"></label>
+    <input asp-for="NomeCompleto" class="form-control" />
+    <span asp-validation-for="NomeCompleto" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Cpf" class="form-label"></label>
+            <input asp-for="Cpf" class="form-control" data-mascara="cpf" inputmode="numeric" placeholder="000.000.000-00" />
+            <span asp-validation-for="Cpf" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Rg" class="form-label"></label>
+            <input asp-for="Rg" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="Rg" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Cargo" class="form-label"></label>
+            <select asp-for="Cargo" class="form-select">
+                <option value="">-- Selecione --</option>
+                @foreach (var cargo in cargos)
+                {
+                    <option value="@cargo">@cargo</option>
+                }
+            </select>
+            <span asp-validation-for="Cargo" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="DataAdmissao" class="form-label"></label>
+            <input asp-for="DataAdmissao" class="form-control" />
+            <span asp-validation-for="DataAdmissao" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Telefone" class="form-label"></label>
+            <input asp-for="Telefone" class="form-control" type="tel" data-mascara="telefone" placeholder="(00) 00000-0000" />
+            <span asp-validation-for="Telefone" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label"></label>
+            <input asp-for="Email" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+@if (Model != null && Model.Id != 0 && !Model.Ativo)
+{
+    <div class="mb-3">
+        <label asp-for="DataDemissao" class="form-label"></label>
+        <input asp-for="DataDemissao" class="form-control" />
+        <span asp-validation-for="DataDemissao" class="text-danger"></span>
+    </div>
+}
+else
+{
+    <input type="hidden" asp-for="DataDemissao" />
+}

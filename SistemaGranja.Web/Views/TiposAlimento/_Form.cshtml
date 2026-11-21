@@ -1,0 +1,53 @@
+@model SistemaGranja.Domain.TipoAlimento
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Nome" class="form-label"></label>
+            <input asp-for="Nome" class="form-control" />
+            <span asp-validation-for="Nome" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        @{
+            var opcoesUnidadeMedidaPadrao = new List<string> { "Kg", "Tonelada", "Saco 25 kg", "Saco 40 kg", "Saco 50 kg", "Litro", "Fardo", "Unidade" };
+            if (!string.IsNullOrEmpty(Model?.UnidadeMedidaPadrao) && !opcoesUnidadeMedidaPadrao.Contains(Model.UnidadeMedidaPadrao)) opcoesUnidadeMedidaPadrao.Add(Model.UnidadeMedidaPadrao);
+        }
+        <div class="mb-3">
+            <label asp-for="UnidadeMedidaPadrao" class="form-label"></label>
+            <select asp-for="UnidadeMedidaPadrao" class="form-select">
+                <option value="">-- Selecione --</option>
+                @foreach (var opcao in opcoesUnidadeMedidaPadrao)
+                {
+                    <option value="@opcao">@opcao</option>
+                }
+            </select>
+            <span asp-validation-for="UnidadeMedidaPadrao" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Fabricante" class="form-label"></label>
+            <input asp-for="Fabricante" class="form-control" />
+            <span asp-validation-for="Fabricante" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="CodigoInterno" class="form-label"></label>
+            <input asp-for="CodigoInterno" class="form-control" />
+            <span asp-validation-for="CodigoInterno" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="mb-3">
+            <label asp-for="Descricao" class="form-label"></label>
+            <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+            <span asp-validation-for="Descricao" class="text-danger"></span>
+        </div>
+    </div>
+</div>

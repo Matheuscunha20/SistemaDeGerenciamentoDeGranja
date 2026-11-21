@@ -1,0 +1,99 @@
+@model SistemaGranja.Domain.Animal
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="TagIdentificacao" class="form-label"></label>
+            <input asp-for="TagIdentificacao" class="form-control" />
+            <span asp-validation-for="TagIdentificacao" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Nome" class="form-label"></label>
+            <input asp-for="Nome" class="form-control" />
+            <span asp-validation-for="Nome" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Raca" class="form-label"></label>
+            <input asp-for="Raca" class="form-control" />
+            <span asp-validation-for="Raca" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        @{
+            var opcoesSexo = new List<string> { "Macho", "Fêmea" };
+            if (!string.IsNullOrEmpty(Model?.Sexo) && !opcoesSexo.Contains(Model.Sexo)) opcoesSexo.Add(Model.Sexo);
+        }
+        <div class="mb-3">
+            <label asp-for="Sexo" class="form-label"></label>
+            <select asp-for="Sexo" class="form-select">
+                <option value="">-- Selecione --</option>
+                @foreach (var opcao in opcoesSexo)
+                {
+                    <option value="@opcao">@opcao</option>
+                }
+            </select>
+            <span asp-validation-for="Sexo" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="DataNascimento" class="form-label"></label>
+            <input asp-for="DataNascimento" class="form-control" />
+            <span asp-validation-for="DataNascimento" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="PesoAtual" class="form-label"></label>
+            <input asp-for="PesoAtual" class="form-control" inputmode="decimal" />
+            <span asp-validation-for="PesoAtual" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-12">
+        @{
+            var opcoesStatusSaude = new List<string> { "Saudável", "Em observação", "Em tratamento", "Em quarentena" };
+            if (!string.IsNullOrEmpty(Model?.StatusSaude) && !opcoesStatusSaude.Contains(Model.StatusSaude)) opcoesStatusSaude.Add(Model.StatusSaude);
+        }
+        <div class="mb-3">
+            <label asp-for="StatusSaude" class="form-label"></label>
+            <select asp-for="StatusSaude" class="form-select">
+                <option value="">-- Selecione --</option>
+                @foreach (var opcao in opcoesStatusSaude)
+                {
+                    <option value="@opcao">@opcao</option>
+                }
+            </select>
+            <span asp-validation-for="StatusSaude" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="GalpaoId" class="form-label"></label>
+            <select asp-for="GalpaoId" class="form-select" asp-items="ViewBag.GalpaoId">
+                <option value="">-- Sem galpão --</option>
+            </select>
+            <span asp-validation-for="GalpaoId" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="LoteId" class="form-label"></label>
+            <select asp-for="LoteId" class="form-select" asp-items="ViewBag.LoteId">
+                <option value="">-- Sem lote --</option>
+            </select>
+            <span asp-validation-for="LoteId" class="text-danger"></span>
+        </div>
+    </div>
+</div>

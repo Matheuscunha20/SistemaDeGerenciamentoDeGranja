@@ -1,59 +1,55 @@
-﻿@model IEnumerable<SistemaGranja.Domain.Galpao>
+@model IEnumerable<SistemaGranja.Domain.Galpao>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Galpões";
 }
 
-<h1>Index</h1>
+<div class="page-header">
+    <h1>Galpões</h1>
+    <a asp-action="Create" class="btn btn-agro">+ Novo galpão</a>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.NomeOuNumero)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TipoInstalacao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CapacidadeMaxima)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LocalizacaoDescricao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Observacoes)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.NomeOuNumero)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TipoInstalacao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CapacidadeMaxima)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LocalizacaoDescricao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Observacoes)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+@if (!Model.Any())
+{
+    <div class="card shadow-sm">
+        <div class="lista-vazia">
+            <p class="mb-3">Nenhum galpão cadastrado ainda.</p>
+            <a asp-action="Create" class="btn btn-agro">Cadastrar o primeiro</a>
+        </div>
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                    <th>@Html.DisplayNameFor(model => model.NomeOuNumero)</th>
+                    <th>@Html.DisplayNameFor(model => model.TipoInstalacao)</th>
+                    <th>@Html.DisplayNameFor(model => model.CapacidadeMaxima)</th>
+                    <th>@Html.DisplayNameFor(model => model.LocalizacaoDescricao)</th>
+                    <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.NomeOuNumero</td>
+                        <td>@item.TipoInstalacao</td>
+                        <td>@item.CapacidadeMaxima</td>
+                        <td>@(string.IsNullOrEmpty(item.LocalizacaoDescricao) ? "—" : item.LocalizacaoDescricao)</td>
+                        <td class="text-end acoes">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted mt-2 small">Total: @Model.Count() registro(s)</p>
+}

@@ -3,8 +3,8 @@
 }
 
 <div class="text-center mb-5">
-    <h1 class="display-5 fw-bold">Granja Sol</h1>
-    <p class="lead text-muted">Sistema de gerenciamento de animais, galpões e alimentação.</p>
+    <h1 class="display-5 fw-bold">AgroArca</h1>
+    <p class="lead text-muted">Cuide do seu rebanho como um bom pastor.</p>
 </div>
 
 @if (User.Identity?.IsAuthenticated == true)
@@ -14,8 +14,8 @@
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <h5 class="card-title">Animais</h5>
-                    <p class="card-text text-muted">Cadastre e acompanhe os animais da granja.</p>
-                    <a asp-controller="Animais" asp-action="Index" class="btn btn-granja">Abrir</a>
+                    <p class="card-text text-muted">Cadastre e acompanhe todos os seus animais.</p>
+                    <a asp-controller="Animais" asp-action="Index" class="btn btn-agro">Abrir</a>
                 </div>
             </div>
         </div>
@@ -24,7 +24,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Galpões</h5>
                     <p class="card-text text-muted">Gerencie os galpões e suas capacidades.</p>
-                    <a asp-controller="Galpoes" asp-action="Index" class="btn btn-granja">Abrir</a>
+                    <a asp-controller="Galpoes" asp-action="Index" class="btn btn-agro">Abrir</a>
                 </div>
             </div>
         </div>
@@ -33,7 +33,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Tipos de Alimento</h5>
                     <p class="card-text text-muted">Mantenha o cadastro de rações e alimentos.</p>
-                    <a asp-controller="TiposAlimento" asp-action="Index" class="btn btn-granja">Abrir</a>
+                    <a asp-controller="TiposAlimento" asp-action="Index" class="btn btn-agro">Abrir</a>
                 </div>
             </div>
         </div>
@@ -43,7 +43,7 @@ else
 {
     <div class="text-center">
         <p>Entre com sua conta para acessar o sistema.</p>
-        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-granja btn-lg me-2">Entrar</a>
+        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-agro btn-lg me-2">Entrar</a>
         <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-secondary btn-lg">Criar conta</a>
     </div>
 }

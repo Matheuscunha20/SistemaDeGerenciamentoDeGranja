@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Domain;    // Para Galpao
@@ -34,7 +34,7 @@ public class GalpoesController : Controller
     // GET: Galpoes/Create
     public IActionResult Create()
     {
-        return View(); // Apenas mostra o formulário de criação
+        return View(new Galpao()); // Mostra o formulário de criação
     }
 
     // POST: Galpoes/Create
@@ -45,6 +45,7 @@ public class GalpoesController : Controller
         if (ModelState.IsValid) // Verifica se os dados do formulário são válidos
         {
             await _galpaoService.AdicionarAsync(galpao);
+            TempData["Sucesso"] = $"Galpão {galpao.NomeOuNumero} cadastrado com sucesso.";
             return RedirectToAction(nameof(Index)); // Volta para a lista após criar
         }
         return View(galpao); // Se inválido, mostra o formulário novamente com os erros
@@ -77,6 +78,7 @@ public class GalpoesController : Controller
                 if (await _galpaoService.ObterPorIdAsync(galpao.Id) == null) return NotFound();
                 else throw;
             }
+            TempData["Sucesso"] = $"Galpão {galpao.NomeOuNumero} atualizado com sucesso.";
             return RedirectToAction(nameof(Index));
         }
         return View(galpao);
@@ -97,6 +99,7 @@ public class GalpoesController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         await _galpaoService.RemoverAsync(id);
+        TempData["Sucesso"] = "Galpão excluído com sucesso.";
         return RedirectToAction(nameof(Index));
     }
 }

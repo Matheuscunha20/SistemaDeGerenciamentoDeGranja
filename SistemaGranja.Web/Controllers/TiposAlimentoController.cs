@@ -1,4 +1,4 @@
-﻿// Arquivo: TiposAlimentoController.cs (na pasta Controllers)
+// Arquivo: TiposAlimentoController.cs (na pasta Controllers)
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // Para DbUpdateConcurrencyException
 using SistemaGranja.Domain;
@@ -35,7 +35,7 @@ public class TiposAlimentoController : Controller
     // GET: TiposAlimento/Create
     public IActionResult Create()
     {
-        return View();
+        return View(new TipoAlimento());
     }
 
     // POST: TiposAlimento/Create
@@ -46,6 +46,7 @@ public class TiposAlimentoController : Controller
         if (ModelState.IsValid)
         {
             await _tipoAlimentoService.AdicionarAsync(tipoAlimento);
+            TempData["Sucesso"] = $"Tipo de alimento {tipoAlimento.Nome} cadastrado com sucesso.";
             return RedirectToAction(nameof(Index));
         }
         return View(tipoAlimento);
@@ -78,6 +79,7 @@ public class TiposAlimentoController : Controller
                 if (await _tipoAlimentoService.ObterPorIdAsync(tipoAlimento.Id) == null) return NotFound();
                 else throw;
             }
+            TempData["Sucesso"] = $"Tipo de alimento {tipoAlimento.Nome} atualizado com sucesso.";
             return RedirectToAction(nameof(Index));
         }
         return View(tipoAlimento);
@@ -98,6 +100,7 @@ public class TiposAlimentoController : Controller
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
         await _tipoAlimentoService.RemoverAsync(id);
+        TempData["Sucesso"] = "Tipo de alimento excluído com sucesso.";
         return RedirectToAction(nameof(Index));
     }
 }

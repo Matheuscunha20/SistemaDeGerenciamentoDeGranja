@@ -1,48 +1,30 @@
-﻿@model SistemaGranja.Domain.TipoAlimento
+@model SistemaGranja.Domain.TipoAlimento
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Detalhes";
 }
 
-<h1>Details</h1>
-
-<div>
-    <h4>TipoAlimento</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nome)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nome)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Descricao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Descricao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.UnidadeMedidaPadrao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UnidadeMedidaPadrao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Fabricante)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Fabricante)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CodigoInterno)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CodigoInterno)
-        </dd>
-    </dl>
+<div class="page-header">
+    <h1>@Model.Nome</h1>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-agro">Editar</a>
+        <a asp-action="Index" class="btn btn-outline-secondary">Voltar para a lista</a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="card shadow-sm form-card">
+    <div class="card-body">
+        <dl class="row detalhes mb-0">
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nome)</dt>
+            <dd class="col-sm-8">@Model.Nome</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.UnidadeMedidaPadrao)</dt>
+            <dd class="col-sm-8">@Model.UnidadeMedidaPadrao</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Fabricante)</dt>
+            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Fabricante) ? "—" : Model.Fabricante)</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CodigoInterno)</dt>
+            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.CodigoInterno) ? "—" : Model.CodigoInterno)</dd>
+            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Descricao)</dt>
+            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Descricao) ? "—" : Model.Descricao)</dd>
+        </dl>
+    </div>
 </div>

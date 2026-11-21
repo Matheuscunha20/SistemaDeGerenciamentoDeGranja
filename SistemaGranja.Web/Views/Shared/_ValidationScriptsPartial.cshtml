@@ -1,2 +1,17 @@
-﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    // Aceita números com vírgula decimal (padrão brasileiro), ex: 12,5
+    $.validator.methods.number = function (value, element) {
+        return this.optional(element) || /^-?\d+([.,]\d+)?$/.test(value);
+    };
+    $.validator.methods.range = function (value, element, param) {
+        var numero = parseFloat(String(value).replace(',', '.'));
+        return this.optional(element) || (numero >= param[0] && numero <= param[1]);
+    };
+    $.extend($.validator.messages, {
+        required: "Este campo é obrigatório.",
+        number: "Informe um número válido.",
+        date: "Informe uma data válida."
+    });
+</script>

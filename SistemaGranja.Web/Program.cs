@@ -64,12 +64,15 @@ builder.Services.ConfigureApplicationCookie(options =>
         : CookieSecurePolicy.Always;
 });
 
-// Chaves que protegem cookies e links de e-mail. No servidor ficam numa pasta que não se perde
-// ao atualizar o sistema (senão todos seriam desconectados a cada atualização).
+// Chaves que protegem cookies e links de e-mail. No servidor ficam guardadas no banco, para não se
+// perderem quando o sistema reinicia ou é atualizado (senão todos seriam desconectados).
+// DataProtection:Pasta, se configurada, guarda numa pasta em vez do banco.
 var protecaoDeDados = builder.Services.AddDataProtection().SetApplicationName("AgroArca");
 var pastaDasChaves = builder.Configuration["DataProtection:Pasta"];
 if (!string.IsNullOrWhiteSpace(pastaDasChaves))
     protecaoDeDados.PersistKeysToFileSystem(new DirectoryInfo(pastaDasChaves));
+else if (!builder.Environment.IsDevelopment())
+    protecaoDeDados.PersistKeysToDbContext<AppDbContext>();
 
 // Fazenda do usuário logado: usada pelo AppDbContext para separar os dados de cada cliente
 builder.Services.AddHttpContextAccessor();
@@ -172,8 +175,6 @@ if (!app.Environment.IsDevelopment())
 {
     if (!app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<ConfiguracaoEmail>>().Value.Configurado)
         logger.LogWarning("Servidor de e-mail não configurado: confirmação de cadastro, esqueci a senha e convites não serão enviados.");
-    if (string.IsNullOrWhiteSpace(pastaDasChaves))
-        logger.LogWarning("DataProtection:Pasta não configurada: os usuários serão desconectados quando o sistema reiniciar.");
 }
 
 // ---------- Caminho de cada requisição ----------

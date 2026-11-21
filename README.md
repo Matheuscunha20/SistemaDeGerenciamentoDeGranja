@@ -143,7 +143,7 @@ O sistema fica na porta **8080**. O HTTPS é feito por um proxy na frente (Caddy
 |---|---|
 | `ConnectionStrings__DefaultConnection` | Conexão com o MySQL (obrigatória) |
 | `Email__Servidor`, `Email__Porta`, `Email__Usuario`, `Email__Senha`, `Email__Remetente` | Envio de e-mails (confirmação, esqueci a senha, convite) |
-| `DataProtection__Pasta` | Pasta das chaves de login (já vem `/app/chaves` no container; monte um volume) |
+| `DataProtection__Pasta` | Opcional: guarda as chaves de login numa pasta (padrão: no banco de dados) |
 | `Proxy__ConfiarEmCabecalhos` | `true` atrás de proxy que cuida do HTTPS |
 | `Banco__AplicarMigracoesAoIniciar` | `true` (padrão): atualiza o banco ao iniciar |
 
@@ -151,6 +151,13 @@ O sistema fica na porta **8080**. O HTTPS é feito por um proxy na frente (Caddy
 - **Logs**: uma linha por evento, com data e hora, na saída do container (`docker compose logs app`).
 - **Segurança**: cookies só por HTTPS, cabeçalhos de proteção, limite de 10 tentativas por minuto no login e no cadastro.
 - O GitHub Actions monta a imagem e sobe o sistema com MySQL a cada mudança, conferindo se as páginas abrem.
+
+### Portfólio grátis (Render + TiDB Cloud)
+
+- **Render** (plano Free) roda o `Dockerfile`; a configuração está em `render.yaml` (Blueprint).
+- **TiDB Cloud Starter** é o banco grátis, compatível com MySQL. Conexão: `Server=<host>;Port=4000;Database=AgroArcaDB;User=<usuario>;Password=<senha>;SslMode=VerifyFull;`
+- O plano grátis do Render "dorme" após 15 minutos sem acesso; o primeiro acesso depois disso leva cerca de 1 minuto.
+- O CI sobe o sistema com um TiDB de verdade e cria uma conta de teste a cada mudança.
 
 ### Publicação automática (servidor próprio)
 

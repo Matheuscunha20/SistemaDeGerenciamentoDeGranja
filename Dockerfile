@@ -22,13 +22,11 @@ RUN dotnet publish SistemaGranja.Web/SistemaGranja.Web.csproj -c Release -o /app
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 
+# DOTNET_gcServer=0: usa menos memória (bom para servidores pequenos e planos grátis)
 ENV ASPNETCORE_ENVIRONMENT=Production \
     ASPNETCORE_HTTP_PORTS=8080 \
-    DataProtection__Pasta=/app/chaves \
+    DOTNET_gcServer=0 \
     TZ=America/Sao_Paulo
-
-# Pasta das chaves de login (montar um volume aqui para não perder ao atualizar)
-RUN mkdir -p /app/chaves && chown app:app /app/chaves
 
 COPY --from=build /app/publish .
 

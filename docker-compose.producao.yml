@@ -36,9 +36,6 @@ services:
       Email__Remetente: "${EMAIL_REMETENTE:-}"
     ports:
       - "8080:8080"
-    volumes:
-      - agroarca-chaves:/app/chaves
 
 volumes:
   agroarca-mysql:
-  agroarca-chaves:

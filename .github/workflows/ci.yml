@@ -68,3 +68,11 @@ jobs:
       - name: Mostrar o log do sistema
         if: always()
         run: docker compose -f docker-compose.producao.yml logs app | tail -n 80
+
+      - name: Conferir os arquivos do servidor (Caddy e compose)
+        run: |
+          DOMINIO=exemplo.com.br MYSQL_ROOT_PASSWORD=x MYSQL_PASSWORD=y \
+            docker compose -f deploy/docker-compose.servidor.yml config --quiet
+          docker run --rm -e DOMINIO=exemplo.com.br -e \
+            -v "$PWD/deploy/Caddyfile:/etc/caddy/Caddyfile:ro" caddy:2 caddy validate --config /etc/caddy/Caddyfile
+          bash -n deploy/preparar-servidor.sh

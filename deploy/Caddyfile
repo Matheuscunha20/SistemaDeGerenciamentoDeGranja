@@ -1,0 +1,12 @@
+# Caddy: recebe os acessos da internet, cuida do HTTPS (certificado grátis e renovado sozinho)
+# e repassa para o AgroArca. O domínio vem do arquivo .env do servidor.
+
+{$DOMINIO} {
+	encode zstd gzip
+	reverse_proxy app:8080
+}
+
+# Para hospedar outro projeto no mesmo servidor, acrescente um bloco assim:
+# crm.seudominio.com.br {
+# 	reverse_proxy crm:8080
+# }

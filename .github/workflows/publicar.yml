@@ -1,0 +1,108 @@
+# Publica o AgroArca no servidor sempre que o CI passar na branch master
+# (ou manualmente em Actions > Publicar > Run workflow).
+# Só funciona depois de criar os segredos SERVIDOR_IP e SERVIDOR_CHAVE_SSH no GitHub.
+name: Publicar
+
+on:
+  workflow_run:
+    workflows: [ CI ]
+    types: [ completed ]
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+env:
+  IMAGEM: ghcr.io/matheuscunha20/agroarca
+
+jobs:
+  publicar:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Conferir se o servidor já foi configurado
+        id: servidor
+        env:
+          IP: ${{ secrets.SERVIDOR_IP }}
+        run: |
+          if [ -z "$IP" ]; then
+            echo "Segredos do servidor ainda não configurados: nada a publicar."
+            echo "configurado=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configurado=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Baixar o código
+        if: steps.servidor.outputs.configurado == 'true'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Entrar no registro de imagens do GitHub
+        if: steps.servidor.outputs.configurado == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Montar e enviar a imagem do AgroArca
+        if: steps.servidor.outputs.configurado == 'true'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGEM }}:latest
+            ${{ env.IMAGEM }}:${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Copiar a configuração para o servidor
+        if: steps.servidor.outputs.configurado == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVIDOR_IP }}
+          username: deploy
+          key: ${{ secrets.SERVIDOR_CHAVE_SSH }}
+          source: "deploy/docker-compose.servidor.yml,deploy/Caddyfile"
+          target: /opt/agroarca
+          strip_components: 1
+
+      - name: Atualizar o sistema no servidor
+        if: steps.servidor.outputs.configurado == 'true'
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USUARIO_GITHUB: ${{ github.actor }}
+          VERSAO: ${{ github.event.workflow_run.head_sha || github.sha }}
+        with:
+          host: ${{ secrets.SERVIDOR_IP }}
+          username: deploy
+          key: ${{ secrets.SERVIDOR_CHAVE_SSH }}
+          envs: TOKEN,USUARIO_GITHUB,VERSAO
+          script: |
+            set -e
+            cd /opt/agroarca
+            echo "$TOKEN" | docker login ghcr.io -u "$USUARIO_GITHUB" --password-stdin
+            export VERSAO
+            docker compose -f docker-compose.servidor.yml pull app
+            docker compose -f docker-compose.servidor.yml up -d
+            docker logout ghcr.io
+            # Espera o sistema responder em /saude (até 2 minutos)
+            for i in $(seq 1 40); do
+              if docker compose -f docker-compose.servidor.yml exec -T caddy wget -qO- http://app:8080/saude; then
+                echo; echo "AgroArca atualizado e no ar (versão $VERSAO)."
+                docker image prune -f >/dev/null
+                exit 0
+              fi
+              sleep 3
+            done
+            echo "O sistema não respondeu a tempo. Últimas linhas do log:"
+            docker compose -f docker-compose.servidor.yml logs --tail 80 app
+            exit 1

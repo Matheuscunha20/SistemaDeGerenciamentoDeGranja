@@ -1,0 +1,196 @@
+@model EquipeController.TelaEquipe
+@using SistemaGranja.Services
+
+@{
+    ViewData["Title"] = "Equipe";
+    var perfis = Enum.GetValues<PerfilUsuario>();
+}
+
+<div class="page-header">
+    <h1>Equipe da fazenda</h1>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-semibold">Pessoas com acesso</div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>E-mail</th>
+                            <th>Perfil</th>
+                            <th>Situação</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var membro in Model.Membros)
+                    {
+                        var ehVoce = membro.Id == Model.UsuarioLogadoId;
+                        var removido = EquipeService.AcessoRemovido(membro);
+                        <tr class="@(removido ? "text-muted" : "")">
+                            <td>
+                                @membro.Email
+                                @if (ehVoce) { <span class="badge bg-light text-dark border ms-1">você</span> }
+                            </td>
+                            <td>
+                                @if (ehVoce)
+                                {
+                                    <span class="badge @membro.Perfil.CorExibicao()">@membro.Perfil.NomeExibicao()</span>
+                                }
+                                else
+                                {
+                                    <form asp-action="AlterarPerfil" method="post" class="d-flex gap-1">
+                                        <input type="hidden" name="id" value="@membro.Id" />
+                                        <select name="perfil" class="form-select form-select-sm" style="max-width: 10rem" onchange="this.form.submit()" aria-label="Perfil de @membro.Email">
+                                            @foreach (var perfil in perfis)
+                                            {
+                                                if (perfil == membro.Perfil)
+                                                {
+                                                    <option value="@perfil" selected>@perfil.NomeExibicao()</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@perfil">@perfil.NomeExibicao()</option>
+                                                }
+                                            }
+                                        </select>
+                                    </form>
+                                }
+                            </td>
+                            <td>
+                                @if (removido)
+                                {
+                                    <span class="badge bg-danger">Acesso removido</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success-subtle text-success-emphasis">Ativo</span>
+                                }
+                            </td>
+                            <td class="text-end acoes">
+                                @if (!ehVoce)
+                                {
+                                    if (removido)
+                                    {
+                                        <form asp-action="ReativarAcesso" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@membro.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-success">Reativar</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="RemoverAcesso" method="post" class="d-inline"
+                                              onsubmit="return confirm('Remover o acesso de @membro.Email? A pessoa não conseguirá mais entrar.');">
+                                            <input type="hidden" name="id" value="@membro.Id" />
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">Remover acesso</button>
+                                        </form>
+                                    }
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-semibold">Convites aguardando</div>
+            @if (!Model.Convites.Any())
+            {
+                <div class="card-body text-muted">Nenhum convite pendente.</div>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                @foreach (var convite in Model.Convites)
+                {
+                    var link = Url.Page("/Account/AceitarConvite", null, new { area = "Identity", token = convite.Token }, Context.Request.Scheme);
+                    var destaque = convite.Id == Model.ConviteCriadoId;
+                    var mensagem = $"Olá! Você foi convidado(a) para a equipe da fazenda no AgroArca. Crie sua senha neste link: {link}";
+                    <li class="list-group-item @(destaque ? "list-group-item-success" : "")">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div>
+                                <div class="fw-semibold">@convite.Email</div>
+                                <small class="text-muted">
+                                    <span class="badge @convite.Perfil.CorExibicao()">@convite.Perfil.NomeExibicao()</span>
+                                    · vale até @convite.ExpiraEm.ToLocalTime().ToString("dd/MM/yyyy HH:mm")
+                                </small>
+                            </div>
+                            <div class="acoes">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-copiar="@link">Copiar link</button>
+                                <a class="btn btn-sm btn-outline-success" target="_blank" rel="noopener"
+                                   href="https://wa.me/?text=@Uri.EscapeDataString(mensagem)">WhatsApp</a>
+                                <form asp-action="CancelarConvite" asp-route-id="@convite.Id" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Cancelar</button>
+                                </form>
+                            </div>
+                        </div>
+                        @if (destaque)
+                        {
+                            <input class="form-control form-control-sm mt-2" value="@link" readonly onclick="this.select()" aria-label="Link do convite" />
+                        }
+                    </li>
+                }
+                </ul>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-white fw-semibold">Convidar alguém</div>
+            <div class="card-body">
+                <form asp-action="Convidar" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                    <div class="mb-3">
+                        <label asp-for="NovoConvite.Email" class="form-label"></label>
+                        <input asp-for="NovoConvite.Email" class="form-control" placeholder="nome@exemplo.com" />
+                        <span asp-validation-for="NovoConvite.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NovoConvite.Perfil" class="form-label"></label>
+                        <select asp-for="NovoConvite.Perfil" class="form-select">
+                            @foreach (var perfil in perfis)
+                            {
+                                <option value="@perfil">@perfil.NomeExibicao()</option>
+                            }
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-agro w-100">Gerar link de convite</button>
+                    <div class="form-text mt-2">O link vale por @Convite.DiasDeValidade dias. Envie pelo WhatsApp ou como preferir.</div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white fw-semibold">O que cada perfil pode fazer</div>
+            <ul class="list-group list-group-flush small">
+                @foreach (var perfil in perfis)
+                {
+                    <li class="list-group-item">
+                        <span class="badge @perfil.CorExibicao()">@perfil.NomeExibicao()</span>
+                        <div class="text-muted mt-1">@perfil.Descricao()</div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.querySelectorAll('[data-copiar]').forEach(function (botao) {
+            botao.addEventListener('click', function () {
+                navigator.clipboard.writeText(botao.dataset.copiar).then(function () {
+                    var texto = botao.textContent;
+                    botao.textContent = 'Copiado!';
+                    setTimeout(function () { botao.textContent = texto; }, 2000);
+                });
+            });
+        });
+    </script>
+}

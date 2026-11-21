@@ -978,6 +978,57 @@ namespace SistemaGranja.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
+            modelBuilder.Entity("SistemaGranja.Data.ApplicationUser", b =>
+                {
+                    b.Property<int>("Perfil")
+                        .HasColumnType("int");
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Convite", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AceitoEm")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CriadoEm")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("ExpiraEm")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Perfil")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("Convites");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
 #pragma warning restore 612, 618
         }
     }

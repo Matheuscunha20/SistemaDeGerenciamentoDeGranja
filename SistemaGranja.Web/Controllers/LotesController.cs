@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -46,12 +47,14 @@ public class LotesController : Controller
     }
 
     // GET: Lotes/Create
+    [Authorize(Policy = Politicas.Gestao)]
     public IActionResult Create()
     {
         return View(new Lote());
     }
 
     // POST: Lotes/Create
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("CodigoLote,DataCriacao,Descricao")] Lote lote)
@@ -68,6 +71,7 @@ public class LotesController : Controller
     }
 
     // GET: Lotes/Edit/5
+    [Authorize(Policy = Politicas.Gestao)]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -77,6 +81,7 @@ public class LotesController : Controller
     }
 
     // POST: Lotes/Edit/5
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,CodigoLote,DataCriacao,Descricao,Ativo")] Lote lote)
@@ -103,6 +108,7 @@ public class LotesController : Controller
     }
 
     // POST: Lotes/AlterarSituacao/5 — encerra ou reabre o lote
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> AlterarSituacao(int id, bool ativo)
@@ -162,6 +168,7 @@ public class LotesController : Controller
     }
 
     // GET: Lotes/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -171,6 +178,7 @@ public class LotesController : Controller
     }
 
     // POST: Lotes/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

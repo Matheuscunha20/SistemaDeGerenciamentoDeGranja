@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -133,6 +134,7 @@ public class EstoqueController : Controller
     }
 
     // GET: Estoque/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -146,6 +148,7 @@ public class EstoqueController : Controller
     }
 
     // POST: Estoque/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

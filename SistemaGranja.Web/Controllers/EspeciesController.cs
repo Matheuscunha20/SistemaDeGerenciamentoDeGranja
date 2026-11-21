@@ -1,10 +1,12 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SistemaGranja.Domain;
 using SistemaGranja.Services;
 using System.Threading.Tasks;
 
-[Authorize]
+// Cadastros base: só Dono e Gerente
+[Authorize(Policy = Politicas.Gestao)]
 public class EspeciesController : Controller
 {
     private readonly IEspecieService _especieService;

@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -5,7 +6,8 @@ using SistemaGranja.Domain;
 using SistemaGranja.Services;
 using System.Threading.Tasks;
 
-[Authorize]
+// Cadastros base: só Dono e Gerente
+[Authorize(Policy = Politicas.Gestao)]
 public class RacasController : Controller
 {
     private readonly IRacaService _racaService;

@@ -10,7 +10,7 @@
 <div class="page-header">
     <h1>@Model.NomeOuNumero</h1>
     <div class="d-flex gap-2">
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-agro">Editar</a>
+        @if (User.PodeGerenciar()) { <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-agro">Editar</a> }
         <a asp-action="Index" class="btn btn-outline-secondary">Voltar para a lista</a>
     </div>
 </div>

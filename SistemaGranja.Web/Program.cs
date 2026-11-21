@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Data;
+using SistemaGranja.Domain;
 using System;
 using System.Globalization;
 using Microsoft.AspNetCore.Localization;
@@ -34,6 +35,17 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 // Fazenda do usuário logado: usada pelo AppDbContext para separar os dados de cada cliente
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IFazendaAtual, FazendaDoUsuarioLogado>();
+
+// Perfis de acesso: quem pode fazer o quê
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(Politicas.Gestao, p => p.RequireRole(nameof(PerfilUsuario.Dono), nameof(PerfilUsuario.Gerente)));
+    options.AddPolicy(Politicas.Dono, p => p.RequireRole(nameof(PerfilUsuario.Dono)));
+});
+
+// A cada minuto o login é conferido com o banco: mudança de perfil vale logo
+// e quem teve o acesso removido sai do sistema
+builder.Services.Configure<SecurityStampValidatorOptions>(o => o.ValidationInterval = TimeSpan.FromMinutes(1));
 // --- FIM DAS SUAS ADIÇÕES DE SERVIÇO ---
 
 // Serviços padrão
@@ -64,6 +76,8 @@ builder.Services.AddScoped<IVacinacaoService, VacinacaoService>();
 builder.Services.AddScoped<ISaudeService, SaudeService>();
 builder.Services.AddScoped<IEstoqueService, EstoqueService>();
 builder.Services.AddScoped<IPainelService, PainelService>();
+builder.Services.AddScoped<IEquipeService, EquipeService>();
+builder.Services.AddScoped<IFazendaService, FazendaService>();
 
 var app = builder.Build();
 
@@ -105,11 +119,12 @@ app.UseRouting();
 
 app.UseAuthentication(); // Autenticação primeiro
 
-// Quem entrou antes desta versão não tem a fazenda no login: pede para entrar de novo
+// Quem entrou antes desta versão não tem a fazenda ou o perfil no login: pede para entrar de novo
 app.Use(async (context, next) =>
 {
     if (context.User.Identity?.IsAuthenticated == true
-        && context.User.FindFirst(FazendaDoUsuarioLogado.ClaimFazendaId) == null
+        && (context.User.FindFirst(FazendaDoUsuarioLogado.ClaimFazendaId) == null
+            || context.User.FindFirst(System.Security.Claims.ClaimTypes.Role) == null)
         && !context.Request.Path.StartsWithSegments("/Identity"))
     {
         await context.SignOutAsync(IdentityConstants.ApplicationScheme);

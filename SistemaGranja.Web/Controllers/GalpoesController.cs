@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -32,12 +33,14 @@ public class GalpoesController : Controller
     }
 
     // GET: Galpoes/Create
+    [Authorize(Policy = Politicas.Gestao)]
     public IActionResult Create()
     {
         return View(new Galpao());
     }
 
     // POST: Galpoes/Create
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("NomeOuNumero,TipoInstalacao,CapacidadeMaxima,LocalizacaoDescricao,Observacoes")] Galpao galpao)
@@ -53,6 +56,7 @@ public class GalpoesController : Controller
     }
 
     // GET: Galpoes/Edit/5
+    [Authorize(Policy = Politicas.Gestao)]
     public async Task<IActionResult> Edit(int? id)
     {
         if (id == null) return NotFound();
@@ -64,6 +68,7 @@ public class GalpoesController : Controller
     }
 
     // POST: Galpoes/Edit/5
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(int id, [Bind("Id,NomeOuNumero,TipoInstalacao,CapacidadeMaxima,LocalizacaoDescricao,Observacoes")] Galpao galpao)
@@ -93,6 +98,7 @@ public class GalpoesController : Controller
     }
 
     // GET: Galpoes/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -104,6 +110,7 @@ public class GalpoesController : Controller
     }
 
     // POST: Galpoes/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

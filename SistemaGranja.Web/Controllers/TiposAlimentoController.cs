@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 // Arquivo: TiposAlimentoController.cs (na pasta Controllers)
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore; // Para DbUpdateConcurrencyException
@@ -6,7 +7,8 @@ using SistemaGranja.Services;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 
-[Authorize]
+// Cadastros base: só Dono e Gerente
+[Authorize(Policy = Politicas.Gestao)]
 public class TiposAlimentoController : Controller
 {
     private readonly ITipoAlimentoService _tipoAlimentoService;

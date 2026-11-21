@@ -40,6 +40,12 @@ Desenvolvido em **C# / ASP.NET Core 8 MVC**, **Entity Framework Core** e **MySQL
 - Funcionários com validação de CPF (dígitos verificadores), cargos e tempo de casa
 - Desligamento e reativação mantendo o histórico
 
+**Acesso e equipe da fazenda**
+- Cada cliente (fazenda) vê apenas os próprios dados
+- Três perfis: **Dono** (tudo, inclusive equipe), **Gerente** (opera tudo, menos a equipe) e **Funcionário** (dia a dia, sem excluir e sem alterar cadastros)
+- Convite por link (WhatsApp ou como preferir), válido por 7 dias
+- O dono muda perfis, remove e reativa acessos e renomeia a fazenda
+
 **Geral**
 - Login e cadastro em português, com bloqueio temporário após várias senhas erradas
 - Datas e números no padrão brasileiro

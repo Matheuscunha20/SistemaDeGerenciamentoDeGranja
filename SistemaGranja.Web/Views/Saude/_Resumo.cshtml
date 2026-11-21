@@ -1,0 +1,29 @@
+@model SistemaGranja.Domain.RegistroSaude
+@using SistemaGranja.Domain
+
+<dl class="row detalhes mb-0">
+    <dt class="col-sm-4">Animal</dt>
+    <dd class="col-sm-8">
+        <a asp-controller="Animais" asp-action="Details" asp-route-id="@Model.AnimalId">@Model.Animal?.TagIdentificacao</a>
+        @if (Model.Animal?.Raca?.Especie != null)
+        {
+            <span class="text-muted">(@Model.Animal.Raca.Especie.Nome)</span>
+        }
+    </dd>
+    <dt class="col-sm-4">Data</dt>
+    <dd class="col-sm-8">@Model.DataOcorrencia.ToString("dd/MM/yyyy")</dd>
+    <dt class="col-sm-4">Tipo</dt>
+    <dd class="col-sm-8"><span class="badge @Model.TipoOcorrencia.CorExibicao()">@Model.TipoOcorrencia.NomeExibicao()</span></dd>
+    <dt class="col-sm-4">O que aconteceu</dt>
+    <dd class="col-sm-8" style="white-space: pre-line;">@Model.DescricaoDetalhada</dd>
+    <dt class="col-sm-4">Diagnóstico</dt>
+    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Diagnostico) ? "—" : Model.Diagnostico)</dd>
+    <dt class="col-sm-4">Tratamento realizado</dt>
+    <dd class="col-sm-8" style="white-space: pre-line;">@(string.IsNullOrEmpty(Model.TratamentoRealizado) ? "—" : Model.TratamentoRealizado)</dd>
+    <dt class="col-sm-4">Medicamentos</dt>
+    <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.MedicamentosAdministrados) ? "—" : Model.MedicamentosAdministrados)</dd>
+    <dt class="col-sm-4">Atendido por</dt>
+    <dd class="col-sm-8">@(Model.Funcionario?.NomeCompleto ?? "—")</dd>
+    <dt class="col-sm-4">Observações</dt>
+    <dd class="col-sm-8" style="white-space: pre-line;">@(string.IsNullOrEmpty(Model.ObservacoesAdicionais) ? "—" : Model.ObservacoesAdicionais)</dd>
+</dl>

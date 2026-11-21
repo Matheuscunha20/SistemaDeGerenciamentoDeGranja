@@ -1,0 +1,28 @@
+@model SistemaGranja.Domain.LancamentoFinanceiro
+
+@{
+    ViewData["Title"] = "Editar lançamento";
+}
+
+<div class="page-header">
+    <h1>Editar lançamento</h1>
+</div>
+
+<div class="card shadow-sm form-card">
+    <div class="card-body">
+        <form asp-action="Edit">
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <partial name="_Form" model="Model" />
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-agro">Salvar</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/financeiro-form.js" asp-append-version="true"></script>
+}

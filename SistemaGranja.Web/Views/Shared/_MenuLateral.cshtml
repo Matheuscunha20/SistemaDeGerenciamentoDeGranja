@@ -20,7 +20,10 @@
     <a class="menu-item @Ativo("Vacinacoes")" aria-current="@Atual("Vacinacoes")" asp-area="" asp-controller="Vacinacoes" asp-action="Index">@Icones.Svg("sanidade") <span>Vacinação</span></a>
     <a class="menu-item @Ativo("Saude")" aria-current="@Atual("Saude")" asp-area="" asp-controller="Saude" asp-action="Index">@Icones.Svg("saude") <span>Saúde</span></a>
     <a class="menu-item @Ativo("Estoque")" aria-current="@Atual("Estoque")" asp-area="" asp-controller="Estoque" asp-action="Index">@Icones.Svg("estoque") <span>Estoque</span></a>
-    <span class="menu-item menu-item-desativado" aria-disabled="true">@Icones.Svg("financeiro") <span>Financeiro</span> <span class="menu-selo">em breve</span></span>
+    @if (User.PodeGerenciar())
+    {
+        <a class="menu-item @Ativo("Financeiro", "CategoriasFinanceiras")" aria-current="@Atual("Financeiro", "CategoriasFinanceiras")" asp-area="" asp-controller="Financeiro" asp-action="Index">@Icones.Svg("financeiro") <span>Financeiro</span></a>
+    }
 
     @if (User.PodeGerenciar())
     {

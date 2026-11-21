@@ -1,0 +1,36 @@
+@model SistemaGranja.Domain.CategoriaFinanceira
+
+@{
+    ViewData["Title"] = "Excluir categoria";
+    var usos = ViewData["Usos"] as int? ?? 0;
+}
+
+<div class="page-header">
+    <h1>Excluir categoria</h1>
+</div>
+
+<div class="card shadow-sm form-card">
+    <div class="card-body">
+        <p class="fs-5 fw-semibold mb-1">@Model.Nome</p>
+        <p class="text-muted">@Model.Tipo.NomeExibicao()</p>
+        @if (usos > 0)
+        {
+            <div class="alert alert-warning">
+                Esta categoria tem @usos lançamento(s) e não pode ser excluída.
+                Para tirá-la das opções, <a asp-action="Edit" asp-route-id="@Model.Id">desative a categoria</a>.
+            </div>
+            <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+        }
+        else
+        {
+            <p>Tem certeza de que deseja excluir esta categoria?</p>
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="Id" />
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                    <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        }
+    </div>
+</div>

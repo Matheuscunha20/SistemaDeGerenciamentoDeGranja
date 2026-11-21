@@ -92,6 +92,7 @@ builder.Services.AddScoped<IEstoqueService, EstoqueService>();
 builder.Services.AddScoped<IPainelService, PainelService>();
 builder.Services.AddScoped<IEquipeService, EquipeService>();
 builder.Services.AddScoped<IFazendaService, FazendaService>();
+builder.Services.AddScoped<IFinanceiroService, FinanceiroService>();
 
 var app = builder.Build();
 

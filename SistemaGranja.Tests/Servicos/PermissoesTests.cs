@@ -61,6 +61,8 @@ namespace SistemaGranja.Tests.Servicos
         [InlineData("TiposVacinaController")]
         [InlineData("TiposAlimentoController")]
         [InlineData("FuncionariosController")]
+        [InlineData("FinanceiroController")]
+        [InlineData("CategoriasFinanceirasController")]
         public void Cadastros_base_sao_de_dono_e_gerente(string nomeDoController)
         {
             var controller = Controllers().Single(t => t.Name == nomeDoController);

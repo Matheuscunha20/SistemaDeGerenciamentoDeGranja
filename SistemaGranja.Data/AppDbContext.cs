@@ -41,6 +41,8 @@ namespace SistemaGranja.Data
         public DbSet<Especie> Especies { get; set; }
         public DbSet<Raca> Racas { get; set; }
         public DbSet<Convite> Convites { get; set; }
+        public DbSet<CategoriaFinanceira> CategoriasFinanceiras { get; set; }
+        public DbSet<LancamentoFinanceiro> LancamentosFinanceiros { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -90,6 +92,27 @@ namespace SistemaGranja.Data
                 .HasForeignKey(a => a.RacaId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Financeiro: nome da categoria único por fazenda e tipo (receita/despesa)
+            builder.Entity<CategoriaFinanceira>()
+                .HasIndex(c => new { c.FazendaId, c.Tipo, c.Nome })
+                .IsUnique();
+
+            // Restrict: categoria com lançamentos não é excluída (pode ser desativada)
+            builder.Entity<LancamentoFinanceiro>()
+                .HasOne(l => l.Categoria)
+                .WithMany()
+                .HasForeignKey(l => l.CategoriaId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Se o lote for excluído, o lançamento continua, só sem o lote
+            builder.Entity<LancamentoFinanceiro>()
+                .HasOne(l => l.Lote)
+                .WithMany()
+                .HasForeignKey(l => l.LoteId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
 
             ConfigurarSeparacaoPorFazenda(builder);
         }

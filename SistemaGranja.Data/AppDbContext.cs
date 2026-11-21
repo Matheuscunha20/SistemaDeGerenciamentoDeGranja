@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -34,6 +34,8 @@ namespace SistemaGranja.Data
         public DbSet<RegistroVacinacao> RegistrosVacinacao { get; set; }
         public DbSet<Funcionario> Funcionarios { get; set; }
         public DbSet<RegistroSaude> RegistrosSaude { get; set; }
+        public DbSet<Especie> Especies { get; set; }
+        public DbSet<Raca> Racas { get; set; }
 
         // Adicione aqui DbSets para as entidades que criamos na conversa anterior,
         // quando você decidir adicioná-las ao seu projeto Domain:
@@ -52,13 +54,31 @@ namespace SistemaGranja.Data
         {
             base.OnModelCreating(builder); // ESSENCIAL ao usar IdentityDbContext
 
-            // Aqui você pode adicionar configurações fluentes do EF Core no futuro,
-            // como definir chaves compostas, índices, relacionamentos complexos, etc.
-            // Exemplo (não necessário agora, mas para conhecimento):
-            // builder.Entity<Animal>()
-            //    .HasOne(a => a.Galpao)
-            //    .WithMany(g => g.Animais)
-            //    .HasForeignKey(a => a.GalpaoId);
+            // Espécie: nome único (não pode haver dois "Bovino")
+            builder.Entity<Especie>()
+                .HasIndex(e => e.Nome)
+                .IsUnique();
+
+            // Raça: pertence a uma espécie; nome único dentro da espécie.
+            // Restrict: não deixa excluir uma espécie que ainda tem raças.
+            builder.Entity<Raca>()
+                .HasOne(r => r.Especie)
+                .WithMany(e => e.Racas)
+                .HasForeignKey(r => r.EspecieId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Raca>()
+                .HasIndex(r => new { r.EspecieId, r.Nome })
+                .IsUnique();
+
+            // Animal: raça opcional no banco (animais antigos), obrigatória no formulário.
+            // Restrict: não deixa excluir uma raça que ainda tem animais.
+            builder.Entity<Animal>()
+                .HasOne(a => a.Raca)
+                .WithMany(r => r.Animais)
+                .HasForeignKey(a => a.RacaId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

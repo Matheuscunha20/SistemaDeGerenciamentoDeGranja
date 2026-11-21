@@ -17,8 +17,11 @@ namespace SistemaGranja.Domain
         public string Nome { get; set; }
 
         [Display(Name = "Raça")]
-        [Required(ErrorMessage = "Informe a raça.")]
-        public string Raca { get; set; }
+        [Required(ErrorMessage = "Selecione a raça.")]
+        public int? RacaId { get; set; }
+
+        [Display(Name = "Raça")]
+        public virtual Raca? Raca { get; set; }
 
         [Display(Name = "Data de nascimento")]
         [DataType(DataType.Date)]
@@ -51,6 +54,33 @@ namespace SistemaGranja.Domain
         [Display(Name = "Lote")]
         public virtual Lote? Lote { get; set; }
 
+        // Idade calculada a partir da data de nascimento (não vai para o banco)
+        [Display(Name = "Idade")]
+        public string IdadeDescricao
+        {
+            get
+            {
+                var hoje = DateTime.Today;
+                if (DataNascimento > hoje) return "—";
+
+                var meses = (hoje.Year - DataNascimento.Year) * 12 + hoje.Month - DataNascimento.Month;
+                if (hoje.Day < DataNascimento.Day) meses--;
+
+                if (meses < 1)
+                {
+                    var dias = (hoje - DataNascimento.Date).Days;
+                    return dias == 1 ? "1 dia" : $"{dias} dias";
+                }
+                if (meses < 12) return meses == 1 ? "1 mês" : $"{meses} meses";
+
+                var anos = meses / 12;
+                var resto = meses % 12;
+                var textoAnos = anos == 1 ? "1 ano" : $"{anos} anos";
+                if (resto == 0) return textoAnos;
+                return resto == 1 ? $"{textoAnos} e 1 mês" : $"{textoAnos} e {resto} meses";
+            }
+        }
+
         public virtual ICollection<RegistroSaude> RegistrosSaude { get; set; }
         public virtual ICollection<RegistroVacinacao> RegistrosVacinacao { get; set; }
 
@@ -58,7 +88,6 @@ namespace SistemaGranja.Domain
         {
             TagIdentificacao = string.Empty;
             Nome = string.Empty;
-            Raca = string.Empty;
             Sexo = string.Empty;
             StatusSaude = "Saudável";
             DataNascimento = DateTime.Today;

@@ -1,0 +1,14 @@
+@model SistemaGranja.Domain.Raca
+
+<div class="mb-3">
+    <label asp-for="EspecieId" class="form-label"></label>
+    <select asp-for="EspecieId" class="form-select" asp-items="ViewBag.Especies">
+        <option value="">-- Selecione --</option>
+    </select>
+    <span asp-validation-for="EspecieId" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="Nome" class="form-label"></label>
+    <input asp-for="Nome" class="form-control" placeholder="Ex.: Nelore, Duroc, Cobb" />
+    <span asp-validation-for="Nome" class="text-danger"></span>
+</div>

@@ -48,15 +48,24 @@ builder.Services.AddScoped<IGalpaoService, GalpaoService>();
 builder.Services.AddScoped<ITipoAlimentoService, TipoAlimentoService>();
 builder.Services.AddScoped<ILoteService, LoteService>();
 builder.Services.AddScoped<IAnimalService, AnimalService>();
+builder.Services.AddScoped<IEspecieService, EspecieService>();
+builder.Services.AddScoped<IRacaService, RacaService>();
 
 var app = builder.Build();
 
-// Em desenvolvimento, cria o banco e aplica as migrations automaticamente
-if (app.Environment.IsDevelopment())
+// Prepara o banco de dados ao iniciar
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+
+    // Em desenvolvimento, cria o banco e aplica as migrations automaticamente
+    if (app.Environment.IsDevelopment())
+    {
+        db.Database.Migrate();
+    }
+
+    // Cadastra espécies e raças comuns (só o que ainda não existe)
+    await SemeadorDeDados.SemearEspeciesERacasAsync(db);
 }
 
 // Configure o pipeline de requisição HTTP

@@ -1,0 +1,7 @@
+@model SistemaGranja.Domain.Especie
+
+<div class="mb-3">
+    <label asp-for="Nome" class="form-label"></label>
+    <input asp-for="Nome" class="form-control" placeholder="Ex.: Bovino, Suíno, Ave" />
+    <span asp-validation-for="Nome" class="text-danger"></span>
+</div>

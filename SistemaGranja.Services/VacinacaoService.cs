@@ -77,6 +77,7 @@ namespace SistemaGranja.Services
                 .GroupBy(r => new { r.AnimalId, r.TipoVacinaId })
                 .Select(grupo => grupo.OrderByDescending(r => r.DataVacinacao).ThenByDescending(r => r.Id).First())
                 .Where(r => r.DataProximaDoseRecomendada.HasValue && r.DataProximaDoseRecomendada.Value.Date <= limite)
+                .Where(r => r.Animal == null || r.Animal.Ativo) // animal vendido/morto não precisa de reforço
                 .OrderBy(r => r.DataProximaDoseRecomendada)
                 .ToList();
         }
@@ -112,7 +113,7 @@ namespace SistemaGranja.Services
 
             // Só cria registros para animais que existem de fato
             var idsExistentes = await _context.Animais
-                .Where(a => ids.Contains(a.Id))
+                .Where(a => a.Ativo && ids.Contains(a.Id))
                 .Select(a => a.Id)
                 .ToListAsync();
 

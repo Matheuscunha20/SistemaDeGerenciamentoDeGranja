@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Animais";
     var filtroAtivo = ViewData["FiltroAtivo"] is true;
+    var saidas = ViewData["Saidas"] is true;
 }
 @functions {
     string CorStatus(string status) => status switch
@@ -20,7 +21,16 @@
     <a asp-action="Create" class="btn btn-agro">+ Novo animal</a>
 </div>
 
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="nav-link @(saidas ? "" : "active")" asp-action="Index">No rebanho</a></li>
+    <li class="nav-item"><a class="nav-link @(saidas ? "active" : "")" asp-action="Index" asp-route-situacao="saidas">Saídas (vendidos, mortos...)</a></li>
+</ul>
+
 <form asp-action="Index" method="get" class="card shadow-sm mb-3">
+    @if (saidas)
+    {
+        <input type="hidden" name="situacao" value="saidas" />
+    }
     <div class="card-body">
         <div class="row g-2 align-items-end">
             <div class="col-md-4">
@@ -65,6 +75,10 @@
                 <p class="mb-3">Nenhum animal encontrado com esses filtros.</p>
                 <a asp-action="Index" class="btn btn-outline-secondary">Limpar filtros</a>
             }
+            else if (saidas)
+            {
+                <p class="mb-0">Nenhum animal saiu do rebanho ainda. Para registrar uma venda ou morte, abra o animal e clique em "Registrar saída".</p>
+            }
             else
             {
                 <p class="mb-3">Nenhum animal cadastrado ainda.</p>
@@ -87,8 +101,16 @@ else
                         <th>@Html.DisplayNameFor(model => model.Sexo)</th>
                         <th>@Html.DisplayNameFor(model => model.IdadeDescricao)</th>
                         <th>@Html.DisplayNameFor(model => model.PesoAtual)</th>
-                        <th>@Html.DisplayNameFor(model => model.StatusSaude)</th>
-                        <th>@Html.DisplayNameFor(model => model.Galpao)</th>
+                        @if (saidas)
+                        {
+                            <th>Saída</th>
+                            <th>Valor da venda</th>
+                        }
+                        else
+                        {
+                            <th>@Html.DisplayNameFor(model => model.StatusSaude)</th>
+                            <th>@Html.DisplayNameFor(model => model.Galpao)</th>
+                        }
                         <th class="text-end">Ações</th>
                     </tr>
                 </thead>
@@ -103,11 +125,19 @@ else
                         <td>@item.Sexo</td>
                         <td>@item.IdadeDescricao</td>
                         <td>@Html.DisplayFor(m => item.PesoAtual)</td>
-                        <td><span class="badge @CorStatus(item.StatusSaude)">@item.StatusSaude</span></td>
-                        <td>@(item.Galpao?.NomeOuNumero ?? "—")</td>
+                        @if (saidas)
+                        {
+                            <td>@item.DataSaida?.ToString("dd/MM/yyyy") · @item.MotivoSaida?.NomeExibicao()</td>
+                            <td>@(item.ValorVenda?.ToString("C") ?? "—")</td>
+                        }
+                        else
+                        {
+                            <td><span class="badge @CorStatus(item.StatusSaude)">@item.StatusSaude</span></td>
+                            <td>@(item.Galpao?.NomeOuNumero ?? "—")</td>
+                        }
                         <td class="text-end acoes">
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                            @if (!saidas) { <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a> }
                             @if (User.PodeGerenciar()) { <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a> }
                         </td>
                     </tr>
@@ -116,5 +146,5 @@ else
             </table>
         </div>
     </div>
-    <p class="text-muted mt-2 small">@Model.Count() animal(is) @(filtroAtivo ? "encontrado(s)" : "cadastrado(s)")</p>
+    <p class="text-muted mt-2 small">@Model.Count() animal(is) @(saidas ? "fora do rebanho" : filtroAtivo ? "encontrado(s)" : "no rebanho")</p>
 }

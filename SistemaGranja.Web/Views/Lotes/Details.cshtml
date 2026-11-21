@@ -26,6 +26,10 @@
         }
         @if (User.PodeGerenciar())
         {
+            if (animais.Count > 0)
+            {
+                <a asp-action="Vender" asp-route-id="@Model.Id" class="btn btn-outline-success">Vender animais</a>
+            }
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Editar</a>
             <form asp-action="AlterarSituacao" asp-route-id="@Model.Id" method="post" class="d-inline">
                 <input type="hidden" name="ativo" value="@(Model.Ativo ? "false" : "true")" />

@@ -22,7 +22,12 @@ namespace SistemaGranja.Services
         // Total gasto em compras no período
         Task<decimal> ObterGastoComComprasAsync(DateTime de, DateTime ate);
 
-        Task AdicionarAsync(MovimentacaoEstoqueAlimento movimentacao);
+        // lancarNoFinanceiro: numa compra com preço, cria a despesa no financeiro (ligada à compra).
+        // jaPago = false deixa a despesa como conta a pagar, vencendo na data da compra.
+        Task AdicionarAsync(MovimentacaoEstoqueAlimento movimentacao, bool lancarNoFinanceiro = false, bool jaPago = true);
+
+        // Despesa do financeiro criada por esta compra (se houver)
+        Task<LancamentoFinanceiro?> ObterDespesaDaCompraAsync(int movimentacaoId);
         Task AtualizarAsync(MovimentacaoEstoqueAlimento movimentacao);
         Task RemoverAsync(int id);
     }

@@ -125,7 +125,7 @@ namespace SistemaGranja.Services
             return compras.Sum(c => c.PrecoUnitario * (decimal)c.Quantidade);
         }
 
-        public async Task AdicionarAsync(MovimentacaoEstoqueAlimento movimentacao)
+        public async Task AdicionarAsync(MovimentacaoEstoqueAlimento movimentacao, bool lancarNoFinanceiro = false, bool jaPago = true)
         {
             if (movimentacao == null)
                 throw new ArgumentNullException(nameof(movimentacao));
@@ -133,6 +133,23 @@ namespace SistemaGranja.Services
             await NormalizarAsync(movimentacao);
             _context.MovimentacoesEstoqueAlimento.Add(movimentacao);
             await _context.SaveChangesAsync();
+
+            if (lancarNoFinanceiro && GeraDespesa(movimentacao))
+            {
+                var categoria = await CategoriasDoSistema.ObterOuCriarAsync(_context, TipoLancamento.Despesa, CategoriasDoSistema.CompraDeAlimento);
+                var despesa = new LancamentoFinanceiro
+                {
+                    Tipo = TipoLancamento.Despesa,
+                    CategoriaId = categoria.Id,
+                    FormaPagamento = FormaPagamento.Outro,
+                    MovimentacaoEstoqueId = movimentacao.Id,
+                    Pago = jaPago,
+                    CriadoEm = DateTime.UtcNow
+                };
+                await PreencherDespesaAsync(despesa, movimentacao);
+                _context.LancamentosFinanceiros.Add(despesa);
+                await _context.SaveChangesAsync();
+            }
         }
 
         public async Task AtualizarAsync(MovimentacaoEstoqueAlimento movimentacao)
@@ -142,6 +159,17 @@ namespace SistemaGranja.Services
 
             await NormalizarAsync(movimentacao);
             _context.MovimentacoesEstoqueAlimento.Update(movimentacao);
+
+            // A despesa ligada a esta compra acompanha a mudança (ou sai, se deixou de ser compra com preço)
+            var despesa = await _context.LancamentosFinanceiros.FirstOrDefaultAsync(l => l.MovimentacaoEstoqueId == movimentacao.Id);
+            if (despesa != null)
+            {
+                if (GeraDespesa(movimentacao))
+                    await PreencherDespesaAsync(despesa, movimentacao);
+                else
+                    _context.LancamentosFinanceiros.Remove(despesa);
+            }
+
             await _context.SaveChangesAsync();
         }
 
@@ -150,8 +178,37 @@ namespace SistemaGranja.Services
             var movimentacao = await _context.MovimentacoesEstoqueAlimento.FindAsync(id);
             if (movimentacao == null) return;
 
+            // Compra excluída: a despesa criada por ela também sai do financeiro
+            var despesa = await _context.LancamentosFinanceiros.FirstOrDefaultAsync(l => l.MovimentacaoEstoqueId == id);
+            if (despesa != null) _context.LancamentosFinanceiros.Remove(despesa);
+
             _context.MovimentacoesEstoqueAlimento.Remove(movimentacao);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<LancamentoFinanceiro?> ObterDespesaDaCompraAsync(int movimentacaoId)
+        {
+            return await _context.LancamentosFinanceiros
+                .AsNoTracking()
+                .FirstOrDefaultAsync(l => l.MovimentacaoEstoqueId == movimentacaoId);
+        }
+
+        private static bool GeraDespesa(MovimentacaoEstoqueAlimento movimentacao) =>
+            movimentacao.TipoMovimentacao == TipoMovimentacaoEstoque.EntradaCompra && movimentacao.ValorTotal >= 0.01m;
+
+        private async Task PreencherDespesaAsync(LancamentoFinanceiro despesa, MovimentacaoEstoqueAlimento movimentacao)
+        {
+            var alimento = await _context.TiposAlimento.FindAsync(movimentacao.TipoAlimentoId);
+            var quantidade = movimentacao.Quantidade.ToString("0.###", new System.Globalization.CultureInfo("pt-BR"));
+            var descricao = $"Compra de {alimento?.Nome ?? "alimento"} ({quantidade} {movimentacao.UnidadeMedida})".Trim();
+            if (!string.IsNullOrWhiteSpace(movimentacao.FornecedorOuDestino))
+                descricao += $" - {movimentacao.FornecedorOuDestino.Trim()}";
+
+            despesa.Descricao = descricao.Length > 200 ? descricao.Substring(0, 200) : descricao;
+            despesa.Valor = Math.Round(movimentacao.ValorTotal, 2);
+            despesa.Data = movimentacao.DataMovimentacao.Date;
+            if (despesa.Pago) despesa.DataPagamento = movimentacao.DataMovimentacao.Date;
+            despesa.Observacoes = string.IsNullOrWhiteSpace(movimentacao.NotaFiscal) ? "Lançada pelo estoque" : $"Lançada pelo estoque · NF {movimentacao.NotaFiscal.Trim()}";
         }
 
         private async Task NormalizarAsync(MovimentacaoEstoqueAlimento movimentacao)

@@ -1,0 +1,30 @@
+@model AnimaisController.FormularioSaida
+
+@{
+    var animal = ViewData["Animal"] as Animal;
+    ViewData["Title"] = "Saída do rebanho";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Saída do rebanho</h1>
+        <div class="text-muted">@animal?.TagIdentificacao @(string.IsNullOrEmpty(animal?.Nome) ? "" : "· " + animal!.Nome) · @animal?.Raca?.Nome</div>
+    </div>
+</div>
+
+<div class="card shadow-sm form-card">
+    <div class="card-body">
+        <form asp-action="Saida" asp-route-id="@Model.AnimalId" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <partial name="_CamposSaida" model="Model" />
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-agro">Registrar saída</button>
+                <a asp-action="Details" asp-route-id="@Model.AnimalId" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/saida-form.js" asp-append-version="true"></script>
+}

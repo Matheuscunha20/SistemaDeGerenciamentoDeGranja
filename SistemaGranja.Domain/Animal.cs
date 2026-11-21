@@ -1,9 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Reflection;
 
 namespace SistemaGranja.Domain
 {
+    // Por que o animal saiu do rebanho. Os números ficam gravados no banco.
+    public enum MotivoSaidaAnimal
+    {
+        [Display(Name = "Venda")] Venda = 1,
+        [Display(Name = "Morte")] Morte = 2,
+        [Display(Name = "Abate")] Abate = 3,
+        [Display(Name = "Doação")] Doacao = 4,
+        [Display(Name = "Outro")] Outro = 99
+    }
+
+    public static class MotivoSaidaAnimalExtensions
+    {
+        public static string NomeExibicao(this MotivoSaidaAnimal motivo)
+        {
+            var campo = typeof(MotivoSaidaAnimal).GetField(motivo.ToString());
+            return campo?.GetCustomAttribute<DisplayAttribute>()?.GetName() ?? motivo.ToString();
+        }
+    }
+
     public class Animal : IPertenceAFazenda
     {
         public int Id { get; set; }
@@ -83,6 +104,24 @@ namespace SistemaGranja.Domain
                 return resto == 1 ? $"{textoAnos} e 1 mês" : $"{textoAnos} e {resto} meses";
             }
         }
+
+        // Saída do rebanho (venda, morte, abate...). O animal continua no histórico, mas some das listas.
+        [Display(Name = "No rebanho")]
+        public bool Ativo { get; set; } = true;
+
+        [Display(Name = "Data da saída")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}")]
+        public DateTime? DataSaida { get; set; }
+
+        [Display(Name = "Motivo da saída")]
+        public MotivoSaidaAnimal? MotivoSaida { get; set; }
+
+        // Valor de venda deste animal (numa venda de lote, a parte dele no total)
+        [Display(Name = "Valor da venda")]
+        [Column(TypeName = "decimal(12,2)")]
+        [DisplayFormat(DataFormatString = "{0:C}")]
+        public decimal? ValorVenda { get; set; }
 
         public virtual ICollection<RegistroSaude> RegistrosSaude { get; set; }
         public virtual ICollection<RegistroVacinacao> RegistrosVacinacao { get; set; }

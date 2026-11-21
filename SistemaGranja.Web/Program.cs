@@ -93,6 +93,7 @@ builder.Services.AddScoped<IPainelService, PainelService>();
 builder.Services.AddScoped<IEquipeService, EquipeService>();
 builder.Services.AddScoped<IFazendaService, FazendaService>();
 builder.Services.AddScoped<IFinanceiroService, FinanceiroService>();
+builder.Services.AddScoped<ISaidaDeAnimaisService, SaidaDeAnimaisService>();
 
 var app = builder.Build();
 

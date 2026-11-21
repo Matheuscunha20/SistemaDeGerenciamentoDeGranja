@@ -31,13 +31,14 @@ namespace SistemaGranja.Services
         {
             var resumo = new ResumoPainel
             {
-                TotalAnimais = await _context.Animais.CountAsync(),
+                TotalAnimais = await _context.Animais.CountAsync(a => a.Ativo),
                 LotesAtivos = await _context.Lotes.CountAsync(l => l.Ativo),
                 FuncionariosAtivos = await _context.Funcionarios.CountAsync(f => f.Ativo)
             };
 
             // Animais por espécie (os sem raça entram como "Não informada")
             var porEspecie = await _context.Animais
+                .Where(a => a.Ativo)
                 .GroupBy(a => a.Raca!.Especie!.Nome)
                 .Select(g => new { Especie = g.Key, Quantidade = g.Count() })
                 .ToListAsync();
@@ -46,6 +47,7 @@ namespace SistemaGranja.Services
                 .ToDictionary(x => x.Especie ?? "Não informada", x => x.Quantidade);
 
             resumo.AnimaisPorEstadoDeSaude = await _context.Animais
+                .Where(a => a.Ativo)
                 .GroupBy(a => a.StatusSaude)
                 .Select(g => new { Estado = g.Key, Quantidade = g.Count() })
                 .ToDictionaryAsync(x => x.Estado, x => x.Quantidade);

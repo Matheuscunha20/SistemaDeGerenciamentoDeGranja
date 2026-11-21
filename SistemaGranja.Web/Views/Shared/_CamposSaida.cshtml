@@ -1,0 +1,58 @@
+@model AnimaisController.FormularioSaida
+@* Campos da saída do rebanho, usados para um animal e para a venda de um lote *@
+
+<div class="row">
+    <div class="col-sm-6">
+        <div class="mb-3">
+            <label asp-for="Motivo" class="form-label">Motivo</label>
+            <select asp-for="Motivo" class="form-select" asp-items="Html.GetEnumSelectList<MotivoSaidaAnimal>()" data-motivo-saida></select>
+        </div>
+    </div>
+    <div class="col-sm-6">
+        <div class="mb-3">
+            <label asp-for="Data" class="form-label">Data</label>
+            <input asp-for="Data" type="date" class="form-control" value="@Model.Data.ToString("yyyy-MM-dd")" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        </div>
+    </div>
+</div>
+
+<div data-campos-venda>
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="mb-3">
+                <label asp-for="Valor" class="form-label">Valor da venda</label>
+                <div class="input-group">
+                    <span class="input-group-text">R$</span>
+                    <input asp-for="Valor" class="form-control" inputmode="decimal" type="text" value="@(Model.Valor?.ToString("0.00"))" placeholder="0,00" />
+                </div>
+                <div class="form-text">Vira uma receita no financeiro (categoria Venda de animais).</div>
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="mb-3">
+                <label asp-for="FormaPagamento" class="form-label">Forma de pagamento</label>
+                <select asp-for="FormaPagamento" class="form-select" asp-items="Html.GetEnumSelectList<FormaPagamento>()"></select>
+            </div>
+        </div>
+    </div>
+    <div class="row align-items-end">
+        <div class="col-sm-6">
+            <div class="mb-3">
+                <label asp-for="Comprador" class="form-label">Comprador</label>
+                <input asp-for="Comprador" class="form-control" placeholder="Opcional" maxlength="80" />
+            </div>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-check form-switch mb-3">
+                <input asp-for="Recebido" class="form-check-input" role="switch" />
+                <label asp-for="Recebido" class="form-check-label">Já recebi o dinheiro</label>
+                <div class="form-text">Desligue se vai receber depois (vira conta a receber).</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-3">
+    <label asp-for="Observacoes" class="form-label">Observações</label>
+    <textarea asp-for="Observacoes" class="form-control" rows="2" placeholder="Opcional" maxlength="300"></textarea>
+</div>

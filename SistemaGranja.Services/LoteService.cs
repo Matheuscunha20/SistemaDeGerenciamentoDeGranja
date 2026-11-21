@@ -47,10 +47,10 @@ namespace SistemaGranja.Services
         public async Task<Lote?> ObterComAnimaisAsync(int id)
         {
             return await _context.Lotes
-                .Include(l => l.Animais)
+                .Include(l => l.Animais.Where(a => a.Ativo))
                     .ThenInclude(a => a.Raca)
                         .ThenInclude(r => r!.Especie)
-                .Include(l => l.Animais)
+                .Include(l => l.Animais.Where(a => a.Ativo))
                     .ThenInclude(a => a.Galpao)
                 .FirstOrDefaultAsync(l => l.Id == id);
         }
@@ -58,7 +58,7 @@ namespace SistemaGranja.Services
         public async Task<Dictionary<int, int>> ObterQuantidadeAnimaisAsync()
         {
             return await _context.Animais
-                .Where(a => a.LoteId != null)
+                .Where(a => a.Ativo && a.LoteId != null)
                 .GroupBy(a => a.LoteId!.Value)
                 .Select(grupo => new { LoteId = grupo.Key, Quantidade = grupo.Count() })
                 .ToDictionaryAsync(x => x.LoteId, x => x.Quantidade);
@@ -71,7 +71,7 @@ namespace SistemaGranja.Services
                     .ThenInclude(r => r!.Especie)
                 .Include(a => a.Galpao)
                 .Include(a => a.Lote)
-                .Where(a => a.LoteId == null || a.LoteId != loteId);
+                .Where(a => a.Ativo && (a.LoteId == null || a.LoteId != loteId));
 
             if (!string.IsNullOrWhiteSpace(busca))
             {
@@ -134,7 +134,7 @@ namespace SistemaGranja.Services
             if (ids.Count == 0) return 0;
 
             var animais = await _context.Animais
-                .Where(a => ids.Contains(a.Id))
+                .Where(a => a.Ativo && ids.Contains(a.Id))
                 .ToListAsync();
 
             foreach (var animal in animais)

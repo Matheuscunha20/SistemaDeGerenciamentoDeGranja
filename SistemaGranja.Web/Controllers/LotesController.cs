@@ -14,9 +14,11 @@ public class LotesController : Controller
     private readonly ILoteService _loteService;
     private readonly IEspecieService _especieService;
     private readonly IGalpaoService _galpaoService;
+    private readonly ISaidaDeAnimaisService _saidaService;
 
-    public LotesController(ILoteService loteService, IEspecieService especieService, IGalpaoService galpaoService)
+    public LotesController(ILoteService loteService, IEspecieService especieService, IGalpaoService galpaoService, ISaidaDeAnimaisService saidaService)
     {
+        _saidaService = saidaService;
         _loteService = loteService;
         _especieService = especieService;
         _galpaoService = galpaoService;
@@ -44,6 +46,62 @@ public class LotesController : Controller
         var lote = await _loteService.ObterComAnimaisAsync(id.Value);
         if (lote == null) return NotFound();
         return View(lote);
+    }
+
+    // GET: Lotes/Vender/5 — vender todos ou alguns animais do lote de uma vez
+    [Authorize(Policy = Politicas.Gestao)]
+    public async Task<IActionResult> Vender(int? id)
+    {
+        if (id == null) return NotFound();
+        var lote = await _loteService.ObterComAnimaisAsync(id.Value);
+        if (lote == null) return NotFound();
+        if (!lote.Animais.Any())
+        {
+            TempData["Erro"] = "Este lote não tem animais no rebanho para vender.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        ViewData["Lote"] = lote;
+        ViewData["Selecionados"] = lote.Animais.Select(a => a.Id).ToList();
+        return View(new AnimaisController.FormularioSaida());
+    }
+
+    // POST: Lotes/Vender/5
+    [Authorize(Policy = Politicas.Gestao)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Vender(int id, AnimaisController.FormularioSaida formulario, List<int> animaisSelecionados)
+    {
+        var lote = await _loteService.ObterComAnimaisAsync(id);
+        if (lote == null) return NotFound();
+
+        // Só animais que estão neste lote
+        var ids = animaisSelecionados.Where(a => lote.Animais.Any(x => x.Id == a)).ToList();
+        var resultado = await _saidaService.RegistrarSaidaAsync(new DadosSaida
+        {
+            AnimalIds = ids,
+            Motivo = formulario.Motivo,
+            Data = formulario.Data,
+            ValorTotal = formulario.Valor,
+            FormaPagamento = formulario.FormaPagamento,
+            Recebido = formulario.Recebido,
+            Comprador = formulario.Comprador,
+            Observacoes = formulario.Observacoes,
+            LoteId = lote.Id
+        });
+
+        if (resultado.Erro != null)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Erro);
+            ViewData["Lote"] = lote;
+            ViewData["Selecionados"] = ids;
+            return View(formulario);
+        }
+
+        var acao = formulario.Motivo == MotivoSaidaAnimal.Venda ? "vendido(s)" : "com saída registrada";
+        TempData["Sucesso"] = $"{resultado.Quantidade} animal(is) {acao}."
+            + (resultado.Receita != null ? $" Receita de {resultado.Receita.Valor:C} lançada no financeiro{(resultado.Receita.Pago ? "" : " como conta a receber")}." : "");
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     // GET: Lotes/Create

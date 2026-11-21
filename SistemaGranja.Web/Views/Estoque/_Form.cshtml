@@ -89,6 +89,35 @@
         </div>
     </div>
 </div>
+@if (Model.Id == 0 && !User.PodeGerenciar())
+{
+    <p class="small text-muted" id="lancarNoFinanceiroBloco">Compras com preço vão para o financeiro como conta a pagar, para o dono ou gerente conferir.</p>
+}
+else if (Model.Id == 0)
+{
+    @* Compra com preço: lança a despesa no financeiro ao mesmo tempo *@
+    <div class="card bg-body-tertiary border-0 mb-3" id="lancarNoFinanceiroBloco">
+        <div class="card-body py-2">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="lancarNoFinanceiro" name="lancarNoFinanceiro" value="true" checked="@((ViewData["LancarNoFinanceiro"] as bool?) ?? true)" />
+                <label class="form-check-label" for="lancarNoFinanceiro">Lançar esta compra como despesa no financeiro</label>
+            </div>
+            <div class="form-check form-switch mt-1">
+                <input class="form-check-input" type="checkbox" role="switch" id="despesaPaga" name="despesaPaga" value="true" checked="@((ViewData["DespesaPaga"] as bool?) ?? true)" />
+                <label class="form-check-label" for="despesaPaga">Já foi paga (desligue se for pagar depois, ex.: boleto)</label>
+            </div>
+            <input type="hidden" name="lancarNoFinanceiro" value="false" />
+            <input type="hidden" name="despesaPaga" value="false" />
+        </div>
+    </div>
+}
+else if (ViewData["DespesaLigada"] is LancamentoFinanceiro despesaLigada)
+{
+    <div class="alert alert-info py-2">
+        Esta compra está no financeiro como despesa de <strong>@despesaLigada.Valor.ToString("C")</strong>
+        (@(despesaLigada.Pago ? "paga" : "em aberto")). Ao salvar, a despesa é atualizada junto.
+    </div>
+}
 <div class="mb-3">
     <label asp-for="Observacoes" class="form-label"></label>
     <textarea asp-for="Observacoes" class="form-control" rows="2"></textarea>

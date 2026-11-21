@@ -1,0 +1,30 @@
+# Compila o projeto e roda os testes a cada push e pull request
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-e-testes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Instalar o .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restaurar pacotes
+        run: dotnet restore SistemaGranjaSol.sln
+
+      - name: Compilar
+        run: dotnet build SistemaGranjaSol.sln --configuration Release --no-restore
+
+      - name: Rodar os testes
+        run: dotnet test SistemaGranjaSol.sln --configuration Release --no-build --verbosity normal

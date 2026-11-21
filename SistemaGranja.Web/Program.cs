@@ -8,6 +8,7 @@ using System.Globalization;
 using Microsoft.AspNetCore.Localization;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure; // Usado pelo Pomelo para MySqlServerVersion
 using SistemaGranja.Services;
+using SistemaGranja.Web.Identidade;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +26,8 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
 })
-.AddEntityFrameworkStores<AppDbContext>();
+.AddEntityFrameworkStores<AppDbContext>()
+.AddErrorDescriber<MensagensIdentityPtBr>(); // mensagens de erro do login em português
 // --- FIM DAS SUAS ADIÇÕES DE SERVIÇO ---
 
 // Serviços padrão
@@ -55,6 +57,7 @@ builder.Services.AddScoped<ITipoVacinaService, TipoVacinaService>();
 builder.Services.AddScoped<IVacinacaoService, VacinacaoService>();
 builder.Services.AddScoped<ISaudeService, SaudeService>();
 builder.Services.AddScoped<IEstoqueService, EstoqueService>();
+builder.Services.AddScoped<IPainelService, PainelService>();
 
 var app = builder.Build();
 

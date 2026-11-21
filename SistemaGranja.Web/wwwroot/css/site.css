@@ -88,3 +88,8 @@ dl.detalhes dt {
 .destaque-danger { border-left-color: #dc3545 !important; }
 .destaque-info { border-left-color: #0dcaf0 !important; }
 .destaque-success { border-left-color: #198754 !important; }
+
+/* "sábado, 21 de novembro" -> "Sábado, 21 de novembro" */
+.text-capitalize-first::first-letter {
+  text-transform: uppercase;
+}

@@ -1,0 +1,47 @@
+@page
+@model RegisterModel
+
+@{
+    ViewData["Title"] = "Criar conta";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="text-center mb-4">
+            <h1 class="h2 fw-bold mb-1">Criar conta</h1>
+            <p class="text-muted">Comece a cuidar do seu rebanho com o AgroArca.</p>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="nome@exemplo.com" autofocus />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Senha" class="form-label"></label>
+                        <input asp-for="Input.Senha" class="form-control" autocomplete="new-password" />
+                        <div class="form-text">Pelo menos 6 caracteres, com letra maiúscula, letra minúscula, número e símbolo (ex.: Rebanho@2026).</div>
+                        <span asp-validation-for="Input.Senha" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.ConfirmarSenha" class="form-label"></label>
+                        <input asp-for="Input.ConfirmarSenha" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Input.ConfirmarSenha" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-agro w-100">Criar conta</button>
+                </form>
+            </div>
+        </div>
+        <p class="text-center mt-3">
+            Já tem conta?
+            <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Entrar</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,45 @@
+@page
+@model LoginModel
+
+@{
+    ViewData["Title"] = "Entrar";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="text-center mb-4">
+            <h1 class="h2 fw-bold mb-1">Entrar</h1>
+            <p class="text-muted">Acesse o AgroArca com seu e-mail e senha.</p>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Email" class="form-label"></label>
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="nome@exemplo.com" autofocus />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Input.Senha" class="form-label"></label>
+                        <input asp-for="Input.Senha" class="form-control" autocomplete="current-password" />
+                        <span asp-validation-for="Input.Senha" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input asp-for="Input.LembrarDeMim" class="form-check-input" />
+                        <label asp-for="Input.LembrarDeMim" class="form-check-label"></label>
+                    </div>
+                    <button type="submit" class="btn btn-agro w-100">Entrar</button>
+                </form>
+            </div>
+        </div>
+        <p class="text-center mt-3">
+            Ainda não tem conta?
+            <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Criar conta</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

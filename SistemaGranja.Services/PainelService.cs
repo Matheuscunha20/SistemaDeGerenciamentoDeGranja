@@ -1,0 +1,79 @@
+using Microsoft.EntityFrameworkCore;
+using SistemaGranja.Data;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace SistemaGranja.Services
+{
+    // Junta os números de todos os módulos para o painel inicial
+    public class PainelService : IPainelService
+    {
+        private readonly AppDbContext _context;
+        private readonly IGalpaoService _galpaoService;
+        private readonly IVacinacaoService _vacinacaoService;
+        private readonly IEstoqueService _estoqueService;
+
+        public PainelService(
+            AppDbContext context,
+            IGalpaoService galpaoService,
+            IVacinacaoService vacinacaoService,
+            IEstoqueService estoqueService)
+        {
+            _context = context;
+            _galpaoService = galpaoService;
+            _vacinacaoService = vacinacaoService;
+            _estoqueService = estoqueService;
+        }
+
+        public async Task<ResumoPainel> ObterResumoAsync()
+        {
+            var resumo = new ResumoPainel
+            {
+                TotalAnimais = await _context.Animais.CountAsync(),
+                LotesAtivos = await _context.Lotes.CountAsync(l => l.Ativo),
+                FuncionariosAtivos = await _context.Funcionarios.CountAsync(f => f.Ativo)
+            };
+
+            // Animais por espécie (os sem raça entram como "Não informada")
+            var porEspecie = await _context.Animais
+                .GroupBy(a => a.Raca!.Especie!.Nome)
+                .Select(g => new { Especie = g.Key, Quantidade = g.Count() })
+                .ToListAsync();
+            resumo.AnimaisPorEspecie = porEspecie
+                .OrderByDescending(x => x.Quantidade)
+                .ToDictionary(x => x.Especie ?? "Não informada", x => x.Quantidade);
+
+            resumo.AnimaisPorEstadoDeSaude = await _context.Animais
+                .GroupBy(a => a.StatusSaude)
+                .Select(g => new { Estado = g.Key, Quantidade = g.Count() })
+                .ToDictionaryAsync(x => x.Estado, x => x.Quantidade);
+
+            // Galpões: ocupação total e quais estão lotados
+            var galpoes = await _galpaoService.ObterTodosAsync();
+            var ocupacao = await _galpaoService.ObterOcupacaoAsync();
+            resumo.TotalGalpoes = galpoes.Count();
+            resumo.CapacidadeTotal = galpoes.Sum(g => g.CapacidadeMaxima);
+            resumo.AnimaisAlojados = ocupacao.Values.Sum();
+            resumo.GalpoesLotados = galpoes
+                .Where(g => ocupacao.GetValueOrDefault(g.Id) >= g.CapacidadeMaxima)
+                .Select(g => g.NomeOuNumero)
+                .ToList();
+
+            // Vacinação: doses atrasadas e dos próximos 7 dias
+            var hoje = DateTime.Today;
+            var proximasDoses = await _vacinacaoService.ObterProximasDosesAsync(7);
+            resumo.VacinasAtrasadas = proximasDoses.Count(r => r.DataProximaDoseRecomendada!.Value.Date < hoje);
+            resumo.VacinasProximos7Dias = proximasDoses.Count() - resumo.VacinasAtrasadas;
+
+            // Estoque: alimentos baixos ou zerados
+            var saldos = await _estoqueService.ObterSaldosAsync();
+            resumo.AlimentosComEstoqueBaixo = saldos
+                .Where(s => s.Situacao != SituacaoEstoque.Normal)
+                .OrderBy(s => s.Saldo)
+                .ToList();
+
+            return resumo;
+        }
+    }
+}

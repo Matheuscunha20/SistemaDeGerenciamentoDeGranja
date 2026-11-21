@@ -1,0 +1,129 @@
+@model SistemaGranja.Domain.RegistroVacinacao
+
+@{
+    ViewData["Title"] = "Vacinar em grupo";
+    var animais = ViewData["Animais"] as List<SistemaGranja.Domain.Animal> ?? new List<SistemaGranja.Domain.Animal>();
+}
+
+<div class="page-header">
+    <h1>Vacinar em grupo</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+</div>
+
+<p class="text-muted">Escolha os animais, preencha os dados da vacina uma vez e registre para todos.</p>
+
+<form asp-action="Grupo" method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label for="busca" class="form-label small text-muted mb-1">Buscar</label>
+                <input type="search" id="busca" name="busca" value="@ViewData["Busca"]" class="form-control" placeholder="Brinco/tag ou nome" />
+            </div>
+            <div class="col-md-2">
+                <label for="especieId" class="form-label small text-muted mb-1">Espécie</label>
+                <select id="especieId" name="especieId" class="form-select" asp-items="ViewBag.FiltroEspecies">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="galpaoId" class="form-label small text-muted mb-1">Galpão</label>
+                <select id="galpaoId" name="galpaoId" class="form-select" asp-items="ViewBag.FiltroGalpoes">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="loteId" class="form-label small text-muted mb-1">Lote</label>
+                <select id="loteId" name="loteId" class="form-select" asp-items="ViewBag.FiltroLotes">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-success w-100">Filtrar animais</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<form asp-action="Grupo" method="post">
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">1. Animais</span>
+                    <span class="small text-muted" id="contadorSelecionados">Nenhum selecionado</span>
+                </div>
+                @if (animais.Count == 0)
+                {
+                    <div class="lista-vazia">Nenhum animal encontrado com esses filtros.</div>
+                }
+                else
+                {
+                    <div class="table-responsive" style="max-height: 520px;">
+                        <table class="table table-sm table-hover mb-0">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th style="width: 40px;"><input type="checkbox" class="form-check-input" id="marcarTodos" title="Marcar todos" /></th>
+                                    <th>Brinco / Tag</th>
+                                    <th>Espécie</th>
+                                    <th>Raça</th>
+                                    <th>Galpão</th>
+                                    <th>Lote</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var animal in animais)
+                            {
+                                <tr>
+                                    <td><input type="checkbox" class="form-check-input selecao-animal" name="animaisSelecionados" value="@animal.Id" id="animal-@animal.Id" /></td>
+                                    <td><label for="animal-@animal.Id" class="fw-semibold mb-0">@animal.TagIdentificacao</label></td>
+                                    <td>@(animal.Raca?.Especie?.Nome ?? "—")</td>
+                                    <td>@(animal.Raca?.Nome ?? "—")</td>
+                                    <td>@(animal.Galpao?.NomeOuNumero ?? "—")</td>
+                                    <td>@(animal.Lote?.CodigoLote ?? "—")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-semibold">2. Dados da vacina</div>
+                <div class="card-body">
+                    <partial name="_CamposVacina" model="Model" />
+                    <button type="submit" class="btn btn-agro w-100" id="botaoRegistrar" disabled>Registrar vacinação</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/vacinacao-form.js" asp-append-version="true"></script>
+    <script>
+        (function () {
+            var marcarTodos = document.getElementById('marcarTodos');
+            var caixas = document.querySelectorAll('.selecao-animal');
+            var botao = document.getElementById('botaoRegistrar');
+            var contador = document.getElementById('contadorSelecionados');
+
+            function atualizar() {
+                var marcados = document.querySelectorAll('.selecao-animal:checked').length;
+                botao.disabled = marcados === 0;
+                botao.textContent = marcados === 0 ? 'Registrar vacinação' : 'Registrar vacinação para ' + marcados + ' animal(is)';
+                contador.textContent = marcados === 0 ? 'Nenhum selecionado' : marcados + ' selecionado(s)';
+                if (marcarTodos) marcarTodos.checked = marcados > 0 && marcados === caixas.length;
+            }
+
+            if (marcarTodos) {
+                marcarTodos.addEventListener('change', function () {
+                    caixas.forEach(function (c) { c.checked = marcarTodos.checked; });
+                    atualizar();
+                });
+            }
+            caixas.forEach(function (c) { c.addEventListener('change', atualizar); });
+        })();
+    </script>
+}

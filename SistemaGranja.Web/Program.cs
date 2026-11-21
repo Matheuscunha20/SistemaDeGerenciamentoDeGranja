@@ -51,6 +51,8 @@ builder.Services.AddScoped<IAnimalService, AnimalService>();
 builder.Services.AddScoped<IEspecieService, EspecieService>();
 builder.Services.AddScoped<IRacaService, RacaService>();
 builder.Services.AddScoped<IFuncionarioService, FuncionarioService>();
+builder.Services.AddScoped<ITipoVacinaService, TipoVacinaService>();
+builder.Services.AddScoped<IVacinacaoService, VacinacaoService>();
 
 var app = builder.Build();
 
@@ -67,6 +69,9 @@ using (var scope = app.Services.CreateScope())
 
     // Cadastra espécies e raças comuns (só o que ainda não existe)
     await SemeadorDeDados.SemearEspeciesERacasAsync(db);
+
+    // Cadastra vacinas comuns na primeira vez (só se não houver nenhuma)
+    await SemeadorDeDados.SemearVacinasAsync(db);
 }
 
 // Configure o pipeline de requisição HTTP

@@ -44,6 +44,47 @@ namespace SistemaGranja.Data
             },
         };
 
+        // Vacinas comuns no Brasil. Os intervalos são apenas sugestões iniciais:
+        // o produtor deve ajustar conforme a bula e o médico-veterinário.
+        // (nome, doença, intervalo de reforço em dias; null = dose única ou conforme protocolo)
+        private static readonly (string Nome, string Doenca, int? IntervaloDias)[] Vacinas =
+        {
+            ("Brucelose (B19)", "Brucelose - dose única em fêmeas bovinas de 3 a 8 meses", null),
+            ("Raiva", "Raiva", 365),
+            ("Clostridioses (polivalente)", "Carbúnculo sintomático, gangrena gasosa, enterotoxemia e outras clostridioses", 365),
+            ("Leptospirose", "Leptospirose", 180),
+            ("IBR/BVD", "Rinotraqueíte infecciosa bovina e diarreia viral bovina", 365),
+            ("Newcastle", "Doença de Newcastle (aves)", null),
+            ("Gumboro", "Doença de Gumboro - bursite infecciosa (aves)", null),
+            ("Marek", "Doença de Marek (aves)", null),
+            ("Circovírus suíno (PCV2)", "Circovirose suína", null),
+            ("Micoplasma suíno", "Pneumonia enzoótica suína", null),
+            ("Erisipela suína", "Erisipela suína", 180),
+            ("Influenza equina", "Influenza equina", 365),
+            ("Tétano", "Tétano", 365),
+        };
+
+        // Só cadastra as vacinas se a tabela estiver vazia,
+        // para não recriar uma vacina que o usuário excluiu de propósito.
+        public static async Task SemearVacinasAsync(AppDbContext db)
+        {
+            if (await db.TiposVacina.AnyAsync()) return;
+
+            foreach (var (nome, doenca, intervalo) in Vacinas)
+            {
+                db.TiposVacina.Add(new TipoVacina
+                {
+                    NomeVacina = nome,
+                    DoencaAlvo = doenca,
+                    IntervaloReforcoDias = intervalo,
+                    DosagemPadraoRecomendada = "Conforme bula",
+                    ViaAdministracaoComum = "Conforme bula"
+                });
+            }
+
+            await db.SaveChangesAsync();
+        }
+
         public static async Task SemearEspeciesERacasAsync(AppDbContext db)
         {
             var especiesExistentes = await db.Especies

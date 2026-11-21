@@ -1,0 +1,32 @@
+@model SistemaGranja.Domain.TipoVacina
+
+@{
+    ViewData["Title"] = "Excluir vacina";
+    var aplicacoes = ViewData["QuantidadeAplicacoes"] as int? ?? 0;
+}
+
+<div class="page-header">
+    <h1>Excluir vacina</h1>
+</div>
+
+@if (aplicacoes > 0)
+{
+    <div class="alert alert-info">
+        A vacina <strong>@Model.NomeVacina</strong> já foi aplicada @aplicacoes vez(es) e não pode ser excluída,
+        para não apagar o histórico de vacinação dos animais.
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+}
+else
+{
+    <div class="alert alert-warning">
+        Tem certeza que deseja excluir a vacina <strong>@Model.NomeVacina</strong>? Esta ação não pode ser desfeita.
+    </div>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+}

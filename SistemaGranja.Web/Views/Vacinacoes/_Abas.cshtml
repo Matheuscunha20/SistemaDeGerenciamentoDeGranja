@@ -1,0 +1,21 @@
+@{
+    var acao = ViewContext.RouteData.Values["action"]?.ToString();
+}
+<div class="page-header">
+    <h1>Vacinação</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" class="btn btn-agro">+ Registrar vacinação</a>
+        <a asp-action="Grupo" class="btn btn-outline-success">Vacinar em grupo</a>
+    </div>
+</div>
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link @(acao == "Index" ? "active" : "")" asp-action="Index">Agenda de doses</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(acao == "Historico" ? "active" : "")" asp-action="Historico">Histórico</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" asp-controller="TiposVacina" asp-action="Index">Vacinas cadastradas</a>
+    </li>
+</ul>

@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+**/.vs/
+**/node_modules/
+**/EmailsDeTeste/
+.git/
+.github/
+.env
+**/appsettings.Development.json
+SistemaGranja.Tests/
+*.md

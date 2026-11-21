@@ -128,6 +128,30 @@ Na primeira execução, o sistema cria as tabelas e cadastra espécies, raças e
 
 ---
 
+## Colocar no ar (produção)
+
+O sistema roda em container Docker (`Dockerfile`). Para subir tudo (sistema + MySQL) num servidor:
+
+```bash
+cp .env.example .env        # e troque as senhas
+docker compose -f docker-compose.producao.yml up -d --build
+```
+
+O sistema fica na porta **8080**. O HTTPS é feito por um proxy na frente (Caddy, Nginx ou a própria plataforma de hospedagem).
+
+| Variável de ambiente | Para que serve |
+|---|---|
+| `ConnectionStrings__DefaultConnection` | Conexão com o MySQL (obrigatória) |
+| `Email__Servidor`, `Email__Porta`, `Email__Usuario`, `Email__Senha`, `Email__Remetente` | Envio de e-mails (confirmação, esqueci a senha, convite) |
+| `DataProtection__Pasta` | Pasta das chaves de login (já vem `/app/chaves` no container; monte um volume) |
+| `Proxy__ConfiarEmCabecalhos` | `true` atrás de proxy que cuida do HTTPS |
+| `Banco__AplicarMigracoesAoIniciar` | `true` (padrão): atualiza o banco ao iniciar |
+
+- **`/saude`**: responde `200` quando o sistema e o banco estão bem (usado pela hospedagem e pelo monitoramento).
+- **Logs**: uma linha por evento, com data e hora, na saída do container (`docker compose logs app`).
+- **Segurança**: cookies só por HTTPS, cabeçalhos de proteção, limite de 10 tentativas por minuto no login e no cadastro.
+- O GitHub Actions monta a imagem e sobe o sistema com MySQL a cada mudança, conferindo se as páginas abrem.
+
 ## Testes
 
 ```bash

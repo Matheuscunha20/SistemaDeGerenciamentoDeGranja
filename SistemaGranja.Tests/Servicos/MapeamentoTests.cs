@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -36,9 +38,16 @@ namespace SistemaGranja.Tests.Servicos
         [Fact]
         public void Migrations_estao_em_dia_com_as_entidades()
         {
+            // Mesma configuração do login usada pelo sistema: o AddDefaultIdentity define
+            // tamanho 128 para as chaves das tabelas AspNetUserLogins e AspNetUserTokens
+            var servicos = new ServiceCollection();
+            servicos.Configure<IdentityOptions>(o => o.Stores.MaxLengthForKeys = 128);
+            using var provedor = servicos.BuildServiceProvider();
+
             var opcoes = new DbContextOptionsBuilder<SistemaGranja.Data.AppDbContext>()
                 .UseMySql("Server=localhost;Database=teste;Uid=teste;Pwd=teste",
                           new MySqlServerVersion(new Version(8, 0, 27)))
+                .UseApplicationServiceProvider(provedor)
                 .Options;
             using var db = new SistemaGranja.Data.AppDbContext(opcoes);
 

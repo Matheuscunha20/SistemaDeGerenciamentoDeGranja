@@ -1,30 +1,34 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
-
-// Arquivo: AppDbContext.cs (no projeto SistemaGranja.Data)
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // Para IdentityDbContext
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SistemaGranja.Domain; // Para acessar suas entidades de domínio
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
-
-
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using SistemaGranja.Domain;
 
 namespace SistemaGranja.Data
 {
-    // Herda de IdentityDbContext para incluir as tabelas do ASP.NET Core Identity
-    // e passamos nossa classe ApplicationUser personalizada.
+    // Herda de IdentityDbContext para incluir as tabelas de login (AspNetUsers etc.)
     public class AppDbContext : IdentityDbContext<ApplicationUser>
     {
-        // Construtor que recebe as opções de configuração do DbContext
-        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        private readonly IFazendaAtual? _fazendaAtual;
+        private int? _fazendaDefinida;
+
+        public AppDbContext(DbContextOptions<AppDbContext> options, IFazendaAtual? fazendaAtual = null) : base(options)
         {
+            _fazendaAtual = fazendaAtual;
         }
 
-        // DbSet para cada uma das suas entidades de domínio
-        // Isso diz ao EF Core para criar uma tabela para cada uma dessas classes.
+        // Fazenda usada para filtrar e salvar os dados.
+        // Vem do usuário logado, ou de DefinirFazenda (cadastro de conta, testes).
+        public int? FazendaAtualId => _fazendaDefinida ?? _fazendaAtual?.FazendaId;
+
+        public void DefinirFazenda(int fazendaId) => _fazendaDefinida = fazendaId;
+
+        public DbSet<Fazenda> Fazendas { get; set; }
         public DbSet<Animal> Animais { get; set; }
         public DbSet<Galpao> Galpoes { get; set; }
         public DbSet<Lote> Lotes { get; set; }
@@ -37,26 +41,20 @@ namespace SistemaGranja.Data
         public DbSet<Especie> Especies { get; set; }
         public DbSet<Raca> Racas { get; set; }
 
-        // Adicione aqui DbSets para as entidades que criamos na conversa anterior,
-        // quando você decidir adicioná-las ao seu projeto Domain:
-        // public DbSet<CategoriaFinanceira> CategoriasFinanceiras { get; set; }
-        // public DbSet<TransacaoFinanceira> TransacoesFinanceiras { get; set; }
-        // public DbSet<VendaAnimal> VendasAnimais { get; set; }
-        // public DbSet<GranjaInfo> GranjaInfos { get; set; }
-        // public DbSet<Cliente> Clientes { get; set; }
-        // public DbSet<Fornecedor> Fornecedores { get; set; }
-
-
-        // O IdentityDbContext já inclui DbSets para:
-        // Users (AspNetUsers), Roles (AspNetRoles), UserRoles (AspNetUserRoles), etc.
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder); // ESSENCIAL ao usar IdentityDbContext
 
-            // Espécie: nome único (não pode haver dois "Bovino")
+            // Usuário pertence a uma fazenda
+            builder.Entity<ApplicationUser>()
+                .HasOne<Fazenda>()
+                .WithMany()
+                .HasForeignKey(u => u.FazendaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Espécie: nome único dentro da fazenda
             builder.Entity<Especie>()
-                .HasIndex(e => e.Nome)
+                .HasIndex(e => new { e.FazendaId, e.Nome })
                 .IsUnique();
 
             // Raça: pertence a uma espécie; nome único dentro da espécie.
@@ -86,6 +84,118 @@ namespace SistemaGranja.Data
                 .HasForeignKey(a => a.RacaId)
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            ConfigurarSeparacaoPorFazenda(builder);
+        }
+
+        // Para cada entidade que pertence a uma fazenda:
+        // - liga à tabela Fazendas (sem exclusão em cascata)
+        // - aplica o filtro automático: toda consulta só traz dados da fazenda atual
+        private void ConfigurarSeparacaoPorFazenda(ModelBuilder builder)
+        {
+            var tipos = builder.Model.GetEntityTypes()
+                .Where(t => typeof(IPertenceAFazenda).IsAssignableFrom(t.ClrType))
+                .Select(t => t.ClrType)
+                .ToList();
+
+            foreach (var tipo in tipos)
+            {
+                builder.Entity(tipo)
+                    .HasOne(typeof(Fazenda))
+                    .WithMany()
+                    .HasForeignKey(nameof(IPertenceAFazenda.FazendaId))
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                // e => e.FazendaId == this.FazendaAtualId
+                // O EF reconhece "this" e usa a fazenda do contexto de cada requisição.
+                var entidade = Expression.Parameter(tipo, "e");
+                var fazendaDaEntidade = Expression.Convert(
+                    Expression.Property(entidade, nameof(IPertenceAFazenda.FazendaId)), typeof(int?));
+                var fazendaAtual = Expression.Property(Expression.Constant(this), nameof(FazendaAtualId));
+                var filtro = Expression.Lambda(Expression.Equal(fazendaDaEntidade, fazendaAtual), entidade);
+
+                builder.Entity(tipo).HasQueryFilter(filtro);
+            }
+        }
+
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            AplicarRegrasDaFazenda();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            AplicarRegrasDaFazenda();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        // Antes de salvar:
+        // - registros novos recebem a fazenda atual
+        // - registros alterados ou excluídos precisam ser da fazenda atual
+        // - ligações (galpão, lote, raça, vacina...) precisam apontar para registros da mesma fazenda
+        // Isso protege contra alguém alterar o formulário para mexer em dados de outra fazenda.
+        private void AplicarRegrasDaFazenda()
+        {
+            var entradas = ChangeTracker.Entries<IPertenceAFazenda>()
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                .ToList();
+
+            if (entradas.Count == 0) return;
+
+            var fazendaId = FazendaAtualId
+                ?? throw new InvalidOperationException("Nenhuma fazenda selecionada para salvar os dados.");
+
+            foreach (var entrada in entradas)
+            {
+                switch (entrada.State)
+                {
+                    case EntityState.Added:
+                        entrada.Entity.FazendaId = fazendaId;
+                        break;
+
+                    case EntityState.Modified:
+                    case EntityState.Deleted:
+                        GarantirQuePertenceAFazenda(entrada, fazendaId);
+                        break;
+                }
+
+                if (entrada.State is EntityState.Added or EntityState.Modified)
+                    GarantirLigacoesDaMesmaFazenda(entrada);
+            }
+        }
+
+        private void GarantirQuePertenceAFazenda(EntityEntry<IPertenceAFazenda> entrada, int fazendaId)
+        {
+            // Lê do banco a fazenda verdadeira do registro (não confia no que veio do formulário)
+            var valoresNoBanco = entrada.GetDatabaseValues();
+            var fazendaNoBanco = valoresNoBanco?.GetValue<int>(nameof(IPertenceAFazenda.FazendaId));
+
+            if (fazendaNoBanco != fazendaId)
+                throw new UnauthorizedAccessException("Este registro não pertence à sua fazenda.");
+
+            // O formulário não envia a fazenda; mantém a que está no banco e não deixa alterá-la
+            var propriedade = entrada.Property(e => e.FazendaId);
+            propriedade.CurrentValue = fazendaId;
+            propriedade.OriginalValue = fazendaId;
+            propriedade.IsModified = false;
+        }
+
+        private void GarantirLigacoesDaMesmaFazenda(EntityEntry<IPertenceAFazenda> entrada)
+        {
+            foreach (var chaveEstrangeira in entrada.Metadata.GetForeignKeys())
+            {
+                var tipoPrincipal = chaveEstrangeira.PrincipalEntityType.ClrType;
+                if (!typeof(IPertenceAFazenda).IsAssignableFrom(tipoPrincipal)) continue;
+
+                var valor = entrada.Property(chaveEstrangeira.Properties[0].Name).CurrentValue;
+                if (valor == null) continue;
+
+                // Find respeita o filtro da fazenda: registro de outra fazenda volta null
+                if (Find(tipoPrincipal, valor) == null)
+                    throw new UnauthorizedAccessException(
+                        $"O registro ligado ({tipoPrincipal.Name} {valor}) não pertence à sua fazenda.");
+            }
         }
     }
 }

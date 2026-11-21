@@ -4,9 +4,12 @@ using System.ComponentModel.DataAnnotations;
 namespace SistemaGranja.Domain
 {
     // Raça de uma espécie: Nelore (Bovino), Duroc (Suíno), Cobb (Ave)...
-    public class Raca
+    public class Raca : IPertenceAFazenda
     {
         public int Id { get; set; }
+
+        // Fazenda dona do registro. Preenchida automaticamente ao salvar.
+        public int FazendaId { get; set; }
 
         [Display(Name = "Raça")]
         [Required(ErrorMessage = "Informe o nome da raça.")]

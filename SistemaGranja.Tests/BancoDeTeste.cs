@@ -7,12 +7,30 @@ namespace SistemaGranja.Tests
     // Cria um banco em memória novo para cada teste, assim um teste não interfere no outro
     public static class BancoDeTeste
     {
-        public static AppDbContext Criar()
+        // Banco novo com uma fazenda já criada e selecionada
+        public static AppDbContext Criar() => CriarParaFazenda(NovoNomeDeBanco(), "Fazenda de teste");
+
+        public static string NovoNomeDeBanco() => $"agroarca-testes-{Guid.NewGuid()}";
+
+        // Abre o banco "nomeDoBanco" como usuário da fazenda "nomeDaFazenda" (cria a fazenda se não existir).
+        // Duas chamadas com o mesmo banco e fazendas diferentes simulam dois clientes no mesmo servidor.
+        public static AppDbContext CriarParaFazenda(string nomeDoBanco, string nomeDaFazenda)
         {
             var opcoes = new DbContextOptionsBuilder<AppDbContext>()
-                .UseInMemoryDatabase($"agroarca-testes-{Guid.NewGuid()}")
+                .UseInMemoryDatabase(nomeDoBanco)
                 .Options;
-            return new AppDbContext(opcoes);
+            var db = new AppDbContext(opcoes);
+
+            var fazenda = db.Fazendas.FirstOrDefault(f => f.Nome == nomeDaFazenda);
+            if (fazenda == null)
+            {
+                fazenda = new Fazenda { Nome = nomeDaFazenda };
+                db.Fazendas.Add(fazenda);
+                db.SaveChanges();
+            }
+
+            db.DefinirFazenda(fazenda.Id);
+            return db;
         }
 
         public static Galpao NovoGalpao(AppDbContext db, string nome = "Galpão 1", int capacidade = 10)

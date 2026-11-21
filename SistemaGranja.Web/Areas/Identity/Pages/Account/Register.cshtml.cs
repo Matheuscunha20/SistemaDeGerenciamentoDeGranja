@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SistemaGranja.Data;
+using SistemaGranja.Domain;
 
 namespace SistemaGranja.Web.Areas.Identity.Pages.Account
 {
@@ -14,15 +15,18 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<RegisterModel> _logger;
+        private readonly AppDbContext _db;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
-            ILogger<RegisterModel> logger)
+            ILogger<RegisterModel> logger,
+            AppDbContext db)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _db = db;
         }
 
         [BindProperty]
@@ -32,6 +36,11 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
 
         public class DadosCadastro
         {
+            [Required(ErrorMessage = "Informe o nome da fazenda.")]
+            [StringLength(150, ErrorMessage = "Use no máximo {1} caracteres.")]
+            [Display(Name = "Nome da fazenda ou propriedade")]
+            public string NomeFazenda { get; set; } = string.Empty;
+
             [Required(ErrorMessage = "Informe o e-mail.")]
             [EmailAddress(ErrorMessage = "E-mail inválido.")]
             [Display(Name = "E-mail")]
@@ -61,21 +70,36 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
             if (!ModelState.IsValid)
                 return Page();
 
-            var usuario = new ApplicationUser { UserName = Input.Email, Email = Input.Email };
+            // Fazenda, usuário e dados iniciais são criados juntos: ou tudo dá certo, ou nada fica gravado
+            await using var transacao = await _db.Database.BeginTransactionAsync();
+
+            var fazenda = new Fazenda { Nome = Input.NomeFazenda.Trim() };
+            _db.Fazendas.Add(fazenda);
+            await _db.SaveChangesAsync();
+
+            var usuario = new ApplicationUser { UserName = Input.Email, Email = Input.Email, FazendaId = fazenda.Id };
             var resultado = await _userManager.CreateAsync(usuario, Input.Senha);
 
-            if (resultado.Succeeded)
+            if (!resultado.Succeeded)
             {
-                _logger.LogInformation("Nova conta criada.");
-                await _signInManager.SignInAsync(usuario, isPersistent: false);
-                return LocalRedirect(ReturnUrl);
+                await transacao.RollbackAsync();
+
+                // Erros do Identity (senha fraca, e-mail já usado...) já vêm em português
+                foreach (var erro in resultado.Errors)
+                    ModelState.AddModelError(string.Empty, erro.Description);
+
+                return Page();
             }
 
-            // Erros do Identity (senha fraca, e-mail já usado...) já vêm em português
-            foreach (var erro in resultado.Errors)
-                ModelState.AddModelError(string.Empty, erro.Description);
+            // A fazenda nova já começa com espécies, raças e vacinas comuns
+            _db.DefinirFazenda(fazenda.Id);
+            await SemeadorDeDados.SemearFazendaNovaAsync(_db);
 
-            return Page();
+            await transacao.CommitAsync();
+            _logger.LogInformation("Nova conta e fazenda criadas.");
+
+            await _signInManager.SignInAsync(usuario, isPersistent: false);
+            return LocalRedirect(ReturnUrl);
         }
     }
 }

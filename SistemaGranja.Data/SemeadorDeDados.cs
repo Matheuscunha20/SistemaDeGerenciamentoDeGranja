@@ -64,7 +64,15 @@ namespace SistemaGranja.Data
             ("Tétano", "Tétano", 365),
         };
 
-        // Só cadastra as vacinas se a tabela estiver vazia,
+        // Dados iniciais de uma fazenda recém-criada.
+        // Antes de chamar, use db.DefinirFazenda(id) com a fazenda nova.
+        public static async Task SemearFazendaNovaAsync(AppDbContext db)
+        {
+            await SemearEspeciesERacasAsync(db);
+            await SemearVacinasAsync(db);
+        }
+
+        // Só cadastra as vacinas se a fazenda ainda não tiver nenhuma,
         // para não recriar uma vacina que o usuário excluiu de propósito.
         public static async Task SemearVacinasAsync(AppDbContext db)
         {

@@ -1,11 +1,14 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SistemaGranja.Domain
 {
-    public class Galpao
+    public class Galpao : IPertenceAFazenda
     {
         public int Id { get; set; }
+
+        // Fazenda dona do registro. Preenchida automaticamente ao salvar.
+        public int FazendaId { get; set; }
 
         [Display(Name = "Nome ou número")]
         [Required(ErrorMessage = "Informe o nome ou número do galpão.")]

@@ -29,10 +29,12 @@
             <dd class="col-sm-8">@Model.TagIdentificacao</dd>
             <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nome)</dt>
             <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Nome) ? "—" : Model.Nome)</dd>
+            <dt class="col-sm-4">Espécie</dt>
+            <dd class="col-sm-8">@(Model.Raca?.Especie?.Nome ?? "—")</dd>
             <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Raca)</dt>
-            <dd class="col-sm-8">@Model.Raca</dd>
+            <dd class="col-sm-8">@(Model.Raca?.Nome ?? "—")</dd>
             <dt class="col-sm-4">@Html.DisplayNameFor(model => model.DataNascimento)</dt>
-            <dd class="col-sm-8">@Html.DisplayFor(m => m.DataNascimento)</dd>
+            <dd class="col-sm-8">@Html.DisplayFor(m => m.DataNascimento) <span class="text-muted">(@Model.IdadeDescricao)</span></dd>
             <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Sexo)</dt>
             <dd class="col-sm-8">@Model.Sexo</dd>
             <dt class="col-sm-4">@Html.DisplayNameFor(model => model.PesoAtual)</dt>

@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Animais";
+    var filtroAtivo = ViewData["FiltroAtivo"] is true;
 }
 @functions {
     string CorStatus(string status) => status switch
@@ -19,12 +20,56 @@
     <a asp-action="Create" class="btn btn-agro">+ Novo animal</a>
 </div>
 
+<form asp-action="Index" method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label for="busca" class="form-label small text-muted mb-1">Buscar</label>
+                <input type="search" id="busca" name="busca" value="@ViewData["Busca"]" class="form-control" placeholder="Brinco/tag ou nome" />
+            </div>
+            <div class="col-md-2">
+                <label for="especieId" class="form-label small text-muted mb-1">Espécie</label>
+                <select id="especieId" name="especieId" class="form-select" asp-items="ViewBag.FiltroEspecies">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="galpaoId" class="form-label small text-muted mb-1">Galpão</label>
+                <select id="galpaoId" name="galpaoId" class="form-select" asp-items="ViewBag.FiltroGalpoes">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="statusSaude" class="form-label small text-muted mb-1">Saúde</label>
+                <select id="statusSaude" name="statusSaude" class="form-select" asp-items="ViewBag.FiltroStatus">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-agro flex-grow-1">Filtrar</button>
+                @if (filtroAtivo)
+                {
+                    <a asp-action="Index" class="btn btn-outline-secondary" title="Limpar filtros">Limpar</a>
+                }
+            </div>
+        </div>
+    </div>
+</form>
+
 @if (!Model.Any())
 {
     <div class="card shadow-sm">
         <div class="lista-vazia">
-            <p class="mb-3">Nenhum animal cadastrado ainda.</p>
-            <a asp-action="Create" class="btn btn-agro">Cadastrar o primeiro</a>
+            @if (filtroAtivo)
+            {
+                <p class="mb-3">Nenhum animal encontrado com esses filtros.</p>
+                <a asp-action="Index" class="btn btn-outline-secondary">Limpar filtros</a>
+            }
+            else
+            {
+                <p class="mb-3">Nenhum animal cadastrado ainda.</p>
+                <a asp-action="Create" class="btn btn-agro">Cadastrar o primeiro</a>
+            }
         </div>
     </div>
 }
@@ -35,31 +80,31 @@ else
             <table class="table table-hover mb-0">
                 <thead class="table-light">
                     <tr>
-                    <th>@Html.DisplayNameFor(model => model.TagIdentificacao)</th>
-                    <th>@Html.DisplayNameFor(model => model.Nome)</th>
-                    <th>@Html.DisplayNameFor(model => model.Raca)</th>
-                    <th>@Html.DisplayNameFor(model => model.DataNascimento)</th>
-                    <th>@Html.DisplayNameFor(model => model.Sexo)</th>
-                    <th>@Html.DisplayNameFor(model => model.PesoAtual)</th>
-                    <th>@Html.DisplayNameFor(model => model.StatusSaude)</th>
-                    <th>@Html.DisplayNameFor(model => model.Galpao)</th>
-                    <th>@Html.DisplayNameFor(model => model.Lote)</th>
-                    <th class="text-end">Ações</th>
+                        <th>@Html.DisplayNameFor(model => model.TagIdentificacao)</th>
+                        <th>@Html.DisplayNameFor(model => model.Nome)</th>
+                        <th>Espécie</th>
+                        <th>@Html.DisplayNameFor(model => model.Raca)</th>
+                        <th>@Html.DisplayNameFor(model => model.Sexo)</th>
+                        <th>@Html.DisplayNameFor(model => model.IdadeDescricao)</th>
+                        <th>@Html.DisplayNameFor(model => model.PesoAtual)</th>
+                        <th>@Html.DisplayNameFor(model => model.StatusSaude)</th>
+                        <th>@Html.DisplayNameFor(model => model.Galpao)</th>
+                        <th class="text-end">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>@item.TagIdentificacao</td>
-                        <td>@item.Nome</td>
-                        <td>@item.Raca</td>
-                        <td>@Html.DisplayFor(m => item.DataNascimento)</td>
+                        <td class="fw-semibold">@item.TagIdentificacao</td>
+                        <td>@(string.IsNullOrEmpty(item.Nome) ? "—" : item.Nome)</td>
+                        <td>@(item.Raca?.Especie?.Nome ?? "—")</td>
+                        <td>@(item.Raca?.Nome ?? "—")</td>
                         <td>@item.Sexo</td>
+                        <td>@item.IdadeDescricao</td>
                         <td>@Html.DisplayFor(m => item.PesoAtual)</td>
                         <td><span class="badge @CorStatus(item.StatusSaude)">@item.StatusSaude</span></td>
                         <td>@(item.Galpao?.NomeOuNumero ?? "—")</td>
-                        <td>@(item.Lote?.CodigoLote ?? "—")</td>
                         <td class="text-end acoes">
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
@@ -71,5 +116,5 @@ else
             </table>
         </div>
     </div>
-    <p class="text-muted mt-2 small">Total: @Model.Count() registro(s)</p>
+    <p class="text-muted mt-2 small">@Model.Count() animal(is) @(filtroAtivo ? "encontrado(s)" : "cadastrado(s)")</p>
 }

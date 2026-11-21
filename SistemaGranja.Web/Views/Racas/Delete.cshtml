@@ -1,0 +1,32 @@
+@model SistemaGranja.Domain.Raca
+
+@{
+    ViewData["Title"] = "Excluir";
+    var quantidadeAnimais = ViewData["QuantidadeAnimais"] as int? ?? 0;
+}
+
+<div class="page-header">
+    <h1>Excluir raça</h1>
+</div>
+
+@if (quantidadeAnimais > 0)
+{
+    <div class="alert alert-info">
+        A raça <strong>@Model.Nome</strong> (@Model.Especie?.Nome) está em uso por @quantidadeAnimais animal(is) e não pode ser excluída.
+        Altere a raça desses animais primeiro.
+    </div>
+    <a asp-action="Index" asp-route-especieId="@Model.EspecieId" class="btn btn-outline-secondary">Voltar</a>
+}
+else
+{
+    <div class="alert alert-warning">
+        Tem certeza que deseja excluir a raça <strong>@Model.Nome</strong> (@Model.Especie?.Nome)? Esta ação não pode ser desfeita.
+    </div>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Index" asp-route-especieId="@Model.EspecieId" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+}

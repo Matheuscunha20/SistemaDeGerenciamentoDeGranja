@@ -49,8 +49,8 @@
 {
     <div class="card shadow-sm">
         <div class="lista-vazia">
-            <p class="mb-3">Nenhum alimento cadastrado. Cadastre os tipos de alimento para controlar o estoque.</p>
-            <a asp-controller="TiposAlimento" asp-action="Create" class="btn btn-agro">Cadastrar alimento</a>
+            <p class="mb-3">Nenhum alimento cadastrado. @(User.PodeGerenciar() ? "Cadastre os tipos de alimento para controlar o estoque." : "Peça ao dono ou gerente para cadastrar os tipos de alimento.")</p>
+            @if (User.PodeGerenciar()) { <a asp-controller="TiposAlimento" asp-action="Create" class="btn btn-agro">Cadastrar alimento</a> }
         </div>
     </div>
 }
@@ -109,6 +109,9 @@ else
     </div>
     <p class="text-muted mt-2 small">
         O consumo por dia é a média das saídas para consumo nos últimos 30 dias.
-        Para receber o aviso de estoque baixo, defina o <a asp-controller="TiposAlimento" asp-action="Index">estoque mínimo</a> de cada alimento.
+        @if (User.PodeGerenciar())
+        {
+            <text>Para receber o aviso de estoque baixo, defina o <a asp-controller="TiposAlimento" asp-action="Index">estoque mínimo</a> de cada alimento.</text>
+        }
     </p>
 }

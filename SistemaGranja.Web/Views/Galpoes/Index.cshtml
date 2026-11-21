@@ -13,7 +13,7 @@
 
 <div class="page-header">
     <h1>Galpões</h1>
-    <a asp-action="Create" class="btn btn-agro">+ Novo galpão</a>
+    @if (User.PodeGerenciar()) { <a asp-action="Create" class="btn btn-agro">+ Novo galpão</a> }
 </div>
 
 @if (!Model.Any())
@@ -21,7 +21,7 @@
     <div class="card shadow-sm">
         <div class="lista-vazia">
             <p class="mb-3">Nenhum galpão cadastrado ainda.</p>
-            <a asp-action="Create" class="btn btn-agro">Cadastrar o primeiro</a>
+            @if (User.PodeGerenciar()) { <a asp-action="Create" class="btn btn-agro">Cadastrar o primeiro</a> }
         </div>
     </div>
 }
@@ -59,8 +59,8 @@ else
                         </td>
                         <td class="text-end acoes">
                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a>
+                            @if (User.PodeGerenciar()) { <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a> }
+                            @if (User.PodeGerenciar()) { <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a> }
                         </td>
                     </tr>
                 }

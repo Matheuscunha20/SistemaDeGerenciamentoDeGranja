@@ -1,0 +1,78 @@
+@page
+@model AceitarConviteModel
+
+@{
+    ViewData["Title"] = "Aceitar convite";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        @if (Model.Convite == null)
+        {
+            <div class="text-center py-5">
+                <h1 class="h3 mb-2">Convite inválido</h1>
+                <p class="text-muted">Este link de convite não existe, já foi usado ou expirou. Peça um novo convite ao dono da fazenda.</p>
+                <a href="~/" class="btn btn-agro">Ir para o início</a>
+            </div>
+        }
+        else if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="text-center py-5">
+                <h1 class="h3 mb-2">Você já está conectado</h1>
+                <p class="text-muted">Para aceitar o convite para <strong>@Model.NomeFazenda</strong>, saia da conta atual e abra o link de novo.</p>
+                <form asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/Account/AceitarConvite", new { token = Model.Token })" method="post">
+                    <button type="submit" class="btn btn-agro">Sair e continuar</button>
+                </form>
+            </div>
+        }
+        else if (Model.JaTemConta)
+        {
+            <div class="text-center py-5">
+                <h1 class="h3 mb-2">Este e-mail já tem conta</h1>
+                <p class="text-muted">
+                    O e-mail <strong>@Model.Convite.Email</strong> já tem uma conta no AgroArca.
+                    Por enquanto, cada conta participa de uma única fazenda. Peça ao dono para convidar outro e-mail.
+                </p>
+                <a asp-page="./Login" class="btn btn-agro">Entrar</a>
+            </div>
+        }
+        else
+        {
+            <div class="text-center mb-4">
+                <h1 class="h2 fw-bold mb-1">Você foi convidado!</h1>
+                <p class="text-muted">
+                    Entre na equipe da <strong>@Model.NomeFazenda</strong> como
+                    <span class="badge @Model.Convite.Perfil.CorExibicao()">@Model.Convite.Perfil.NomeExibicao()</span>.
+                </p>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <form method="post">
+                        <input type="hidden" asp-for="Token" />
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                        <div class="mb-3">
+                            <label class="form-label">E-mail</label>
+                            <input class="form-control" value="@Model.Convite.Email" readonly autocomplete="username" />
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Input.Senha" class="form-label"></label>
+                            <input asp-for="Input.Senha" class="form-control" autocomplete="new-password" autofocus />
+                            <div class="form-text">Pelo menos 6 caracteres, com letra maiúscula, letra minúscula, número e símbolo (ex.: Rebanho@2026).</div>
+                            <span asp-validation-for="Input.Senha" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Input.ConfirmarSenha" class="form-label"></label>
+                            <input asp-for="Input.ConfirmarSenha" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Input.ConfirmarSenha" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-agro w-100">Entrar na equipe</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -24,11 +24,14 @@
         {
             <a asp-action="AdicionarAnimais" asp-route-id="@Model.Id" class="btn btn-agro">+ Adicionar animais</a>
         }
-        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Editar</a>
-        <form asp-action="AlterarSituacao" asp-route-id="@Model.Id" method="post" class="d-inline">
-            <input type="hidden" name="ativo" value="@(Model.Ativo ? "false" : "true")" />
-            <button type="submit" class="btn btn-outline-secondary">@(Model.Ativo ? "Encerrar lote" : "Reabrir lote")</button>
-        </form>
+        @if (User.PodeGerenciar())
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">Editar</a>
+            <form asp-action="AlterarSituacao" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <input type="hidden" name="ativo" value="@(Model.Ativo ? "false" : "true")" />
+                <button type="submit" class="btn btn-outline-secondary">@(Model.Ativo ? "Encerrar lote" : "Reabrir lote")</button>
+            </form>
+        }
         <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
     </div>
 </div>

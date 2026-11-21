@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SistemaGranja.Data;
+using SistemaGranja.Services;
 
 namespace SistemaGranja.Web.Areas.Identity.Pages.Account
 {
@@ -13,11 +14,13 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
     public class LoginModel : PageModel
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly ILogger<LoginModel> _logger;
 
-        public LoginModel(SignInManager<ApplicationUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ApplicationUser> signInManager, UserManager<ApplicationUser> userManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
+            _userManager = userManager;
             _logger = logger;
         }
 
@@ -69,6 +72,14 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
 
             if (resultado.IsLockedOut)
             {
+                // O dono da fazenda removeu o acesso desta pessoa
+                var usuario = await _userManager.FindByEmailAsync(Input.Email);
+                if (usuario != null && EquipeService.AcessoRemovido(usuario))
+                {
+                    ModelState.AddModelError(string.Empty, "Seu acesso a esta fazenda foi removido. Fale com o dono da fazenda.");
+                    return Page();
+                }
+
                 ModelState.AddModelError(string.Empty, "Conta bloqueada por excesso de tentativas. Tente novamente em alguns minutos.");
                 return Page();
             }

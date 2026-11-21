@@ -80,7 +80,7 @@ else
                         <td>@(item.DataProximaDoseRecomendada?.ToString("dd/MM/yyyy") ?? "—")</td>
                         <td class="text-end acoes">
                             <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
-                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a>
+                            @if (User.PodeGerenciar()) { <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a> }
                         </td>
                     </tr>
                 }

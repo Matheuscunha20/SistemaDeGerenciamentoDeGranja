@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +7,8 @@ using SistemaGranja.Services;
 using System;
 using System.Threading.Tasks;
 
-[Authorize]
+// Cadastros base: só Dono e Gerente
+[Authorize(Policy = Politicas.Gestao)]
 public class FuncionariosController : Controller
 {
     private readonly IFuncionarioService _funcionarioService;

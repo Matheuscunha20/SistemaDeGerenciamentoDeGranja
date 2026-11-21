@@ -5,7 +5,7 @@ using SistemaGranja.Data;
 
 namespace SistemaGranja.Web.Identidade
 {
-    // Ao fazer login, guarda no cookie a fazenda do usuário (Id e nome)
+    // Ao fazer login, guarda no cookie a fazenda do usuário (Id e nome) e o perfil de acesso
     public class FabricaDeClaimsAgroArca : UserClaimsPrincipalFactory<ApplicationUser>
     {
         private readonly AppDbContext _db;
@@ -28,6 +28,9 @@ namespace SistemaGranja.Web.Identidade
                 var fazenda = await _db.Fazendas.FindAsync(user.FazendaId.Value);
                 identidade.AddClaim(new Claim(FazendaDoUsuarioLogado.ClaimFazendaId, user.FazendaId.Value.ToString()));
                 identidade.AddClaim(new Claim(FazendaDoUsuarioLogado.ClaimFazendaNome, fazenda?.Nome ?? string.Empty));
+
+                // Perfil (Dono, Gerente ou Funcionario) como "papel": permite usar User.IsInRole(...)
+                identidade.AddClaim(new Claim(Options.ClaimsIdentity.RoleClaimType, user.Perfil.ToString()));
             }
 
             return identidade;

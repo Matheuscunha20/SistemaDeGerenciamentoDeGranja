@@ -25,6 +25,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Tipos do ASP.NET Core (controllers, [Authorize]) usados nos testes de permissão -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 

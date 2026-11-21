@@ -1,3 +1,4 @@
+using SistemaGranja.Web.Identidade;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -191,6 +192,7 @@ public class VacinacoesController : Controller
     }
 
     // GET: Vacinacoes/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     public async Task<IActionResult> Delete(int? id)
     {
         if (id == null) return NotFound();
@@ -200,6 +202,7 @@ public class VacinacoesController : Controller
     }
 
     // POST: Vacinacoes/Delete/5
+    [Authorize(Policy = Politicas.Gestao)]
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)

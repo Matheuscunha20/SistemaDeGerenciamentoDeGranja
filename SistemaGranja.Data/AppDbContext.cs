@@ -40,6 +40,7 @@ namespace SistemaGranja.Data
         public DbSet<RegistroSaude> RegistrosSaude { get; set; }
         public DbSet<Especie> Especies { get; set; }
         public DbSet<Raca> Racas { get; set; }
+        public DbSet<Convite> Convites { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -51,6 +52,11 @@ namespace SistemaGranja.Data
                 .WithMany()
                 .HasForeignKey(u => u.FazendaId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Convite: o token do link é único
+            builder.Entity<Convite>()
+                .HasIndex(c => c.Token)
+                .IsUnique();
 
             // Espécie: nome único dentro da fazenda
             builder.Entity<Especie>()

@@ -66,6 +66,32 @@ namespace SistemaGranja.Services
         public List<FluxoMes> Meses { get; set; } = new();
     }
 
+    // Custo, receita e lucro de um lote (lançamentos ligados a ele, pagos ou em aberto)
+    public class ResultadoLote
+    {
+        public Lote Lote { get; set; } = null!;
+        public decimal Receitas { get; set; }
+        public decimal Despesas { get; set; }
+        public decimal Lucro => Receitas - Despesas;
+        // Lucro sobre o que entrou (ex.: 0,25 = 25%); null se não houve receita
+        public decimal? Margem => Receitas > 0 ? Lucro / Receitas : null;
+        public decimal EmAberto { get; set; } // parte dos valores que ainda não foi paga/recebida
+        public int AnimaisNoLote { get; set; }
+        public int AnimaisQueSairam { get; set; }
+        public int TotalDeAnimais => AnimaisNoLote + AnimaisQueSairam;
+        public decimal? CustoPorAnimal => TotalDeAnimais > 0 ? Math.Round(Despesas / TotalDeAnimais, 2) : null;
+        public List<LancamentoFinanceiro> Lancamentos { get; set; } = new();
+    }
+
+    // Receitas e despesas pagas/recebidas em um mês
+    public class TotaisDoMes
+    {
+        public DateTime Mes { get; set; }
+        public decimal Receitas { get; set; }
+        public decimal Despesas { get; set; }
+        public decimal Saldo => Receitas - Despesas;
+    }
+
     public interface IFinanceiroService
     {
         // Lançamentos
@@ -82,6 +108,11 @@ namespace SistemaGranja.Services
         Task<ContasEmAberto> ObterContasEmAbertoAsync(TipoLancamento? tipo, DateTime hoje);
         Task<string?> MarcarComoPagoAsync(int id, DateTime dataPagamento);
         Task<FluxoDeCaixa> ObterFluxoDeCaixaAsync(DateTime hoje, int mesesAntes = 2, int mesesDepois = 3);
+
+        // Resultados
+        Task<List<ResultadoLote>> ObterResultadosPorLoteAsync(bool somenteComLancamentos = true);
+        Task<ResultadoLote?> ObterResultadoDoLoteAsync(int loteId);
+        Task<List<TotaisDoMes>> ObterTotaisMensaisAsync(DateTime hoje, int meses = 6);
 
         // Categorias
         Task GarantirCategoriasPadraoAsync();

@@ -17,6 +17,9 @@ namespace SistemaGranja.Services
         // Lote com os animais (para a tela de detalhes)
         Task<Lote?> ObterComAnimaisAsync(int id);
 
+        // Animais do lote que já saíram do rebanho (vendidos, mortos...)
+        Task<List<Animal>> ObterAnimaisQueSairamAsync(int loteId);
+
         // Quantidade de animais em cada lote: chave = Id do lote
         Task<Dictionary<int, int>> ObterQuantidadeAnimaisAsync();
 

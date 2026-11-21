@@ -85,10 +85,10 @@ public class FinanceiroController : Controller
     }
 
     // GET: Financeiro/Create?tipo=Receita
-    public async Task<IActionResult> Create(TipoLancamento? tipo)
+    public async Task<IActionResult> Create(TipoLancamento? tipo, int? loteId)
     {
         await _financeiro.GarantirCategoriasPadraoAsync();
-        var lancamento = new LancamentoFinanceiro { Tipo = tipo ?? TipoLancamento.Despesa };
+        var lancamento = new LancamentoFinanceiro { Tipo = tipo ?? TipoLancamento.Despesa, LoteId = loteId };
         await CarregarListasAsync(lancamento);
         return View(lancamento);
     }
@@ -197,6 +197,25 @@ public class FinanceiroController : Controller
         return !string.IsNullOrEmpty(voltarPara) && Url.IsLocalUrl(voltarPara)
             ? LocalRedirect(voltarPara)
             : RedirectToAction(nameof(Contas));
+    }
+
+    public class TelaResultados
+    {
+        public List<TotaisDoMes> Meses { get; set; } = new();
+        public List<ResultadoLote> Lotes { get; set; } = new();
+        public ResumoFinanceiro Ano { get; set; } = new();
+    }
+
+    // GET: Financeiro/Resultados — receitas x despesas dos últimos meses e lucro por lote
+    public async Task<IActionResult> Resultados()
+    {
+        var hoje = DateTime.Today;
+        return View(new TelaResultados
+        {
+            Meses = await _financeiro.ObterTotaisMensaisAsync(hoje, 6),
+            Lotes = await _financeiro.ObterResultadosPorLoteAsync(),
+            Ano = await _financeiro.ObterResumoAsync(new DateTime(hoje.Year, 1, 1), new DateTime(hoje.Year, 12, 31))
+        });
     }
 
     // GET: Financeiro/FluxoDeCaixa

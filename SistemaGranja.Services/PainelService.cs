@@ -94,6 +94,22 @@ namespace SistemaGranja.Services
             resumo.ContasAPagarVencidas = contasAPagar.Count(c => c.Data < hoje);
             resumo.ValorContasAPagarVencidas = contasAPagar.Where(c => c.Data < hoje).Sum(c => c.Valor);
             resumo.ContasAPagarProximos7Dias = contasAPagar.Count(c => c.Data >= hoje);
+            resumo.APagarProximos7Dias = contasAPagar.Where(c => c.Data >= hoje).Sum(c => c.Valor);
+
+            resumo.AReceberProximos7Dias = await _context.LancamentosFinanceiros
+                .Where(l => !l.Pago && l.Tipo == TipoLancamento.Receita && l.Data >= hoje && l.Data < daquiASete)
+                .SumAsync(l => l.Valor);
+
+            // Pago e recebido neste mês
+            var inicioDoMes = new DateTime(hoje.Year, hoje.Month, 1);
+            var inicioDoProximoMes = inicioDoMes.AddMonths(1);
+            var totaisDoMes = await _context.LancamentosFinanceiros
+                .Where(l => l.Pago && l.DataPagamento >= inicioDoMes && l.DataPagamento < inicioDoProximoMes)
+                .GroupBy(l => l.Tipo)
+                .Select(g => new { Tipo = g.Key, Total = g.Sum(l => l.Valor) })
+                .ToListAsync();
+            resumo.RecebidoNoMes = totaisDoMes.Where(t => t.Tipo == TipoLancamento.Receita).Sum(t => t.Total);
+            resumo.PagoNoMes = totaisDoMes.Where(t => t.Tipo == TipoLancamento.Despesa).Sum(t => t.Total);
 
             return resumo;
         }

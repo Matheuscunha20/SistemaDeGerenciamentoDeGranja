@@ -45,6 +45,9 @@ Desenvolvido em **C# / ASP.NET Core 8 MVC**, **Entity Framework Core** e **MySQL
 - Resumo do período (receitas, despesas e saldo) e totais por categoria
 - Períodos prontos (este mês, mês passado, 30 dias, ano) e filtros
 - Categorias padrão de fazenda, editáveis
+- Contas a pagar e a receber, parcelas mensais e fluxo de caixa com previsão
+- Compra no estoque vira despesa; venda de animais (um a um ou do lote) vira receita
+- Resultados: recebido x pago dos últimos meses, para onde foi o dinheiro e lucro por lote
 
 **Acesso e equipe da fazenda**
 - Cada cliente (fazenda) vê apenas os próprios dados

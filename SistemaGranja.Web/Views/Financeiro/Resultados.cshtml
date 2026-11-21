@@ -1,0 +1,150 @@
+@model FinanceiroController.TelaResultados
+
+@{
+    ViewData["Title"] = "Resultados";
+    var cultura = new System.Globalization.CultureInfo("pt-BR");
+    var maior = Model.Meses.Count > 0 ? Model.Meses.Max(m => Math.Max(m.Receitas, m.Despesas)) : 0m;
+    int Altura(decimal valor) => maior > 0 && valor > 0 ? Math.Max((int)(valor / maior * 100), 2) : 0;
+    string NomeMes(DateTime mes) => cultura.TextInfo.ToTitleCase(mes.ToString("MMM", cultura).Replace(".", ""));
+    var totalReceitas = Model.Meses.Sum(m => m.Receitas);
+    var totalDespesas = Model.Meses.Sum(m => m.Despesas);
+}
+
+<div class="page-header">
+    <h1>Financeiro</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Receita" class="btn btn-agro">@Icones.Svg("mais", 18) Receita</a>
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-outline-danger">@Icones.Svg("mais", 18) Despesa</a>
+    </div>
+</div>
+
+<partial name="_Abas" />
+
+<section class="painel-avisos mb-4" aria-label="Resultado do ano">
+    <div class="aviso aviso-sucesso">
+        <span class="aviso-titulo">Recebido em @DateTime.Today.Year</span>
+        <span class="aviso-numero">@Model.Ano.Receitas.ToString("C")</span>
+    </div>
+    <div class="aviso aviso-perigo">
+        <span class="aviso-titulo">Pago em @DateTime.Today.Year</span>
+        <span class="aviso-numero">@Model.Ano.Despesas.ToString("C")</span>
+    </div>
+    <div class="aviso @(Model.Ano.Saldo >= 0 ? "aviso-neutro" : "aviso-atencao")">
+        <span class="aviso-titulo">Resultado do ano</span>
+        <span class="aviso-numero @(Model.Ano.Saldo < 0 ? "text-danger-emphasis" : "")">@Model.Ano.Saldo.ToString("C")</span>
+        <span class="aviso-texto">@(Model.Ano.Saldo > 0 ? "Lucro até agora" : Model.Ano.Saldo < 0 ? "Prejuízo até agora" : "Sem movimento")</span>
+    </div>
+</section>
+
+<div class="row g-4">
+    <div class="col-xl-6">
+        <section class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex flex-wrap justify-content-between align-items-baseline gap-2 mb-3">
+                    <h2 class="h5 mb-0">Últimos 6 meses</h2>
+                    <div class="d-flex gap-3 small">
+                        <span class="legenda"><span class="legenda-cor legenda-receita"></span> Recebido</span>
+                        <span class="legenda"><span class="legenda-cor legenda-despesa"></span> Pago</span>
+                    </div>
+                </div>
+                <div class="grafico-meses" role="img" aria-label="Recebido e pago nos últimos 6 meses">
+                    @foreach (var mes in Model.Meses)
+                    {
+                        <div class="grafico-mes" title="@NomeMes(mes.Mes): recebido @mes.Receitas.ToString("C"), pago @mes.Despesas.ToString("C")">
+                            <div class="grafico-barras">
+                                <div class="grafico-barra grafico-receita" style="height: @Altura(mes.Receitas)%"></div>
+                                <div class="grafico-barra grafico-despesa" style="height: @Altura(mes.Despesas)%"></div>
+                            </div>
+                            <div class="grafico-rotulo">@NomeMes(mes.Mes)</div>
+                            <div class="grafico-saldo @(mes.Saldo < 0 ? "text-danger-emphasis" : "text-success-emphasis")">@mes.Saldo.ToString("C0")</div>
+                        </div>
+                    }
+                </div>
+                <p class="small text-muted mt-3 mb-0">
+                    Nos 6 meses: recebido @totalReceitas.ToString("C"), pago @totalDespesas.ToString("C"),
+                    resultado <strong class="@(totalReceitas - totalDespesas < 0 ? "text-danger-emphasis" : "text-success-emphasis")">@((totalReceitas - totalDespesas).ToString("C"))</strong>.
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-xl-6">
+        <section class="card shadow-sm h-100">
+            <div class="card-body d-flex flex-column gap-2">
+                <h2 class="h5 mb-1">Para onde foi o dinheiro em @DateTime.Today.Year</h2>
+                @{
+                    var despesas = Model.Ano.PorCategoria.Where(c => c.Tipo == TipoLancamento.Despesa).Take(6).ToList();
+                    var maiorDespesa = despesas.Count > 0 ? despesas.Max(c => c.Total) : 0m;
+                }
+                @if (despesas.Count == 0)
+                {
+                    <p class="text-muted mb-0">Nenhuma despesa paga neste ano.</p>
+                }
+                else
+                {
+                    foreach (var (categoria, _, total) in despesas)
+                    {
+                        var largura = maiorDespesa > 0 ? Math.Max((int)(total / maiorDespesa * 100), 2) : 0;
+                        var parte = Model.Ano.Despesas > 0 ? total / Model.Ano.Despesas : 0;
+                        <div class="py-1">
+                            <div class="d-flex justify-content-between gap-2 small mb-1">
+                                <span class="fw-semibold">@categoria</span>
+                                <span class="text-nowrap">@total.ToString("C") <span class="text-muted">(@parte.ToString("P0", cultura))</span></span>
+                            </div>
+                            <div class="barra barra-perigo"><div class="barra-valor" style="width: @largura%"></div></div>
+                        </div>
+                    }
+                }
+            </div>
+        </section>
+    </div>
+</div>
+
+<h2 class="h5 mt-4 mb-2">Lucro por lote</h2>
+<p class="small text-muted">Soma as receitas e despesas ligadas a cada lote (pagas ou em aberto). Para um custo completo, ligue ao lote as compras de animais, ração, vacinas e a venda.</p>
+@if (!Model.Lotes.Any())
+{
+    <div class="card shadow-sm">
+        <div class="lista-vazia">
+            <p class="mb-2">Nenhum lote tem lançamentos ainda.</p>
+            <p class="small mb-0">Ao lançar uma receita ou despesa, escolha o lote. A venda de animais de um lote já entra aqui automaticamente.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table tabela-cartoes table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Lote</th>
+                        <th>Animais</th>
+                        <th class="text-end">Receitas</th>
+                        <th class="text-end">Despesas</th>
+                        <th class="text-end">Custo por animal</th>
+                        <th class="text-end">Lucro</th>
+                        <th class="text-end">Margem</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var r in Model.Lotes)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Lotes" asp-action="Details" asp-route-id="@r.Lote.Id" class="fw-semibold">@r.Lote.CodigoLote</a>
+                            @if (!r.Lote.Ativo) { <span class="selo selo-neutro ms-1">encerrado</span> }
+                        </td>
+                        <td>@($"{r.AnimaisNoLote} no lote" + (r.AnimaisQueSairam > 0 ? $" · {r.AnimaisQueSairam} saíram" : ""))</td>
+                        <td class="text-end text-success-emphasis text-nowrap">@r.Receitas.ToString("C")</td>
+                        <td class="text-end text-danger-emphasis text-nowrap">@r.Despesas.ToString("C")</td>
+                        <td class="text-end text-nowrap">@(r.CustoPorAnimal?.ToString("C") ?? "—")</td>
+                        <td class="text-end fw-semibold text-nowrap @(r.Lucro < 0 ? "text-danger-emphasis" : "text-success-emphasis")">@r.Lucro.ToString("C")</td>
+                        <td class="text-end text-nowrap">@(r.Margem?.ToString("P0", cultura) ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

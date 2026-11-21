@@ -4,6 +4,8 @@
     <li><a class="dropdown-item" asp-area="" asp-controller="Equipe" asp-action="Index">@Icones.Svg("equipe", 18) Equipe</a></li>
     <li><a class="dropdown-item" asp-area="" asp-controller="Fazenda" asp-action="Index">@Icones.Svg("galpoes", 18) Dados da fazenda</a></li>
 }
+@* Aparece só quando o navegador permite instalar o app (Chrome, Edge, Android) *@
+<li class="d-none" data-instalar-app><button type="button" class="dropdown-item">@Icones.Svg("baixar", 18) Instalar o app</button></li>
 <li><a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">@Icones.Svg("conta", 18) Minha conta</a></li>
 <li><hr class="dropdown-divider" /></li>
 <li>

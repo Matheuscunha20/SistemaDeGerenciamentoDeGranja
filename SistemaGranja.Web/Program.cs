@@ -127,7 +127,15 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedCultures = new[] { culturaBrasil },
     SupportedUICultures = new[] { culturaBrasil }
 });
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    // O service worker (app instalável) precisa ser conferido a cada visita, para as atualizações chegarem
+    OnPrepareResponse = contexto =>
+    {
+        if (contexto.File.Name == "sw.js")
+            contexto.Context.Response.Headers.CacheControl = "no-cache";
+    }
+});
 
 // Páginas de conta em inglês que ainda não usamos ficam fora do ar
 app.Use(async (context, next) =>

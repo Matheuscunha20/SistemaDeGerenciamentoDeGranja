@@ -45,3 +45,31 @@ document.querySelectorAll('table.tabela-cartoes').forEach(function (tabela) {
         });
     });
 });
+
+// App instalável (PWA): registra o service worker e mostra "Instalar o app" quando o navegador permitir.
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/sw.js').catch(function () { /* sem PWA, o site funciona normal */ });
+    });
+}
+
+var pedidoDeInstalacao = null;
+window.addEventListener('beforeinstallprompt', function (evento) {
+    evento.preventDefault();
+    pedidoDeInstalacao = evento;
+    document.querySelectorAll('[data-instalar-app]').forEach(function (item) { item.classList.remove('d-none'); });
+});
+
+document.addEventListener('click', function (evento) {
+    var item = evento.target.closest && evento.target.closest('[data-instalar-app]');
+    if (!item || !pedidoDeInstalacao) return;
+    pedidoDeInstalacao.prompt();
+    pedidoDeInstalacao.userChoice.finally(function () {
+        pedidoDeInstalacao = null;
+        document.querySelectorAll('[data-instalar-app]').forEach(function (i) { i.classList.add('d-none'); });
+    });
+});
+
+window.addEventListener('appinstalled', function () {
+    document.querySelectorAll('[data-instalar-app]').forEach(function (i) { i.classList.add('d-none'); });
+});

@@ -1,0 +1,20 @@
+@page
+@model ConfirmEmailChangeModel
+
+@{
+    ViewData["Title"] = "Troca de e-mail";
+}
+
+<div class="text-center py-5">
+    @if (Model.Confirmado)
+    {
+        <h1 class="h3 mb-2">E-mail alterado!</h1>
+        <p class="text-muted">A partir de agora, entre no AgroArca com o novo e-mail.</p>
+    }
+    else
+    {
+        <h1 class="h3 mb-2">Não foi possível trocar o e-mail</h1>
+        <p class="text-muted">@Model.Mensagem</p>
+    }
+    <a href="~/" class="btn btn-agro">Ir para o início</a>
+</div>

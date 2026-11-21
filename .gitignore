@@ -368,3 +368,6 @@ MigrationBackup/
 FodyWeavers.xsd
 # Variáveis locais do Docker (senha do banco)
 .env
+
+# E-mails de teste salvos em desenvolvimento (contêm links de acesso)
+EmailsDeTeste/

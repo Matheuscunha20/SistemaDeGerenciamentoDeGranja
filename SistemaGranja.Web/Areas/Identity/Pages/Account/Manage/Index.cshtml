@@ -1,0 +1,53 @@
+@page
+@model IndexModel
+
+@{
+    ViewData["Title"] = "Minha conta";
+    ViewData["PaginaAtiva"] = "Dados";
+}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <dl class="row mb-0">
+            <dt class="col-sm-4">E-mail</dt>
+            <dd class="col-sm-8">
+                @Model.Email
+                @if (Model.EmailConfirmado)
+                {
+                    <span class="badge bg-success-subtle text-success-emphasis ms-1">confirmado</span>
+                }
+                else
+                {
+                    <span class="badge bg-warning text-dark ms-1">não confirmado</span>
+                    <a asp-page="./Email" class="small ms-1">confirmar</a>
+                }
+            </dd>
+            <dt class="col-sm-4">Fazenda</dt>
+            <dd class="col-sm-8">@Model.NomeFazenda</dd>
+            <dt class="col-sm-4">Perfil</dt>
+            <dd class="col-sm-8 mb-0">
+                <span class="badge @Model.Perfil.CorExibicao()">@Model.Perfil.NomeExibicao()</span>
+                <div class="small text-muted mt-1">@Model.Perfil.Descricao()</div>
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="Input.Telefone" class="form-label"></label>
+                <input asp-for="Input.Telefone" class="form-control" placeholder="(11) 91234-5678" data-mascara="telefone" />
+                <span asp-validation-for="Input.Telefone" class="text-danger"></span>
+            </div>
+            <button type="submit" class="btn btn-agro">Salvar</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/mascaras.js" asp-append-version="true"></script>
+}

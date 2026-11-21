@@ -1,0 +1,25 @@
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    var paginaAtiva = ViewData["PaginaAtiva"] as string;
+}
+
+<div class="page-header">
+    <h1>Minha conta</h1>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-3">
+        <div class="list-group shadow-sm">
+            <a class="list-group-item list-group-item-action @(paginaAtiva == "Dados" ? "active" : "")" asp-page="./Index">Meus dados</a>
+            <a class="list-group-item list-group-item-action @(paginaAtiva == "Email" ? "active" : "")" asp-page="./Email">E-mail</a>
+            <a class="list-group-item list-group-item-action @(paginaAtiva == "Senha" ? "active" : "")" asp-page="./ChangePassword">Senha</a>
+        </div>
+    </div>
+    <div class="col-md-9 col-lg-6">
+        @RenderBody()
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

@@ -1,0 +1,127 @@
+@model IEnumerable<SistemaGranja.Domain.Animal>
+
+@{
+    var lote = (SistemaGranja.Domain.Lote)ViewData["Lote"]!;
+    ViewData["Title"] = "Adicionar animais";
+}
+
+<div class="page-header">
+    <h1>Adicionar animais ao lote @lote.CodigoLote</h1>
+    <a asp-action="Details" asp-route-id="@lote.Id" class="btn btn-outline-secondary">Voltar ao lote</a>
+</div>
+
+<form asp-action="AdicionarAnimais" asp-route-id="@lote.Id" method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-4">
+                <label for="busca" class="form-label small text-muted mb-1">Buscar</label>
+                <input type="search" id="busca" name="busca" value="@ViewData["Busca"]" class="form-control" placeholder="Brinco/tag ou nome" />
+            </div>
+            <div class="col-md-3">
+                <label for="especieId" class="form-label small text-muted mb-1">Espécie</label>
+                <select id="especieId" name="especieId" class="form-select" asp-items="ViewBag.FiltroEspecies">
+                    <option value="">Todas</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="galpaoId" class="form-label small text-muted mb-1">Galpão</label>
+                <select id="galpaoId" name="galpaoId" class="form-select" asp-items="ViewBag.FiltroGalpoes">
+                    <option value="">Todos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-agro w-100">Filtrar</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (!Model.Any())
+{
+    <div class="card shadow-sm">
+        <div class="lista-vazia">Nenhum animal disponível com esses filtros.</div>
+    </div>
+}
+else
+{
+    <form asp-action="AdicionarAnimais" asp-route-id="@lote.Id" method="post">
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 40px;">
+                                <input type="checkbox" class="form-check-input" id="marcarTodos" title="Marcar todos" />
+                            </th>
+                            <th>Brinco / Tag</th>
+                            <th>Espécie</th>
+                            <th>Raça</th>
+                            <th>Sexo</th>
+                            <th>Idade</th>
+                            <th>Galpão</th>
+                            <th>Lote atual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var animal in Model)
+                    {
+                        <tr>
+                            <td>
+                                <input type="checkbox" class="form-check-input selecao-animal" name="animaisSelecionados" value="@animal.Id" id="animal-@animal.Id" />
+                            </td>
+                            <td><label for="animal-@animal.Id" class="fw-semibold mb-0">@animal.TagIdentificacao</label></td>
+                            <td>@(animal.Raca?.Especie?.Nome ?? "—")</td>
+                            <td>@(animal.Raca?.Nome ?? "—")</td>
+                            <td>@animal.Sexo</td>
+                            <td>@animal.IdadeDescricao</td>
+                            <td>@(animal.Galpao?.NomeOuNumero ?? "—")</td>
+                            <td>
+                                @if (animal.Lote != null)
+                                {
+                                    <span class="badge bg-warning text-dark" title="Será movido para este lote">@animal.Lote.CodigoLote</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <p class="small text-muted mt-2">
+            Animais que já estão em outro lote (em amarelo) serão <strong>movidos</strong> para o lote @lote.CodigoLote.
+        </p>
+        <div class="d-flex gap-2 align-items-center">
+            <button type="submit" class="btn btn-agro" id="botaoAdicionar" disabled>Adicionar selecionados</button>
+            <span class="small text-muted" id="contadorSelecionados">Nenhum selecionado</span>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <script>
+        (function () {
+            var marcarTodos = document.getElementById('marcarTodos');
+            var caixas = document.querySelectorAll('.selecao-animal');
+            var botao = document.getElementById('botaoAdicionar');
+            var contador = document.getElementById('contadorSelecionados');
+            if (!botao) return;
+
+            function atualizar() {
+                var marcados = document.querySelectorAll('.selecao-animal:checked').length;
+                botao.disabled = marcados === 0;
+                contador.textContent = marcados === 0 ? 'Nenhum selecionado' : marcados + ' selecionado(s)';
+                marcarTodos.checked = marcados > 0 && marcados === caixas.length;
+            }
+
+            marcarTodos.addEventListener('change', function () {
+                caixas.forEach(function (c) { c.checked = marcarTodos.checked; });
+                atualizar();
+            });
+            caixas.forEach(function (c) { c.addEventListener('change', atualizar); });
+        })();
+    </script>
+}

@@ -239,6 +239,16 @@ public class AnimaisController : Controller
         ViewData["EspecieId"] = new SelectList(await _especieService.ObterTodasAsync(), "Id", "Nome", especieId);
         ViewData["RacaId"] = new SelectList(racas, "Id", "Nome", animal.RacaId);
         ViewData["GalpaoId"] = await MontarListaDeGalpoesAsync(animal);
-        ViewData["LoteId"] = new SelectList(await _loteService.ObterTodosAsync(), "Id", "CodigoLote", animal.LoteId);
+        // Só lotes ativos, mais o lote atual do animal caso ele já tenha sido encerrado
+        var lotes = (await _loteService.ObterAtivosAsync())
+            .Select(l => new SelectListItem(l.CodigoLote, l.Id.ToString()))
+            .ToList();
+        if (animal.LoteId.HasValue && lotes.All(l => l.Value != animal.LoteId.ToString()))
+        {
+            var loteAtual = await _loteService.ObterPorIdAsync(animal.LoteId.Value);
+            if (loteAtual != null)
+                lotes.Insert(0, new SelectListItem($"{loteAtual.CodigoLote} (encerrado)", loteAtual.Id.ToString()));
+        }
+        ViewData["LoteId"] = lotes;
     }
 }

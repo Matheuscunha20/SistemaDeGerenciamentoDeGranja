@@ -1,24 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-// Arquivo: Lote.cs
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace SistemaGranja.Domain
 {
+    // Agrupamento de animais para manejo conjunto.
+    // Ex.: "BEZERRAS-MAIO", "ENGORDA-2026-A", "MATRIZES-LACTACAO"
     public class Lote
     {
         public int Id { get; set; }
-        public string CodigoLote { get; set; } // Ex: "LOTE2025-A", "BEZERRAS-MAIO"
-        public DateTime DataCriacao { get; set; }
-        public string Descricao { get; set; } // Ex: "Lote para engorda final", "Bezerras desmamadas"
-        public bool Ativo { get; set; } // Indica se o lote está ativo ou já foi "fechado"
 
-        // Propriedade de navegação: um lote pode ter vários animais
+        [Display(Name = "Código do lote")]
+        [Required(ErrorMessage = "Informe o código do lote.")]
+        public string CodigoLote { get; set; }
+
+        [Display(Name = "Data de criação")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [Required(ErrorMessage = "Informe a data de criação.")]
+        public DateTime DataCriacao { get; set; }
+
+        [Display(Name = "Descrição")]
+        [DisplayFormat(ConvertEmptyStringToNull = false)]
+        public string Descricao { get; set; }
+
+        // Lote encerrado não aparece mais na escolha de lote dos animais
+        [Display(Name = "Situação")]
+        public bool Ativo { get; set; }
+
         public virtual ICollection<Animal> Animais { get; set; }
 
         public Lote()
@@ -26,7 +35,7 @@ namespace SistemaGranja.Domain
             CodigoLote = string.Empty;
             Descricao = string.Empty;
             Ativo = true;
-            DataCriacao = DateTime.Now;
+            DataCriacao = DateTime.Today;
             Animais = new HashSet<Animal>();
         }
     }

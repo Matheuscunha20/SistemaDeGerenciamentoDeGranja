@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Data;
+using SistemaGranja.Domain;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -81,6 +82,16 @@ namespace SistemaGranja.Services
                 .ThenBy(s => s.Alimento.Nome)
                 .Take(4)
                 .ToList();
+
+            // Contas a pagar em aberto: vencidas e dos próximos 7 dias
+            var daquiASete = hoje.AddDays(8);
+            var contasAPagar = await _context.LancamentosFinanceiros
+                .Where(l => !l.Pago && l.Tipo == TipoLancamento.Despesa && l.Data < daquiASete)
+                .Select(l => new { l.Data, l.Valor })
+                .ToListAsync();
+            resumo.ContasAPagarVencidas = contasAPagar.Count(c => c.Data < hoje);
+            resumo.ValorContasAPagarVencidas = contasAPagar.Where(c => c.Data < hoje).Sum(c => c.Valor);
+            resumo.ContasAPagarProximos7Dias = contasAPagar.Count(c => c.Data >= hoje);
 
             return resumo;
         }

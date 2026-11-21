@@ -1,0 +1,6 @@
+@model SistemaGranja.Domain.LancamentoFinanceiro
+@* Botão "Pagar"/"Receber" de uma conta em aberto (usa a data de hoje) *@
+<form asp-controller="Financeiro" asp-action="MarcarPago" asp-route-id="@Model.Id" method="post" class="d-inline">
+    <input type="hidden" name="voltarPara" value="@(Context.Request.Path + Context.Request.QueryString)" />
+    <button type="submit" class="btn btn-sm btn-agro">@(Model.Tipo == TipoLancamento.Receita ? "Recebido" : "Pago")</button>
+</form>

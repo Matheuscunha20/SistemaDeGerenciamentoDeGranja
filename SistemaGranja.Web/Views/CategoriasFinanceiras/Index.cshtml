@@ -5,12 +5,12 @@
 }
 
 <div class="page-header">
-    <div>
-        <h1>Categorias do financeiro</h1>
-        <div class="text-muted small">Use para organizar receitas e despesas. Categoria desativada some das opções, mas os lançamentos antigos continuam com ela.</div>
-    </div>
-    <a asp-controller="Financeiro" asp-action="Index" class="btn btn-outline-secondary">Voltar ao financeiro</a>
+    <h1>Financeiro</h1>
 </div>
+
+<partial name="/Views/Financeiro/_Abas.cshtml" />
+
+<p class="text-muted small mb-3">Use as categorias para organizar receitas e despesas. Categoria desativada some das opções, mas os lançamentos antigos continuam com ela.</p>
 
 <div class="row g-4">
     @foreach (var tipo in new[] { TipoLancamento.Receita, TipoLancamento.Despesa })

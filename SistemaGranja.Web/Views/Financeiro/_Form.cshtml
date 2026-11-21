@@ -35,12 +35,52 @@
     </div>
     <div class="col-sm-6">
         <div class="mb-3">
-            <label asp-for="Data" class="form-label"></label>
-            <input asp-for="Data" class="form-control" />
+            <label asp-for="Data" class="form-label" data-rotulo-data>@(Model.Pago ? "Data" : "Vencimento")</label>
+            <input asp-for="Data" class="form-control" data-campo-data />
             <span asp-validation-for="Data" class="text-danger"></span>
         </div>
     </div>
 </div>
+
+<div class="row align-items-end">
+    <div class="col-sm-6">
+        <div class="form-check form-switch mb-3">
+            <input asp-for="Pago" class="form-check-input" role="switch" data-campo-pago />
+            <label asp-for="Pago" class="form-check-label" data-rotulo-pago>@(Model.Tipo == TipoLancamento.Receita ? "Já foi recebido" : "Já foi pago")</label>
+            <div class="form-text">Desligue para lançar uma conta a @(Model.Tipo == TipoLancamento.Receita ? "receber" : "pagar") (em aberto).</div>
+        </div>
+    </div>
+    <div class="col-sm-6" data-grupo-pagamento>
+        <div class="mb-3">
+            <label asp-for="DataPagamento" class="form-label"></label>
+            <input asp-for="DataPagamento" class="form-control" data-campo-data-pagamento />
+            <div class="form-text">Se ficar vazio, usa a mesma data acima.</div>
+        </div>
+    </div>
+</div>
+
+@if (Model.Id == 0)
+{
+    var repetir = ViewData["RepetirMeses"] as int? ?? 1;
+    <div class="mb-3">
+        <label class="form-label" for="repetirMeses">Repetir todo mês</label>
+        <select class="form-select" id="repetirMeses" name="repetirMeses" style="max-width: 20rem">
+            @for (var i = 1; i <= 36; i++)
+            {
+                var texto = i == 1 ? "Não repetir" : $"{i} vezes (parcelas mensais)";
+                if (i == repetir)
+                {
+                    <option value="@i" selected>@texto</option>
+                }
+                else
+                {
+                    <option value="@i">@texto</option>
+                }
+            }
+        </select>
+        <div class="form-text">Ex.: um financiamento em 12 parcelas. As próximas ficam como contas em aberto, uma por mês.</div>
+    </div>
+}
 
 <div class="row">
     <div class="col-sm-6">

@@ -80,6 +80,23 @@
             }
         </span>
     </a>
+    @if (User.PodeGerenciar() && (Model.ContasAPagarVencidas > 0 || Model.ContasAPagarProximos7Dias > 0))
+    {
+        <a class="aviso @(Model.ContasAPagarVencidas > 0 ? "aviso-perigo" : "aviso-atencao")" asp-controller="Financeiro" asp-action="Contas" asp-route-tipo="@TipoLancamento.Despesa">
+            <span class="aviso-titulo">@Icones.Svg("financeiro", 18) Contas a pagar</span>
+            <span class="aviso-numero">@(Model.ContasAPagarVencidas > 0 ? Model.ContasAPagarVencidas : Model.ContasAPagarProximos7Dias)</span>
+            <span class="aviso-texto">
+                @if (Model.ContasAPagarVencidas > 0)
+                {
+                    @:Vencidas, somando @Model.ValorContasAPagarVencidas.ToString("C")
+                }
+                else
+                {
+                    @:Vencem nos próximos 7 dias
+                }
+            </span>
+        </a>
+    }
 </section>
 
 <div class="painel-blocos">

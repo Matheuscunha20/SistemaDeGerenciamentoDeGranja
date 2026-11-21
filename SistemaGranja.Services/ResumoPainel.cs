@@ -26,6 +26,11 @@ namespace SistemaGranja.Services
         // Lista curta para o painel: as próximas doses (atrasadas primeiro)
         public List<RegistroVacinacao> ProximasDoses { get; set; } = new();
 
+        // Contas a pagar (só aparece para quem vê o financeiro)
+        public int ContasAPagarVencidas { get; set; }
+        public decimal ValorContasAPagarVencidas { get; set; }
+        public int ContasAPagarProximos7Dias { get; set; }
+
         // Alimentos que acabam primeiro, no ritmo atual de consumo
         public List<SaldoAlimento> EstoqueAcabandoPrimeiro { get; set; } = new();
 

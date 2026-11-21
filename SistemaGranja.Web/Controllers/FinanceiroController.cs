@@ -25,10 +25,11 @@ public class FinanceiroController : Controller
         public TipoLancamento? Tipo { get; set; }
         public int? CategoriaId { get; set; }
         public string? Busca { get; set; }
+        public string? Situacao { get; set; } // "pagos", "abertos" ou vazio
         public ResumoFinanceiro Resumo { get; set; } = new();
         public List<LancamentoFinanceiro> Lancamentos { get; set; } = new();
         public List<CategoriaFinanceira> Categorias { get; set; } = new();
-        public bool FiltroExtra => Tipo.HasValue || CategoriaId.HasValue || !string.IsNullOrWhiteSpace(Busca);
+        public bool FiltroExtra => Tipo.HasValue || CategoriaId.HasValue || !string.IsNullOrWhiteSpace(Busca) || !string.IsNullOrEmpty(Situacao);
     }
 
     // Períodos prontos: este mês, mês passado, últimos 30 dias, este ano; ou datas escolhidas
@@ -45,7 +46,7 @@ public class FinanceiroController : Controller
     }
 
     // GET: Financeiro
-    public async Task<IActionResult> Index(string? periodo, DateTime? de, DateTime? ate, TipoLancamento? tipo, int? categoriaId, string? busca)
+    public async Task<IActionResult> Index(string? periodo, DateTime? de, DateTime? ate, TipoLancamento? tipo, int? categoriaId, string? busca, string? situacao)
     {
         await _financeiro.GarantirCategoriasPadraoAsync();
 
@@ -71,10 +72,12 @@ public class FinanceiroController : Controller
             Tipo = tipo,
             CategoriaId = categoriaId,
             Busca = busca,
+            Situacao = situacao is "pagos" or "abertos" ? situacao : null,
             Resumo = await _financeiro.ObterResumoAsync(inicio, fim),
             Lancamentos = await _financeiro.ObterLancamentosAsync(new FiltroLancamentos
             {
-                De = inicio, Ate = fim, Tipo = tipo, CategoriaId = categoriaId, Busca = busca
+                De = inicio, Ate = fim, Tipo = tipo, CategoriaId = categoriaId, Busca = busca,
+                Pago = situacao == "pagos" ? true : situacao == "abertos" ? false : null
             }),
             Categorias = await _financeiro.ObterCategoriasAsync()
         };
@@ -93,15 +96,19 @@ public class FinanceiroController : Controller
     // POST: Financeiro/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("Tipo,Descricao,Valor,Data,CategoriaId,FormaPagamento,LoteId,Observacoes")] LancamentoFinanceiro lancamento, string? salvarENovo)
+    public async Task<IActionResult> Create([Bind("Tipo,Descricao,Valor,Data,Pago,DataPagamento,CategoriaId,FormaPagamento,LoteId,Observacoes")] LancamentoFinanceiro lancamento, string? salvarENovo, int repetirMeses = 1)
     {
         LimparValidacaoDeNavegacao();
+        ViewData["RepetirMeses"] = repetirMeses;
         if (ModelState.IsValid)
         {
-            var erro = await _financeiro.SalvarLancamentoAsync(lancamento);
+            var erro = await _financeiro.SalvarLancamentoAsync(lancamento, repetirMeses);
             if (erro == null)
             {
-                TempData["Sucesso"] = $"{lancamento.Tipo.NomeExibicao()} de {lancamento.Valor:C} registrada.";
+                var situacao = lancamento.Pago ? "registrada" : "lançada como conta em aberto";
+                TempData["Sucesso"] = repetirMeses > 1
+                    ? $"{repetirMeses} {(lancamento.Tipo == TipoLancamento.Receita ? "receitas" : "despesas")} mensais de {lancamento.Valor:C} lançadas."
+                    : $"{lancamento.Tipo.NomeExibicao()} de {lancamento.Valor:C} {situacao}.";
                 return salvarENovo != null
                     ? RedirectToAction(nameof(Create), new { tipo = lancamento.Tipo })
                     : RedirectToAction(nameof(Index));
@@ -127,7 +134,7 @@ public class FinanceiroController : Controller
     // POST: Financeiro/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,Tipo,Descricao,Valor,Data,CategoriaId,FormaPagamento,LoteId,Observacoes")] LancamentoFinanceiro lancamento)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,Tipo,Descricao,Valor,Data,Pago,DataPagamento,CategoriaId,FormaPagamento,LoteId,Observacoes")] LancamentoFinanceiro lancamento)
     {
         if (id != lancamento.Id) return NotFound();
 
@@ -166,6 +173,36 @@ public class FinanceiroController : Controller
         else
             TempData["Erro"] = "Lançamento não encontrado.";
         return RedirectToAction(nameof(Index));
+    }
+
+    // GET: Financeiro/Contas?tipo=Despesa
+    public async Task<IActionResult> Contas(TipoLancamento? tipo)
+    {
+        ViewData["Tipo"] = tipo;
+        return View(await _financeiro.ObterContasEmAbertoAsync(tipo, DateTime.Today));
+    }
+
+    // POST: Financeiro/MarcarPago/5
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> MarcarPago(int id, DateTime? dataPagamento, string? voltarPara)
+    {
+        var lancamento = await _financeiro.ObterLancamentoAsync(id);
+        var erro = await _financeiro.MarcarComoPagoAsync(id, dataPagamento ?? DateTime.Today);
+        if (erro == null)
+            TempData["Sucesso"] = $"\"{lancamento!.Descricao}\" marcada como {(lancamento.Tipo == TipoLancamento.Receita ? "recebida" : "paga")}.";
+        else
+            TempData["Erro"] = erro;
+
+        return !string.IsNullOrEmpty(voltarPara) && Url.IsLocalUrl(voltarPara)
+            ? LocalRedirect(voltarPara)
+            : RedirectToAction(nameof(Contas));
+    }
+
+    // GET: Financeiro/FluxoDeCaixa
+    public async Task<IActionResult> FluxoDeCaixa()
+    {
+        return View(await _financeiro.ObterFluxoDeCaixaAsync(DateTime.Today));
     }
 
     private void LimparValidacaoDeNavegacao()

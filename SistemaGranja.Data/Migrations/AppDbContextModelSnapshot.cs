@@ -276,10 +276,29 @@ namespace SistemaGranja.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Nome")
+                    b.HasIndex("FazendaId", "Nome")
                         .IsUnique();
 
                     b.ToTable("Especies");
+                });
+
+            modelBuilder.Entity("SistemaGranja.Domain.Fazenda", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("varchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Fazendas");
                 });
 
             modelBuilder.Entity("SistemaGranja.Domain.Funcionario", b =>
@@ -802,6 +821,159 @@ namespace SistemaGranja.Data.Migrations
             modelBuilder.Entity("SistemaGranja.Domain.TipoVacina", b =>
                 {
                     b.Navigation("RegistrosVacinacao");
+                });
+            modelBuilder.Entity("SistemaGranja.Data.ApplicationUser", b =>
+                {
+                    b.Property<int?>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Animal", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Galpao", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Lote", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.TipoAlimento", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.MovimentacaoEstoqueAlimento", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.TipoVacina", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.RegistroVacinacao", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Funcionario", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.RegistroSaude", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Especie", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.Raca", b =>
+                {
+                    b.Property<int>("FazendaId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("FazendaId");
+
+                    b.HasOne("SistemaGranja.Domain.Fazenda", null)
+                        .WithMany()
+                        .HasForeignKey("FazendaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

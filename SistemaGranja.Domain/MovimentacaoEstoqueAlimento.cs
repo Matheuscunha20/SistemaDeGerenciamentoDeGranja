@@ -35,9 +35,12 @@ namespace SistemaGranja.Domain
         };
     }
 
-    public class MovimentacaoEstoqueAlimento
+    public class MovimentacaoEstoqueAlimento : IPertenceAFazenda
     {
         public int Id { get; set; }
+
+        // Fazenda dona do registro. Preenchida automaticamente ao salvar.
+        public int FazendaId { get; set; }
 
         [Display(Name = "Alimento")]
         [Range(1, int.MaxValue, ErrorMessage = "Selecione o alimento.")]

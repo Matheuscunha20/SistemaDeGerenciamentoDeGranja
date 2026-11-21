@@ -16,8 +16,13 @@
                 <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
                     <div class="mb-3">
+                        <label asp-for="Input.NomeFazenda" class="form-label"></label>
+                        <input asp-for="Input.NomeFazenda" class="form-control" placeholder="Ex.: Fazenda Boa Vista" autofocus />
+                        <span asp-validation-for="Input.NomeFazenda" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
                         <label asp-for="Input.Email" class="form-label"></label>
-                        <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="nome@exemplo.com" autofocus />
+                        <input asp-for="Input.Email" class="form-control" autocomplete="username" placeholder="nome@exemplo.com" />
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
                     <div class="mb-3">

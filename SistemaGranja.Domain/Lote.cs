@@ -6,9 +6,12 @@ namespace SistemaGranja.Domain
 {
     // Agrupamento de animais para manejo conjunto.
     // Ex.: "BEZERRAS-MAIO", "ENGORDA-2026-A", "MATRIZES-LACTACAO"
-    public class Lote
+    public class Lote : IPertenceAFazenda
     {
         public int Id { get; set; }
+
+        // Fazenda dona do registro. Preenchida automaticamente ao salvar.
+        public int FazendaId { get; set; }
 
         [Display(Name = "Código do lote")]
         [Required(ErrorMessage = "Informe o código do lote.")]

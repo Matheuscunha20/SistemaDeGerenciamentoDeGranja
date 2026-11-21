@@ -1,12 +1,15 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace SistemaGranja.Domain
 {
-    public class Animal
+    public class Animal : IPertenceAFazenda
     {
         public int Id { get; set; }
+
+        // Fazenda dona do registro. Preenchida automaticamente ao salvar.
+        public int FazendaId { get; set; }
 
         [Display(Name = "Brinco / Tag")]
         [Required(ErrorMessage = "Informe o brinco ou tag de identificação.")]

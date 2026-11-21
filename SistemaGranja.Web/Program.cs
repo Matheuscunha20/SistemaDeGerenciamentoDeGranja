@@ -1,5 +1,6 @@
 // Arquivo: Program.cs (no projeto SistemaGranja.Web)
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Data;
@@ -27,7 +28,12 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<AppDbContext>()
-.AddErrorDescriber<MensagensIdentityPtBr>(); // mensagens de erro do login em português
+.AddErrorDescriber<MensagensIdentityPtBr>() // mensagens de erro do login em português
+.AddClaimsPrincipalFactory<FabricaDeClaimsAgroArca>(); // guarda a fazenda do usuário no login
+
+// Fazenda do usuário logado: usada pelo AppDbContext para separar os dados de cada cliente
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IFazendaAtual, FazendaDoUsuarioLogado>();
 // --- FIM DAS SUAS ADIÇÕES DE SERVIÇO ---
 
 // Serviços padrão
@@ -72,11 +78,8 @@ using (var scope = app.Services.CreateScope())
         db.Database.Migrate();
     }
 
-    // Cadastra espécies e raças comuns (só o que ainda não existe)
-    await SemeadorDeDados.SemearEspeciesERacasAsync(db);
-
-    // Cadastra vacinas comuns na primeira vez (só se não houver nenhuma)
-    await SemeadorDeDados.SemearVacinasAsync(db);
+    // Espécies, raças e vacinas agora são de cada fazenda:
+    // são cadastradas quando a conta (e a fazenda) é criada.
 }
 
 // Configure o pipeline de requisição HTTP
@@ -101,6 +104,20 @@ app.UseStaticFiles();
 app.UseRouting();
 
 app.UseAuthentication(); // Autenticação primeiro
+
+// Quem entrou antes desta versão não tem a fazenda no login: pede para entrar de novo
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true
+        && context.User.FindFirst(FazendaDoUsuarioLogado.ClaimFazendaId) == null
+        && !context.Request.Path.StartsWithSegments("/Identity"))
+    {
+        await context.SignOutAsync(IdentityConstants.ApplicationScheme);
+        context.Response.Redirect("/Identity/Account/Login");
+        return;
+    }
+    await next();
+});
 app.UseAuthorization();  // Depois autorização
 
 // Rotas

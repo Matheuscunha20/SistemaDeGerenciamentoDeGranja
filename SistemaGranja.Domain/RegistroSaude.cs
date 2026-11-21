@@ -39,9 +39,12 @@ namespace SistemaGranja.Domain
         };
     }
 
-    public class RegistroSaude
+    public class RegistroSaude : IPertenceAFazenda
     {
         public int Id { get; set; }
+
+        // Fazenda dona do registro. Preenchida automaticamente ao salvar.
+        public int FazendaId { get; set; }
 
         [Display(Name = "Animal")]
         [Range(1, int.MaxValue, ErrorMessage = "Selecione o animal.")]

@@ -17,3 +17,18 @@ document.addEventListener('change', function (evento) {
         campo.value = valor.replace('.', ',');
     }
 });
+
+// Modo escuro: o botão com data-alternar-tema troca entre claro e escuro.
+// A escolha fica salva neste aparelho; sem escolha, segue o tema do celular/computador.
+document.addEventListener('click', function (evento) {
+    var botao = evento.target.closest && evento.target.closest('[data-alternar-tema]');
+    if (!botao) return;
+
+    var raiz = document.documentElement;
+    var novo = raiz.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+    raiz.setAttribute('data-bs-theme', novo);
+    try { localStorage.setItem('agroarca-tema', novo); } catch (e) { }
+
+    var cor = document.querySelector('meta[name="theme-color"]');
+    if (cor) cor.setAttribute('content', novo === 'dark' ? '#131B16' : '#1F3A26');
+});

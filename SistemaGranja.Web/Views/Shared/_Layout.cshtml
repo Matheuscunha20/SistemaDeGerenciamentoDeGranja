@@ -1,98 +1,214 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+@{
+    var logado = User.Identity?.IsAuthenticated == true;
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var nomeFazenda = User.FindFirst(FazendaDoUsuarioLogado.ClaimFazendaNome)?.Value;
+    var email = User.Identity?.Name ?? string.Empty;
+    var inicial = string.IsNullOrEmpty(email) ? "?" : email.Substring(0, 1).ToUpperInvariant();
+    string Ativo(params string[] nomes) => nomes.Contains(controller) ? "active" : string.Empty;
+}
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1F3A26" />
     <title>@ViewData["Title"] - AgroArca</title>
+    @* Aplica o tema (claro/escuro) antes de desenhar a página, para não piscar *@
+    <script>
+        (function () {
+            var tema = null;
+            try { tema = localStorage.getItem('agroarca-tema'); } catch (e) { }
+            if (tema !== 'light' && tema !== 'dark') {
+                tema = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            }
+            document.documentElement.setAttribute('data-bs-theme', tema);
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/SistemaGranja.Web.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-md navbar-dark navbar-agro mb-4">
-            <div class="container-fluid">
-                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Home" asp-action="Index">AgroArca</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Abrir menu">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-md-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-white" asp-area="" asp-controller="Home" asp-action="Index">@(User.Identity?.IsAuthenticated == true ? "Painel" : "Início")</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Rebanho</a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Animais" asp-action="Index">Animais</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Lotes" asp-action="Index">Lotes</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Galpoes" asp-action="Index">Galpões</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Sanidade</a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Vacinacoes" asp-action="Index">Agenda de vacinação</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Vacinacoes" asp-action="Historico">Histórico de vacinação</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Vacinacoes" asp-action="Grupo">Vacinar em grupo</a></li>
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Saude" asp-action="Index">Saúde</a></li>
-                                </ul>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Estoque" asp-action="Index">Estoque</a>
-                            </li>
-                            if (User.PodeGerenciar())
-                            {
-                            <li class="nav-item">
-                                <a class="nav-link text-white" asp-area="" asp-controller="Funcionarios" asp-action="Index">Funcionários</a>
-                            </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Cadastros</a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Especies" asp-action="Index">Espécies</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="Racas" asp-action="Index">Raças</a></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="TiposVacina" asp-action="Index">Vacinas</a></li>
-                                    <li><hr class="dropdown-divider" /></li>
-                                    <li><a class="dropdown-item" asp-area="" asp-controller="TiposAlimento" asp-action="Index">Tipos de Alimento</a></li>
-                                </ul>
-                            </li>
-                            }
-                        }
+<body class="@(logado ? "app-logado" : "app-visitante")">
+    @if (logado)
+    {
+        <div class="app-shell">
+            @* Menu lateral: só no computador *@
+            <aside class="app-sidebar d-none d-lg-flex">
+                <a class="app-marca" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="app-marca-icone">@Icones.Svg("marca", 22)</span>
+                    <span class="app-marca-texto">
+                        <span class="app-marca-nome">AgroArca</span>
+                        <span class="app-marca-fazenda">@nomeFazenda</span>
+                    </span>
+                </a>
+
+                @{ ViewData["MenuId"] = "lateral"; }
+                <partial name="_MenuLateral" />
+
+                <div class="dropup mt-auto">
+                    <button class="app-usuario" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="app-avatar">@inicial</span>
+                        <span class="app-usuario-texto">
+                            <span class="app-usuario-email">@email</span>
+                            <span class="app-usuario-perfil">@User.NomeDoPerfil()</span>
+                        </span>
+                    </button>
+                    <ul class="dropdown-menu shadow">
+                        <partial name="_MenuUsuario" />
                     </ul>
-                    <partial name="_LoginPartial" />
+                </div>
+            </aside>
+
+            <div class="app-main">
+                <header class="app-topbar">
+                    @* No celular, a marca e a fazenda ficam no topo *@
+                    <a class="app-marca app-marca-topo d-lg-none" asp-area="" asp-controller="Home" asp-action="Index">
+                        <span class="app-marca-icone">@Icones.Svg("marca", 20)</span>
+                        <span class="app-marca-texto">
+                            <span class="app-marca-nome">AgroArca</span>
+                            <span class="app-marca-fazenda">@nomeFazenda</span>
+                        </span>
+                    </a>
+                    <form class="app-busca d-none d-md-flex" asp-area="" asp-controller="Animais" asp-action="Index" method="get" role="search">
+                        @Icones.Svg("buscar", 18)
+                        <input type="search" name="busca" placeholder="Buscar animal pelo brinco ou nome" aria-label="Buscar animal pelo brinco ou nome" />
+                    </form>
+                    <div class="app-topbar-acoes">
+                        <a class="btn-icone d-md-none" asp-area="" asp-controller="Animais" asp-action="Index" aria-label="Buscar animal">@Icones.Svg("buscar")</a>
+                        <button type="button" class="btn-icone" data-alternar-tema aria-label="Alternar modo escuro" title="Alternar modo escuro">
+                            <span class="icone-tema-claro">@Icones.Svg("lua")</span>
+                            <span class="icone-tema-escuro">@Icones.Svg("sol")</span>
+                        </button>
+                    </div>
+                </header>
+
+                <main role="main" class="app-conteudo">
+                    @if (TempData["Erro"] is string mensagemErro)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @mensagemErro
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
+                    }
+                    @if (TempData["Sucesso"] is string mensagemSucesso)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @mensagemSucesso
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                        </div>
+                    }
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+
+        @* Barra inferior: só no celular e tablet *@
+        <nav class="app-barra-inferior d-lg-none" aria-label="Navegação rápida">
+            <a class="@Ativo("Home")" asp-area="" asp-controller="Home" asp-action="Index">
+                <span class="barra-icone">@Icones.Svg("painel", 22)</span>Painel
+            </a>
+            <a class="@Ativo("Animais", "Lotes", "Galpoes")" asp-area="" asp-controller="Animais" asp-action="Index">
+                <span class="barra-icone">@Icones.Svg("animais", 22)</span>Rebanho
+            </a>
+            <button type="button" class="barra-novo" data-bs-toggle="offcanvas" data-bs-target="#acoesRapidas" aria-controls="acoesRapidas" aria-label="Registrar algo novo">
+                @Icones.Svg("mais", 26)
+            </button>
+            <a class="@Ativo("Vacinacoes", "Saude")" asp-area="" asp-controller="Vacinacoes" asp-action="Index">
+                <span class="barra-icone">@Icones.Svg("sanidade", 22)</span>Sanidade
+            </a>
+            <button type="button" data-bs-toggle="offcanvas" data-bs-target="#menuMais" aria-controls="menuMais">
+                <span class="barra-icone">@Icones.Svg("menu", 22)</span>Mais
+            </button>
+        </nav>
+
+        @* Botão "+": atalhos para registrar algo *@
+        <div class="offcanvas offcanvas-bottom app-folha" tabindex="-1" id="acoesRapidas" aria-labelledby="acoesRapidasTitulo">
+            <div class="offcanvas-header">
+                <h2 class="offcanvas-title h5" id="acoesRapidasTitulo">Registrar</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+            </div>
+            <div class="offcanvas-body pt-0">
+                <div class="acoes-rapidas">
+                    <a asp-area="" asp-controller="Animais" asp-action="Create">@Icones.Svg("animais", 22) Novo animal</a>
+                    <a asp-area="" asp-controller="Vacinacoes" asp-action="Create">@Icones.Svg("vacina", 22) Vacinar animal</a>
+                    <a asp-area="" asp-controller="Vacinacoes" asp-action="Grupo">@Icones.Svg("grupo", 22) Vacinar em grupo</a>
+                    <a asp-area="" asp-controller="Saude" asp-action="Create">@Icones.Svg("saude", 22) Ocorrência de saúde</a>
+                    <a asp-area="" asp-controller="Estoque" asp-action="Create">@Icones.Svg("estoque", 22) Movimentar estoque</a>
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @if (TempData["Erro"] is string mensagemErro)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @mensagemErro
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-            }
-            @if (TempData["Sucesso"] is string mensagemSucesso)
-            {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @mensagemSucesso
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
-                </div>
-            }
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; @DateTime.Now.Year - AgroArca - Cuide do seu rebanho como um bom pastor.
         </div>
-    </footer>
+
+        @* "Mais": o menu completo no celular *@
+        <div class="offcanvas offcanvas-start app-menu-mais" tabindex="-1" id="menuMais" aria-labelledby="menuMaisTitulo">
+            <div class="offcanvas-header">
+                <a class="app-marca" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="app-marca-icone">@Icones.Svg("marca", 22)</span>
+                    <span class="app-marca-texto">
+                        <span class="app-marca-nome" id="menuMaisTitulo">AgroArca</span>
+                        <span class="app-marca-fazenda">@nomeFazenda</span>
+                    </span>
+                </a>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Fechar"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column gap-3">
+                @{ ViewData["MenuId"] = "mais"; }
+                <partial name="_MenuLateral" />
+                <div class="app-menu-conta">
+                    <div class="app-usuario-texto mb-2">
+                        <span class="app-usuario-email">@email</span>
+                        <span class="app-usuario-perfil">@User.NomeDoPerfil()</span>
+                    </div>
+                    <ul class="list-unstyled mb-0">
+                        <partial name="_MenuUsuario" />
+                    </ul>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <header class="app-topo-visitante">
+            <div class="container d-flex align-items-center justify-content-between gap-3">
+                <a class="app-marca" asp-area="" asp-controller="Home" asp-action="Index">
+                    <span class="app-marca-icone">@Icones.Svg("marca", 22)</span>
+                    <span class="app-marca-nome">AgroArca</span>
+                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn-icone" data-alternar-tema aria-label="Alternar modo escuro" title="Alternar modo escuro">
+                        <span class="icone-tema-claro">@Icones.Svg("lua")</span>
+                        <span class="icone-tema-escuro">@Icones.Svg("sol")</span>
+                    </button>
+                    <a class="btn btn-outline-secondary" asp-area="Identity" asp-page="/Account/Login">Entrar</a>
+                    <a class="btn btn-agro d-none d-sm-inline-block" asp-area="Identity" asp-page="/Account/Register">Criar conta</a>
+                </div>
+            </div>
+        </header>
+        <div class="container">
+            <main role="main" class="py-4">
+                @if (TempData["Erro"] is string mensagemErro)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @mensagemErro
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                }
+                @if (TempData["Sucesso"] is string mensagemSucesso)
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @mensagemSucesso
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+                    </div>
+                }
+                @RenderBody()
+            </main>
+        </div>
+        <footer class="app-rodape">
+            <div class="container">&copy; @DateTime.Now.Year AgroArca · Cuide do seu rebanho como um bom pastor.</div>
+        </footer>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

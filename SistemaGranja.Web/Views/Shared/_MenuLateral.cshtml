@@ -1,0 +1,45 @@
+@* Itens do menu principal. Usado no menu lateral (computador) e no "Mais" (celular). *@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var cadastros = new[] { "Especies", "Racas", "TiposVacina", "TiposAlimento" };
+    var cadastrosAberto = cadastros.Contains(controller);
+    // Id único: o menu aparece duas vezes na página (lateral e "Mais")
+    var idCadastros = "cadastros-" + (ViewData["MenuId"] ?? "menu");
+    string Ativo(params string[] nomes) => nomes.Contains(controller) ? "active" : string.Empty;
+    string? Atual(params string[] nomes) => nomes.Contains(controller) ? "page" : null;
+}
+<nav class="menu-app" aria-label="Menu principal">
+    <a class="menu-item @Ativo("Home")" aria-current="@Atual("Home")" asp-area="" asp-controller="Home" asp-action="Index">@Icones.Svg("painel") <span>Painel</span></a>
+
+    <span class="menu-grupo">Rebanho</span>
+    <a class="menu-item @Ativo("Animais")" aria-current="@Atual("Animais")" asp-area="" asp-controller="Animais" asp-action="Index">@Icones.Svg("animais") <span>Animais</span></a>
+    <a class="menu-item @Ativo("Lotes")" aria-current="@Atual("Lotes")" asp-area="" asp-controller="Lotes" asp-action="Index">@Icones.Svg("lotes") <span>Lotes</span></a>
+    <a class="menu-item @Ativo("Galpoes")" aria-current="@Atual("Galpoes")" asp-area="" asp-controller="Galpoes" asp-action="Index">@Icones.Svg("galpoes") <span>Galpões</span></a>
+
+    <span class="menu-grupo">Manejo</span>
+    <a class="menu-item @Ativo("Vacinacoes")" aria-current="@Atual("Vacinacoes")" asp-area="" asp-controller="Vacinacoes" asp-action="Index">@Icones.Svg("sanidade") <span>Vacinação</span></a>
+    <a class="menu-item @Ativo("Saude")" aria-current="@Atual("Saude")" asp-area="" asp-controller="Saude" asp-action="Index">@Icones.Svg("saude") <span>Saúde</span></a>
+    <a class="menu-item @Ativo("Estoque")" aria-current="@Atual("Estoque")" asp-area="" asp-controller="Estoque" asp-action="Index">@Icones.Svg("estoque") <span>Estoque</span></a>
+    <span class="menu-item menu-item-desativado" aria-disabled="true">@Icones.Svg("financeiro") <span>Financeiro</span> <span class="menu-selo">em breve</span></span>
+
+    @if (User.PodeGerenciar())
+    {
+        <span class="menu-grupo">Fazenda</span>
+        <a class="menu-item @Ativo("Funcionarios")" aria-current="@Atual("Funcionarios")" asp-area="" asp-controller="Funcionarios" asp-action="Index">@Icones.Svg("funcionarios") <span>Funcionários</span></a>
+        <button class="menu-item @(cadastrosAberto ? "" : "collapsed")" type="button" data-bs-toggle="collapse" data-bs-target="#@idCadastros" aria-expanded="@(cadastrosAberto ? "true" : "false")" aria-controls="@idCadastros">
+            @Icones.Svg("cadastros") <span>Cadastros</span> <span class="menu-seta ms-auto">@Icones.Svg("seta", 16)</span>
+        </button>
+        <div class="collapse @(cadastrosAberto ? "show" : "")" id="@idCadastros">
+            <div class="menu-sub">
+                <a class="menu-item @Ativo("Especies")" aria-current="@Atual("Especies")" asp-area="" asp-controller="Especies" asp-action="Index">Espécies</a>
+                <a class="menu-item @Ativo("Racas")" aria-current="@Atual("Racas")" asp-area="" asp-controller="Racas" asp-action="Index">Raças</a>
+                <a class="menu-item @Ativo("TiposVacina")" aria-current="@Atual("TiposVacina")" asp-area="" asp-controller="TiposVacina" asp-action="Index">Vacinas</a>
+                <a class="menu-item @Ativo("TiposAlimento")" aria-current="@Atual("TiposAlimento")" asp-area="" asp-controller="TiposAlimento" asp-action="Index">Tipos de alimento</a>
+            </div>
+        </div>
+    }
+    @if (User.EhDono())
+    {
+        <a class="menu-item @Ativo("Equipe", "Fazenda")" aria-current="@Atual("Equipe", "Fazenda")" asp-area="" asp-controller="Equipe" asp-action="Index">@Icones.Svg("equipe") <span>Equipe e fazenda</span></a>
+    }
+</nav>

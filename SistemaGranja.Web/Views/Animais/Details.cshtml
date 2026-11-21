@@ -54,7 +54,7 @@
 }
 
 <div class="card shadow-sm mt-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">Vacinação</span>
         <a asp-controller="Vacinacoes" asp-action="Create" asp-route-animalId="@Model.Id" class="btn btn-sm btn-agro">+ Registrar vacina</a>
     </div>
@@ -66,7 +66,7 @@
     {
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Data</th>
                         <th>Vacina</th>
@@ -98,7 +98,7 @@
 }
 
 <div class="card shadow-sm mt-4">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <div class="card-header d-flex justify-content-between align-items-center">
         <span class="fw-semibold">Saúde</span>
         <a asp-controller="Saude" asp-action="Create" asp-route-animalId="@Model.Id" class="btn btn-sm btn-agro">+ Registrar ocorrência</a>
     </div>
@@ -110,7 +110,7 @@
     {
         <div class="table-responsive">
             <table class="table table-sm table-hover mb-0">
-                <thead class="table-light">
+                <thead>
                     <tr>
                         <th>Data</th>
                         <th>Tipo</th>

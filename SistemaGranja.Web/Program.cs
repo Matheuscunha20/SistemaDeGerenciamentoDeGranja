@@ -10,13 +10,13 @@ using SistemaGranja.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// --- INÕCIO DAS SUAS ADI«’ES DE SERVI«O ---
-// 1. Pegar a string de conex„o
+// --- IN√çCIO DAS SUAS ADI√á√ïES DE SERVI√áO ---
+// 1. Pegar a string de conex√£o
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // 2. Configurar o AppDbContext com Pomelo
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 27)))); // Ajuste para a vers„o real do seu MySQL, se necess·rio
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 27)))); // Ajuste para a vers√£o real do seu MySQL, se necess√°rio
 
 // 3. Configurar o ASP.NET Core Identity
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
@@ -24,9 +24,9 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     options.SignIn.RequireConfirmedAccount = false;
 })
 .AddEntityFrameworkStores<AppDbContext>();
-// --- FIM DAS SUAS ADI«’ES DE SERVI«O ---
+// --- FIM DAS SUAS ADI√á√ïES DE SERVI√áO ---
 
-// ServiÁos padr„o
+// Servi√ßos padr√£o
 builder.Services.AddControllersWithViews(); // Para MVC
 builder.Services.AddRazorPages(); // Para Razor Pages e/ou UI do Identity
 builder.Services.AddScoped<IGalpaoService, GalpaoService>();
@@ -36,7 +36,7 @@ builder.Services.AddScoped<IAnimalService, AnimalService>();
 
 var app = builder.Build();
 
-// Configure o pipeline de requisiÁ„o HTTP
+// Configure o pipeline de requisi√ß√£o HTTP
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error"); // Ou apenas /Error para Razor Pages
@@ -48,8 +48,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // AutenticaÁ„o primeiro
-app.UseAuthorization();  // Depois autorizaÁ„o
+app.UseAuthentication(); // Autentica√ß√£o primeiro
+app.UseAuthorization();  // Depois autoriza√ß√£o
 
 // Rotas
 app.MapControllerRoute(

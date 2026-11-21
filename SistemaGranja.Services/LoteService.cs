@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Data;
 using SistemaGranja.Domain;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace SistemaGranja.Services

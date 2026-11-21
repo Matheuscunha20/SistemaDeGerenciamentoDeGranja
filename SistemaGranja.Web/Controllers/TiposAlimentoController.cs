@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore; // Para DbUpdateConcurrencyException
 using SistemaGranja.Domain;
 using SistemaGranja.Services;
 using System.Threading.Tasks;
-// using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
-// [Authorize] // Descomente para exigir login
+[Authorize]
 public class TiposAlimentoController : Controller
 {
     private readonly ITipoAlimentoService _tipoAlimentoService;

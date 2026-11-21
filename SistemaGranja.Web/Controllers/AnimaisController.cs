@@ -1,4 +1,5 @@
 ﻿// Arquivo: AnimaisController.cs
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering; // Para SelectList
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,7 @@ using SistemaGranja.Services;
 using System.Linq;
 using System.Threading.Tasks;
 
-// [Authorize]
+[Authorize]
 public class AnimaisController : Controller
 {
     private readonly IAnimalService _animalService;
@@ -49,7 +50,7 @@ public class AnimaisController : Controller
     // POST: Animais/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("TagIdentificacao,Nome,Raca,DataNascimento,Sexo,PesoAtual,StatusSaude,GalpaoId,LoteId,DataEntradaGranja,MotivoEntrada,OrigemAnimal")] Animal animal)
+    public async Task<IActionResult> Create([Bind("TagIdentificacao,Nome,Raca,DataNascimento,Sexo,PesoAtual,StatusSaude,GalpaoId,LoteId")] Animal animal)
     {
         // Remova Id da validação, pois é gerado pelo banco.
         ModelState.Remove("Id");
@@ -86,7 +87,7 @@ public class AnimaisController : Controller
     // POST: Animais/Edit/5
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("Id,TagIdentificacao,Nome,Raca,DataNascimento,Sexo,PesoAtual,StatusSaude,GalpaoId,LoteId,DataEntradaGranja,MotivoEntrada,OrigemAnimal,DataSaidaGranja,MotivoSaida,DestinoAnimal,CausaMorte")] Animal animal)
+    public async Task<IActionResult> Edit(int id, [Bind("Id,TagIdentificacao,Nome,Raca,DataNascimento,Sexo,PesoAtual,StatusSaude,GalpaoId,LoteId")] Animal animal)
     {
         if (id != animal.Id) return NotFound();
 

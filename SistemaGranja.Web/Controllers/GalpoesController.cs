@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Domain;    // Para Galpao
 using SistemaGranja.Services;  // Para IGalpaoService
-// using Microsoft.AspNetCore.Authorization; // Adicionar quando for proteger
+using Microsoft.AspNetCore.Authorization;
 
-// [Authorize] // Descomente para exigir login para acessar este controller
+[Authorize]
 public class GalpoesController : Controller
 {
     private readonly IGalpaoService _galpaoService;

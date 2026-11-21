@@ -71,6 +71,7 @@ namespace SistemaGranja.Services
         public async Task<Dictionary<string, int>> ContarAnimaisPorEstadoAsync()
         {
             return await _context.Animais
+                .Where(a => a.Ativo)
                 .GroupBy(a => a.StatusSaude)
                 .Select(grupo => new { Estado = grupo.Key, Quantidade = grupo.Count() })
                 .ToDictionaryAsync(x => x.Estado, x => x.Quantidade);

@@ -33,6 +33,8 @@
 
         var ehCompra = tipo.value === ENTRADA_COMPRA;
         camposCompra.style.display = ehCompra ? '' : 'none';
+        var blocoFinanceiro = document.getElementById('lancarNoFinanceiroBloco');
+        if (blocoFinanceiro) blocoFinanceiro.style.display = ehCompra ? '' : 'none';
         if (rotulo) rotulo.textContent = ehCompra ? 'Fornecedor' : 'Destino (galpão, lote...)';
 
         if (valorTotal) {

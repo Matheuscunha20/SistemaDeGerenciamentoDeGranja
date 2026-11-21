@@ -27,16 +27,18 @@ namespace SistemaGranja.Services
                     .ThenInclude(r => r!.Especie);
         }
 
+        // Só os animais que estão no rebanho (sem os vendidos, mortos etc.)
         public async Task<IEnumerable<Animal>> ObterTodosComRelacionamentosAsync()
         {
             return await ConsultaComRelacionamentos()
+                .Where(a => a.Ativo)
                 .OrderBy(a => a.TagIdentificacao)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<Animal>> ObterFiltradosAsync(string? busca, int? especieId, int? galpaoId, string? statusSaude)
+        public async Task<IEnumerable<Animal>> ObterFiltradosAsync(string? busca, int? especieId, int? galpaoId, string? statusSaude, bool foraDoRebanho = false)
         {
-            var consulta = ConsultaComRelacionamentos();
+            var consulta = ConsultaComRelacionamentos().Where(a => a.Ativo == !foraDoRebanho);
 
             if (!string.IsNullOrWhiteSpace(busca))
             {
@@ -55,9 +57,9 @@ namespace SistemaGranja.Services
             if (!string.IsNullOrWhiteSpace(statusSaude))
                 consulta = consulta.Where(a => a.StatusSaude == statusSaude);
 
-            return await consulta
-                .OrderBy(a => a.TagIdentificacao)
-                .ToListAsync();
+            return foraDoRebanho
+                ? await consulta.OrderByDescending(a => a.DataSaida).ThenBy(a => a.TagIdentificacao).ToListAsync()
+                : await consulta.OrderBy(a => a.TagIdentificacao).ToListAsync();
         }
 
         public async Task<Animal?> ObterPorIdComRelacionamentosAsync(int id)
@@ -66,11 +68,12 @@ namespace SistemaGranja.Services
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
+        // O brinco é único entre os animais do rebanho (o de um animal vendido pode ser reaproveitado)
         public async Task<bool> ExisteTagAsync(string tag, int? ignorarId = null)
         {
             var tagNormalizada = tag.Trim().ToLower();
             return await _context.Animais
-                .AnyAsync(a => a.TagIdentificacao.ToLower() == tagNormalizada && a.Id != ignorarId);
+                .AnyAsync(a => a.Ativo && a.TagIdentificacao.ToLower() == tagNormalizada && a.Id != ignorarId);
         }
 
         public async Task AdicionarAsync(Animal animal)
@@ -87,6 +90,20 @@ namespace SistemaGranja.Services
             if (animal == null)
                 throw new ArgumentNullException(nameof(animal));
             animal.TagIdentificacao = animal.TagIdentificacao.Trim();
+
+            // A tela de edição não mexe na saída do rebanho: mantém o que está gravado
+            var gravado = await _context.Animais.AsNoTracking()
+                .Where(a => a.Id == animal.Id)
+                .Select(a => new { a.Ativo, a.DataSaida, a.MotivoSaida, a.ValorVenda })
+                .FirstOrDefaultAsync();
+            if (gravado != null)
+            {
+                animal.Ativo = gravado.Ativo;
+                animal.DataSaida = gravado.DataSaida;
+                animal.MotivoSaida = gravado.MotivoSaida;
+                animal.ValorVenda = gravado.ValorVenda;
+            }
+
             _context.Animais.Update(animal);
             await _context.SaveChangesAsync();
         }

@@ -114,6 +114,14 @@ namespace SistemaGranja.Data
                 .IsRequired(false)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // Despesa criada por uma compra no estoque: se a compra for excluída, o vínculo some
+            builder.Entity<LancamentoFinanceiro>()
+                .HasOne(l => l.MovimentacaoEstoque)
+                .WithMany()
+                .HasForeignKey(l => l.MovimentacaoEstoqueId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.SetNull);
+
             ConfigurarSeparacaoPorFazenda(builder);
         }
 

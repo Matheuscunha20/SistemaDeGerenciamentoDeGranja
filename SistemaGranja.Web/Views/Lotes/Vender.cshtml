@@ -1,0 +1,62 @@
+@model AnimaisController.FormularioSaida
+
+@{
+    var lote = (Lote)ViewData["Lote"]!;
+    var selecionados = ViewData["Selecionados"] as List<int> ?? new();
+    var animais = lote.Animais.OrderBy(a => a.TagIdentificacao).ToList();
+    ViewData["Title"] = $"Vender animais do lote {lote.CodigoLote}";
+}
+
+<div class="page-header">
+    <div>
+        <h1>Vender animais</h1>
+        <div class="text-muted">Lote @lote.CodigoLote</div>
+    </div>
+</div>
+
+<form asp-action="Vender" asp-route-id="@lote.Id" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Animais (@animais.Count)</span>
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="marcarTodos" data-marcar-todos checked="@(selecionados.Count == animais.Count)" />
+                        <label class="form-check-label small" for="marcarTodos">Todos</label>
+                    </div>
+                </div>
+                <ul class="list-group list-group-flush" style="max-height: 28rem; overflow-y: auto">
+                    @foreach (var animal in animais)
+                    {
+                        <li class="list-group-item">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="animaisSelecionados" value="@animal.Id" id="animal-@animal.Id" data-animal-venda checked="@selecionados.Contains(animal.Id)" />
+                                <label class="form-check-label w-100 d-flex justify-content-between gap-2" for="animal-@animal.Id">
+                                    <span><strong>@animal.TagIdentificacao</strong> @animal.Raca?.Nome</span>
+                                    <span class="text-muted">@animal.PesoAtual.ToString("N1") kg</span>
+                                </label>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <partial name="_CamposSaida" model="Model" />
+                    <p class="small text-muted">Numa venda, informe o <strong>valor total</strong>: ele é dividido entre os animais selecionados. Os animais saem do rebanho, mas continuam no histórico do lote.</p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="submit" class="btn btn-agro">Registrar</button>
+                        <a asp-action="Details" asp-route-id="@lote.Id" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="~/js/saida-form.js" asp-append-version="true"></script>
+}

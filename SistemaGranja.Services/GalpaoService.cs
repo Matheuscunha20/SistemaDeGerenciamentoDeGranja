@@ -32,7 +32,7 @@ namespace SistemaGranja.Services
         public async Task<Galpao?> ObterComAnimaisAsync(int id)
         {
             return await _context.Galpoes
-                .Include(g => g.Animais)
+                .Include(g => g.Animais.Where(a => a.Ativo))
                     .ThenInclude(a => a.Raca)
                         .ThenInclude(r => r!.Especie)
                 .FirstOrDefaultAsync(g => g.Id == id);
@@ -41,7 +41,7 @@ namespace SistemaGranja.Services
         public async Task<Dictionary<int, int>> ObterOcupacaoAsync()
         {
             return await _context.Animais
-                .Where(a => a.GalpaoId != null)
+                .Where(a => a.Ativo && a.GalpaoId != null)
                 .GroupBy(a => a.GalpaoId!.Value)
                 .Select(grupo => new { GalpaoId = grupo.Key, Quantidade = grupo.Count() })
                 .ToDictionaryAsync(x => x.GalpaoId, x => x.Quantidade);
@@ -50,7 +50,7 @@ namespace SistemaGranja.Services
         public async Task<int> ContarAnimaisAsync(int galpaoId, int? ignorarAnimalId = null)
         {
             return await _context.Animais
-                .CountAsync(a => a.GalpaoId == galpaoId && a.Id != ignorarAnimalId);
+                .CountAsync(a => a.Ativo && a.GalpaoId == galpaoId && a.Id != ignorarAnimalId);
         }
 
         public async Task<bool> ExisteNomeAsync(string nome, int? ignorarId = null)

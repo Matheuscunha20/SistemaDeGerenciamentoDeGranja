@@ -59,8 +59,17 @@ public class EstoqueController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(
-        [Bind("TipoAlimentoId,DataMovimentacao,TipoMovimentacao,Quantidade,PrecoUnitario,FornecedorOuDestino,NotaFiscal,FuncionarioId,Observacoes")] MovimentacaoEstoqueAlimento movimentacao)
+        [Bind("TipoAlimentoId,DataMovimentacao,TipoMovimentacao,Quantidade,PrecoUnitario,FornecedorOuDestino,NotaFiscal,FuncionarioId,Observacoes")] MovimentacaoEstoqueAlimento movimentacao,
+        bool lancarNoFinanceiro = false, bool despesaPaga = false)
     {
+        // Funcionário não vê o financeiro: a compra dele vai como conta a pagar, para o dono/gerente conferir
+        if (!User.PodeGerenciar())
+        {
+            lancarNoFinanceiro = true;
+            despesaPaga = false;
+        }
+        ViewData["LancarNoFinanceiro"] = lancarNoFinanceiro;
+        ViewData["DespesaPaga"] = despesaPaga;
         LimparValidacaoDeNavegacao();
         await ValidarAsync(movimentacao);
 
@@ -70,9 +79,11 @@ public class EstoqueController : Controller
             return View(movimentacao);
         }
 
-        await _estoqueService.AdicionarAsync(movimentacao);
+        await _estoqueService.AdicionarAsync(movimentacao, lancarNoFinanceiro, despesaPaga);
         var saldo = await _estoqueService.ObterSaldoAsync(movimentacao.TipoAlimentoId);
-        TempData["Sucesso"] = $"{movimentacao.TipoMovimentacao.NomeExibicao()} registrada. Saldo atual: {saldo:N2} {movimentacao.UnidadeMedida}.";
+        var despesa = await _estoqueService.ObterDespesaDaCompraAsync(movimentacao.Id);
+        TempData["Sucesso"] = $"{movimentacao.TipoMovimentacao.NomeExibicao()} registrada. Saldo atual: {saldo:N2} {movimentacao.UnidadeMedida}."
+            + (despesa != null ? $" Despesa de {despesa.Valor:C} lançada no financeiro{(despesa.Pago ? "" : " como conta a pagar")}." : "");
         return RedirectToAction(nameof(Index));
     }
 
@@ -83,6 +94,7 @@ public class EstoqueController : Controller
         var movimentacao = await _estoqueService.ObterPorIdAsync(id.Value);
         if (movimentacao == null) return NotFound();
 
+        ViewData["DespesaLigada"] = await _estoqueService.ObterDespesaDaCompraAsync(movimentacao.Id);
         await CarregarListasAsync(movimentacao);
         return View(movimentacao);
     }

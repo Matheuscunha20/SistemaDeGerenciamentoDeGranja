@@ -19,6 +19,7 @@ public class AnimaisController : Controller
     private readonly IRacaService _racaService;
     private readonly IVacinacaoService _vacinacaoService;
     private readonly ISaudeService _saudeService;
+    private readonly ISaidaDeAnimaisService _saidaService;
 
     public static readonly string[] EstadosDeSaude = { "Saudável", "Em observação", "Em tratamento", "Em quarentena" };
 
@@ -29,8 +30,10 @@ public class AnimaisController : Controller
         IEspecieService especieService,
         IRacaService racaService,
         IVacinacaoService vacinacaoService,
-        ISaudeService saudeService)
+        ISaudeService saudeService,
+        ISaidaDeAnimaisService saidaService)
     {
+        _saidaService = saidaService;
         _animalService = animalService;
         _galpaoService = galpaoService;
         _loteService = loteService;
@@ -41,9 +44,12 @@ public class AnimaisController : Controller
     }
 
     // GET: Animais?busca=&especieId=&galpaoId=&statusSaude=
-    public async Task<IActionResult> Index(string? busca, int? especieId, int? galpaoId, string? statusSaude)
+    public async Task<IActionResult> Index(string? busca, int? especieId, int? galpaoId, string? statusSaude, string? situacao)
     {
-        var animais = await _animalService.ObterFiltradosAsync(busca, especieId, galpaoId, statusSaude);
+        // situacao=saidas: animais que saíram do rebanho (vendidos, mortos...)
+        var saidas = situacao == "saidas";
+        var animais = await _animalService.ObterFiltradosAsync(busca, especieId, galpaoId, statusSaude, saidas);
+        ViewData["Saidas"] = saidas;
 
         ViewData["Busca"] = busca;
         ViewData["StatusSaude"] = statusSaude;
@@ -74,6 +80,76 @@ public class AnimaisController : Controller
         ViewData["Vacinacoes"] = (await _vacinacaoService.ObterHistoricoAsync(animalId: animal.Id)).ToList();
         ViewData["OcorrenciasSaude"] = (await _saudeService.ObterHistoricoAsync(animalId: animal.Id)).ToList();
         return View(animal);
+    }
+
+    public class FormularioSaida
+    {
+        public int AnimalId { get; set; }
+        public MotivoSaidaAnimal Motivo { get; set; } = MotivoSaidaAnimal.Venda;
+        public DateTime Data { get; set; } = DateTime.Today;
+        public decimal? Valor { get; set; }
+        public FormaPagamento FormaPagamento { get; set; } = FormaPagamento.Pix;
+        public bool Recebido { get; set; } = true;
+        public string? Comprador { get; set; }
+        public string? Observacoes { get; set; }
+    }
+
+    // GET: Animais/Saida/5 — venda, morte, abate...
+    [Authorize(Policy = Politicas.Gestao)]
+    public async Task<IActionResult> Saida(int? id)
+    {
+        if (id == null) return NotFound();
+        var animal = await _animalService.ObterPorIdComRelacionamentosAsync(id.Value);
+        if (animal == null) return NotFound();
+        if (!animal.Ativo) return RedirectToAction(nameof(Details), new { id });
+
+        ViewData["Animal"] = animal;
+        return View(new FormularioSaida { AnimalId = animal.Id });
+    }
+
+    // POST: Animais/Saida/5
+    [Authorize(Policy = Politicas.Gestao)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Saida(int id, FormularioSaida formulario)
+    {
+        var resultado = await _saidaService.RegistrarSaidaAsync(new DadosSaida
+        {
+            AnimalIds = new List<int> { id },
+            Motivo = formulario.Motivo,
+            Data = formulario.Data,
+            ValorTotal = formulario.Valor,
+            FormaPagamento = formulario.FormaPagamento,
+            Recebido = formulario.Recebido,
+            Comprador = formulario.Comprador,
+            Observacoes = formulario.Observacoes
+        });
+
+        if (resultado.Erro != null)
+        {
+            ModelState.AddModelError(string.Empty, resultado.Erro);
+            ViewData["Animal"] = await _animalService.ObterPorIdComRelacionamentosAsync(id);
+            return View(formulario);
+        }
+
+        TempData["Sucesso"] = resultado.Receita != null
+            ? $"Saída registrada. Receita de {resultado.Receita.Valor:C} lançada no financeiro{(resultado.Receita.Pago ? "" : " como conta a receber")}."
+            : "Saída do rebanho registrada.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    // POST: Animais/VoltarAoRebanho/5 — desfaz uma saída registrada por engano
+    [Authorize(Policy = Politicas.Gestao)]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> VoltarAoRebanho(int id)
+    {
+        var erro = await _saidaService.VoltarAoRebanhoAsync(id);
+        if (erro == null)
+            TempData["Sucesso"] = "O animal voltou ao rebanho. Se houve receita de venda, confira e exclua no financeiro.";
+        else
+            TempData["Erro"] = erro;
+        return RedirectToAction(nameof(Details), new { id });
     }
 
     // GET: Animais/Create

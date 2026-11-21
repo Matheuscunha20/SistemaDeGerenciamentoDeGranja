@@ -114,6 +114,10 @@ namespace SistemaGranja.Domain
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string Observacoes { get; set; } = string.Empty;
 
+        // Criado automaticamente por uma compra no estoque (atualiza junto com ela)
+        public int? MovimentacaoEstoqueId { get; set; }
+        public virtual MovimentacaoEstoqueAlimento? MovimentacaoEstoque { get; set; }
+
         public DateTime CriadoEm { get; set; } = DateTime.UtcNow;
 
         // Valor com sinal: receita soma, despesa subtrai

@@ -1142,6 +1142,34 @@ namespace SistemaGranja.Data.Migrations
                     b.Property<bool>("Pago")
                         .HasColumnType("tinyint(1)");
                 });
+            modelBuilder.Entity("SistemaGranja.Domain.Animal", b =>
+                {
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("DataSaida")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("MotivoSaida")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ValorVenda")
+                        .HasColumnType("decimal(12,2)");
+                });
+            modelBuilder.Entity("SistemaGranja.Domain.LancamentoFinanceiro", b =>
+                {
+                    b.Property<int?>("MovimentacaoEstoqueId")
+                        .HasColumnType("int");
+
+                    b.HasIndex("MovimentacaoEstoqueId");
+
+                    b.HasOne("SistemaGranja.Domain.MovimentacaoEstoqueAlimento", "MovimentacaoEstoque")
+                        .WithMany()
+                        .HasForeignKey("MovimentacaoEstoqueId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("MovimentacaoEstoque");
+                });
 #pragma warning restore 612, 618
         }
     }

@@ -94,8 +94,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3, .h1, .h2, .h3, .display-4 {
+h1, h2, h3, h4, h5, .h1, .h2, .h3, .h4, .h5, .display-4 {
   font-family: Manrope, Inter, system-ui, sans-serif;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 
@@ -752,4 +753,273 @@ dl.detalhes dt {
 /* Código/brinco na primeira coluna não quebra em duas linhas */
 .table > tbody td:first-child {
   white-space: nowrap;
+}
+
+/* ==========================================================================
+   Painel
+   ========================================================================== */
+
+.painel-topo h1 {
+  font-size: 2rem;
+}
+
+.painel-avisos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.aviso {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--aa-borda);
+  background: var(--aa-superficie);
+  color: var(--aa-texto);
+  text-decoration: none;
+}
+
+.aviso:hover {
+  color: inherit;
+  filter: brightness(0.98);
+}
+
+.aviso-titulo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.aviso-numero {
+  font-family: Manrope, Inter, sans-serif;
+  font-size: 1.875rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.aviso-texto {
+  font-size: 0.8125rem;
+  opacity: 0.85;
+}
+
+.aviso-perigo { background: var(--bs-danger-bg-subtle); border-color: var(--bs-danger-border-subtle); color: var(--bs-danger-text-emphasis); }
+.aviso-atencao { background: var(--bs-warning-bg-subtle); border-color: var(--bs-warning-border-subtle); color: var(--bs-warning-text-emphasis); }
+.aviso-info { background: var(--bs-info-bg-subtle); border-color: var(--bs-info-border-subtle); color: var(--bs-info-text-emphasis); }
+.aviso-neutro .aviso-titulo,
+.aviso-neutro .aviso-texto { color: var(--aa-texto-suave); }
+
+.painel-blocos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.painel-total {
+  font-family: Manrope, Inter, sans-serif;
+  font-size: 1.375rem;
+  color: var(--aa-texto);
+}
+
+.barra {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--aa-superficie-2);
+  overflow: hidden;
+}
+
+.barra-valor {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--aa-verde);
+}
+
+.barra-atencao .barra-valor { background: #D99A2B; }
+.barra-perigo .barra-valor { background: #C2410C; }
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.625rem;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.selo-sucesso { background: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); }
+.selo-atencao { background: var(--bs-warning-bg-subtle); color: var(--bs-warning-text-emphasis); }
+.selo-info { background: var(--bs-info-bg-subtle); color: var(--bs-info-text-emphasis); }
+.selo-perigo { background: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); }
+.selo-neutro { background: var(--aa-superficie-2); color: var(--aa-texto-suave); }
+
+a.selo:hover { filter: brightness(0.96); }
+
+.lista-painel {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-painel li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--aa-borda);
+}
+
+.lista-painel li:last-child {
+  border-bottom: 0;
+}
+
+.lista-painel-data {
+  flex: 0 0 4.5rem;
+  font-size: 0.75rem;
+}
+
+.lista-painel-texto {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ==========================================================================
+   Celular: telas mais confortáveis
+   ========================================================================== */
+
+@media (max-width: 767.98px) {
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  /* Botão principal do topo ocupa a largura toda */
+  .page-header > .btn,
+  .page-header > div > .btn:only-child {
+    width: 100%;
+  }
+
+  /* Abas roláveis em vez de quebrar em várias linhas */
+  .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-tabs .nav-link {
+    white-space: nowrap;
+  }
+
+  /* Formulários: botões de salvar/voltar empilhados e grandes */
+  .form-card .btn,
+  form .d-flex > .btn-agro {
+    min-height: 44px;
+  }
+
+  /* --- Tabelas em cartões ---
+     Cada linha vira um cartão; o nome da coluna aparece ao lado do valor
+     (preenchido pelo site.js a partir do cabeçalho da tabela). */
+  .tabela-cartoes thead {
+    display: none;
+  }
+
+  .tabela-cartoes,
+  .tabela-cartoes tbody,
+  .tabela-cartoes tr,
+  .tabela-cartoes td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabela-cartoes tr {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--aa-borda);
+  }
+
+  .tabela-cartoes tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .tabela-cartoes > tbody > tr > td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    border: 0;
+    text-align: right !important;
+    white-space: normal;
+  }
+
+  .tabela-cartoes > tbody > tr > td::before {
+    content: attr(data-rotulo);
+    flex: 0 0 auto;
+    color: var(--aa-texto-suave);
+    font-size: 0.8125rem;
+    text-align: left;
+  }
+
+  /* Primeira coluna = título do cartão (brinco, nome...) */
+  .tabela-cartoes > tbody > tr > td:first-child {
+    justify-content: flex-start;
+    text-align: left !important;
+    font-size: 1.0625rem;
+    font-weight: 700;
+    padding-bottom: 0.375rem;
+  }
+
+  .tabela-cartoes > tbody > tr > td:first-child::before,
+  .tabela-cartoes > tbody > tr > td[data-rotulo=""]::before {
+    content: none;
+  }
+
+  /* Coluna de ações: botões grandes, lado a lado, no fim do cartão */
+  .tabela-cartoes > tbody > tr > td.acoes,
+  .tabela-cartoes > tbody > tr > td:last-child:has(.btn) {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.625rem;
+  }
+
+  .tabela-cartoes > tbody > tr > td.acoes::before,
+  .tabela-cartoes > tbody > tr > td:last-child:has(.btn)::before {
+    content: none;
+  }
+
+  .tabela-cartoes td.acoes .btn,
+  .tabela-cartoes td:last-child .btn {
+    flex: 1 1 0;
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tabela-cartoes td.acoes form {
+    flex: 1 1 0;
+    display: flex;
+  }
+
+  .tabela-cartoes td.acoes form .btn {
+    width: 100%;
+  }
+
+  /* Linhas destacadas (ex.: vacina atrasada) continuam coloridas */
+  .tabela-cartoes tr.table-danger { background: var(--bs-danger-bg-subtle); }
+  .tabela-cartoes tr.table-warning { background: var(--bs-warning-bg-subtle); }
+  .tabela-cartoes tr.table-danger > td,
+  .tabela-cartoes tr.table-warning > td { background: transparent; box-shadow: none; }
+
+  /* Sem rolagem lateral quando a tabela vira cartões */
+  .table-responsive:has(> .tabela-cartoes) {
+    overflow: hidden;
+    border-radius: inherit;
+  }
 }

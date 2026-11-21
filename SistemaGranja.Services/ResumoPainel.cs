@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SistemaGranja.Domain;
 
 namespace SistemaGranja.Services
 {
@@ -21,6 +22,12 @@ namespace SistemaGranja.Services
         public int VacinasProximos7Dias { get; set; }
 
         public List<SaldoAlimento> AlimentosComEstoqueBaixo { get; set; } = new();
+
+        // Lista curta para o painel: as próximas doses (atrasadas primeiro)
+        public List<RegistroVacinacao> ProximasDoses { get; set; } = new();
+
+        // Alimentos que acabam primeiro, no ritmo atual de consumo
+        public List<SaldoAlimento> EstoqueAcabandoPrimeiro { get; set; } = new();
 
         public int OcupacaoPercentual => CapacidadeTotal > 0 ? (int)System.Math.Round(AnimaisAlojados * 100.0 / CapacidadeTotal) : 0;
         public int AnimaisEmAtencao =>

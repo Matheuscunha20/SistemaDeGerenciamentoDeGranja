@@ -4,154 +4,193 @@
 @{
     ViewData["Title"] = "Painel";
     var cultura = new System.Globalization.CultureInfo("pt-BR");
-    var hoje = DateTime.Today.ToString("dddd, d 'de' MMMM 'de' yyyy", cultura);
-    var corOcupacao = Model.OcupacaoPercentual >= 90 ? "bg-danger" : Model.OcupacaoPercentual >= 70 ? "bg-warning" : "bg-success";
 
-    // Alertas: só aparecem quando há algo a fazer
-    var alertas = new List<(string Classe, string Texto, string Controller, string Acao, string Botao)>();
-    if (Model.VacinasAtrasadas > 0)
-        alertas.Add(("danger", $"{Model.VacinasAtrasadas} dose(s) de vacina atrasada(s).", "Vacinacoes", "Index", "Ver agenda"));
-    if (Model.AlimentosComEstoqueBaixo.Any(s => s.Situacao == SituacaoEstoque.Zerado))
-        alertas.Add(("danger", $"Sem estoque: {string.Join(", ", Model.AlimentosComEstoqueBaixo.Where(s => s.Situacao == SituacaoEstoque.Zerado).Select(s => s.Alimento.Nome))}.", "Estoque", "Index", "Ver estoque"));
-    if (Model.AlimentosComEstoqueBaixo.Any(s => s.Situacao == SituacaoEstoque.Baixo))
-        alertas.Add(("warning", $"Estoque baixo: {string.Join(", ", Model.AlimentosComEstoqueBaixo.Where(s => s.Situacao == SituacaoEstoque.Baixo).Select(s => s.Alimento.Nome))}.", "Estoque", "Index", "Ver estoque"));
-    if (Model.GalpoesLotados.Count > 0)
-        alertas.Add(("warning", $"Galpão(ões) lotado(s): {string.Join(", ", Model.GalpoesLotados)}.", "Galpoes", "Index", "Ver galpões"));
-    if (Model.AnimaisEmAtencao > 0)
-        alertas.Add(("info", $"{Model.AnimaisEmAtencao} animal(is) em tratamento, quarentena ou observação.", "Saude", "Index", "Ver saúde"));
-    if (Model.VacinasProximos7Dias > 0)
-        alertas.Add(("info", $"{Model.VacinasProximos7Dias} dose(s) de vacina nos próximos 7 dias.", "Vacinacoes", "Index", "Ver agenda"));
+    // Hora do Brasil, mesmo com o servidor em outro fuso
+    var agora = DateTime.Now;
+    try { agora = TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo")); } catch { }
+    var saudacao = agora.Hour < 12 ? "Bom dia" : agora.Hour < 18 ? "Boa tarde" : "Boa noite";
+    var dataHoje = agora.ToString("dddd, d 'de' MMMM", cultura);
+    var hoje = agora.Date;
+
+    var nomeFazenda = User.FindFirst(FazendaDoUsuarioLogado.ClaimFazendaNome)?.Value;
+    var zerados = Model.AlimentosComEstoqueBaixo.Where(s => s.Situacao == SituacaoEstoque.Zerado).Select(s => s.Alimento.Nome).ToList();
+    var baixos = Model.AlimentosComEstoqueBaixo.Where(s => s.Situacao == SituacaoEstoque.Baixo).Select(s => s.Alimento.Nome).ToList();
+
+    string Plural(int n, string um, string varios) => n == 1 ? um : varios;
 }
 
-<div class="page-header">
+<div class="page-header painel-topo">
     <div>
-        <h1>Painel</h1>
-        <div class="text-muted small text-capitalize-first">@hoje</div>
+        <div class="text-muted small text-capitalize-first">@dataHoje</div>
+        <h1>@saudacao!</h1>
+        @if (!string.IsNullOrEmpty(nomeFazenda))
+        {
+            <div class="text-muted">@nomeFazenda</div>
+        }
     </div>
-    <div class="d-flex flex-wrap gap-2">
-        <a asp-controller="Animais" asp-action="Create" class="btn btn-agro">+ Animal</a>
-        <a asp-controller="Vacinacoes" asp-action="Create" class="btn btn-outline-success">Vacinar</a>
+    @* No celular esses atalhos ficam no botão "+" da barra inferior *@
+    <div class="d-none d-lg-flex flex-wrap gap-2">
+        <a asp-controller="Animais" asp-action="Create" class="btn btn-agro">@Icones.Svg("mais", 18) Animal</a>
+        <a asp-controller="Vacinacoes" asp-action="Create" class="btn btn-outline-secondary">Vacinar</a>
         <a asp-controller="Saude" asp-action="Create" class="btn btn-outline-secondary">Ocorrência de saúde</a>
         <a asp-controller="Estoque" asp-action="Create" class="btn btn-outline-secondary">Movimentar estoque</a>
     </div>
 </div>
 
-@if (alertas.Count == 0)
-{
-    <div class="alert alert-success d-flex align-items-center gap-2">
-        <span class="fs-5">✓</span>
-        <span>Tudo em dia: nenhuma vacina atrasada, nenhum estoque baixo e nenhum galpão lotado.</span>
-    </div>
-}
-else
-{
-    <div class="mb-4">
-        @foreach (var alerta in alertas)
-        {
-            <div class="alert alert-@alerta.Classe d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 mb-2">
-                <span>@alerta.Texto</span>
-                <a asp-controller="@alerta.Controller" asp-action="@alerta.Acao" class="btn btn-sm btn-light">@alerta.Botao</a>
+<section class="painel-avisos mb-4" aria-label="Avisos">
+    <a class="aviso @(Model.VacinasAtrasadas > 0 ? "aviso-perigo" : "aviso-neutro")" asp-controller="Vacinacoes" asp-action="Index">
+        <span class="aviso-titulo">@Icones.Svg("sanidade", 18) Vacinas atrasadas</span>
+        <span class="aviso-numero">@Model.VacinasAtrasadas</span>
+        <span class="aviso-texto">@Model.VacinasProximos7Dias @Plural(Model.VacinasProximos7Dias, "dose", "doses") nos próximos 7 dias</span>
+    </a>
+    <a class="aviso @(zerados.Count > 0 ? "aviso-perigo" : baixos.Count > 0 ? "aviso-atencao" : "aviso-neutro")" asp-controller="Estoque" asp-action="Index">
+        <span class="aviso-titulo">@Icones.Svg("estoque", 18) Estoque baixo</span>
+        <span class="aviso-numero">@Model.AlimentosComEstoqueBaixo.Count</span>
+        <span class="aviso-texto">
+            @if (zerados.Count > 0)
+            {
+                @:Sem estoque: @(string.Join(", ", zerados))
+            }
+            else if (baixos.Count > 0)
+            {
+                @:@(string.Join(", ", baixos))
+            }
+            else
+            {
+                @:Tudo abastecido
+            }
+        </span>
+    </a>
+    <a class="aviso @(Model.AnimaisEmAtencao > 0 ? "aviso-info" : "aviso-neutro")" asp-controller="Saude" asp-action="Index">
+        <span class="aviso-titulo">@Icones.Svg("saude", 18) Em atenção</span>
+        <span class="aviso-numero">@Model.AnimaisEmAtencao</span>
+        <span class="aviso-texto">Em tratamento, quarentena ou observação</span>
+    </a>
+    <a class="aviso @(Model.GalpoesLotados.Count > 0 ? "aviso-atencao" : "aviso-neutro")" asp-controller="Galpoes" asp-action="Index">
+        <span class="aviso-titulo">@Icones.Svg("galpoes", 18) Galpões</span>
+        <span class="aviso-numero">@Model.OcupacaoPercentual%</span>
+        <span class="aviso-texto">
+            @if (Model.GalpoesLotados.Count > 0)
+            {
+                @:Lotado: @(string.Join(", ", Model.GalpoesLotados))
+            }
+            else
+            {
+                @:@Model.AnimaisAlojados de @Model.CapacidadeTotal vagas ocupadas
+            }
+        </span>
+    </a>
+</section>
+
+<div class="painel-blocos">
+    <section class="card shadow-sm">
+        <div class="card-body d-flex flex-column gap-3">
+            <div class="d-flex align-items-baseline justify-content-between gap-2">
+                <h2 class="h5 mb-0">Rebanho</h2>
+                <span class="text-muted"><strong class="painel-total">@Model.TotalAnimais</strong> @Plural(Model.TotalAnimais, "animal", "animais")</span>
             </div>
-        }
-    </div>
-}
-
-<div class="row g-3 mb-4">
-    <div class="col-sm-6 col-xl-3">
-        <a asp-controller="Animais" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card shadow-sm h-100 card-destaque destaque-success"><div class="card-body">
-                <div class="small text-muted">Animais</div>
-                <div class="fs-3 fw-semibold">@Model.TotalAnimais</div>
-                <div class="small text-muted">@Model.LotesAtivos lote(s) ativo(s)</div>
-            </div></div>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a asp-controller="Galpoes" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card shadow-sm h-100"><div class="card-body">
-                <div class="small text-muted">Ocupação dos galpões</div>
-                <div class="fs-3 fw-semibold">@Model.OcupacaoPercentual%</div>
-                <div class="progress my-1" style="height: 6px;" role="progressbar" aria-valuenow="@Model.OcupacaoPercentual" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar @corOcupacao" style="width: @(Math.Min(Model.OcupacaoPercentual, 100))%"></div>
-                </div>
-                <div class="small text-muted">@Model.AnimaisAlojados de @Model.CapacidadeTotal vagas · @Model.TotalGalpoes galpão(ões)</div>
-            </div></div>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a asp-controller="Vacinacoes" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card shadow-sm h-100 card-destaque @(Model.VacinasAtrasadas > 0 ? "destaque-danger" : "destaque-info")"><div class="card-body">
-                <div class="small text-muted">Vacinas atrasadas</div>
-                <div class="fs-3 fw-semibold">@Model.VacinasAtrasadas</div>
-                <div class="small text-muted">@Model.VacinasProximos7Dias nos próximos 7 dias</div>
-            </div></div>
-        </a>
-    </div>
-    <div class="col-sm-6 col-xl-3">
-        <a asp-controller="Estoque" asp-action="Index" class="text-decoration-none text-reset">
-            <div class="card shadow-sm h-100 card-destaque @(Model.AlimentosComEstoqueBaixo.Count > 0 ? "destaque-warning" : "destaque-success")"><div class="card-body">
-                <div class="small text-muted">Alimentos com estoque baixo</div>
-                <div class="fs-3 fw-semibold">@Model.AlimentosComEstoqueBaixo.Count</div>
-                <div class="small text-muted">@Model.FuncionariosAtivos funcionário(s) ativo(s)</div>
-            </div></div>
-        </a>
-    </div>
-</div>
-
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header fw-semibold">Animais por espécie</div>
-            <div class="card-body">
-                @if (Model.TotalAnimais == 0)
-                {
-                    <p class="text-muted mb-2">Nenhum animal cadastrado ainda.</p>
-                    <a asp-controller="Animais" asp-action="Create" class="btn btn-sm btn-agro">Cadastrar o primeiro</a>
-                }
-                else
-                {
-                    foreach (var (especie, quantidade) in Model.AnimaisPorEspecie)
+            @if (Model.TotalAnimais == 0)
+            {
+                <p class="text-muted mb-0">Nenhum animal cadastrado ainda.</p>
+                <div><a asp-controller="Animais" asp-action="Create" class="btn btn-sm btn-agro">Cadastrar o primeiro</a></div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-2">
+                    @foreach (var (especie, quantidade) in Model.AnimaisPorEspecie)
                     {
                         var percentual = (int)Math.Round(quantidade * 100.0 / Model.TotalAnimais);
-                        <div class="mb-3">
+                        <div>
                             <div class="d-flex justify-content-between small mb-1">
                                 <span class="fw-semibold">@especie</span>
-                                <span class="text-muted">@quantidade (@percentual%)</span>
+                                <span class="text-muted">@quantidade</span>
                             </div>
-                            <div class="progress" style="height: 8px;" role="progressbar" aria-label="@especie" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100">
-                                <div class="progress-bar bg-success" style="width: @percentual%"></div>
+                            <div class="barra" role="progressbar" aria-label="@especie" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100">
+                                <div class="barra-valor" style="width: @(Math.Max(percentual, 2))%"></div>
                             </div>
                         </div>
                     }
-                }
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header fw-semibold">Estado de saúde do rebanho</div>
-            <div class="card-body">
-                @if (Model.TotalAnimais == 0)
-                {
-                    <p class="text-muted mb-0">Os estados de saúde aparecem quando houver animais.</p>
-                }
-                else
-                {
-                    <div class="row g-2">
-                        @foreach (var (estado, classe) in new[] { ("Saudável", "destaque-success"), ("Em observação", "destaque-info"), ("Em tratamento", "destaque-warning"), ("Em quarentena", "destaque-danger") })
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach (var (estado, classe) in new[] { ("Saudável", "selo-sucesso"), ("Em observação", "selo-atencao"), ("Em tratamento", "selo-info"), ("Em quarentena", "selo-perigo") })
+                    {
+                        var quantidade = Model.AnimaisPorEstadoDeSaude.GetValueOrDefault(estado);
+                        if (quantidade > 0)
                         {
-                            <div class="col-6">
-                                <a asp-controller="Animais" asp-action="Index" asp-route-statusSaude="@estado" class="text-decoration-none text-reset">
-                                    <div class="border rounded p-2 card-destaque @classe">
-                                        <div class="small text-muted">@estado</div>
-                                        <div class="fs-5 fw-semibold">@Model.AnimaisPorEstadoDeSaude.GetValueOrDefault(estado)</div>
-                                    </div>
-                                </a>
-                            </div>
+                            <a class="selo @classe" asp-controller="Animais" asp-action="Index" asp-route-statusSaude="@estado">@quantidade @estado.ToLower()</a>
                         }
+                    }
+                </div>
+                <div class="small text-muted">@Model.LotesAtivos @Plural(Model.LotesAtivos, "lote ativo", "lotes ativos") · @Model.FuncionariosAtivos @Plural(Model.FuncionariosAtivos, "funcionário ativo", "funcionários ativos")</div>
+            }
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+        <div class="card-body d-flex flex-column gap-2">
+            <div class="d-flex align-items-baseline justify-content-between gap-2">
+                <h2 class="h5 mb-0">Próximas vacinas</h2>
+                <a asp-controller="Vacinacoes" asp-action="Index" class="small fw-semibold">Ver agenda</a>
+            </div>
+            @if (Model.ProximasDoses.Count == 0)
+            {
+                <p class="text-muted mb-0">Nenhuma dose atrasada ou prevista para os próximos 7 dias.</p>
+            }
+            else
+            {
+                <ul class="lista-painel">
+                    @foreach (var dose in Model.ProximasDoses)
+                    {
+                        var data = dose.DataProximaDoseRecomendada!.Value.Date;
+                        var dias = (data - hoje).Days;
+                        var (rotulo, classe) = dias < 0 ? ("atrasada", "selo-perigo") : dias == 0 ? ("hoje", "selo-atencao") : (data.ToString("dd/MM"), "selo-neutro");
+                        <li>
+                            <span class="selo @classe lista-painel-data">@rotulo</span>
+                            <span class="lista-painel-texto">
+                                <span class="fw-semibold">@dose.TipoVacina?.NomeVacina · @dose.Animal?.TagIdentificacao</span>
+                                <span class="small text-muted">@(dias < 0 ? $"Venceu em {data:dd/MM}" : dose.Animal?.Nome)</span>
+                            </span>
+                            <a asp-controller="Vacinacoes" asp-action="Create" asp-route-animalId="@dose.AnimalId" asp-route-tipoVacinaId="@dose.TipoVacinaId" class="btn btn-sm btn-outline-primary">Aplicar</a>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+
+    <section class="card shadow-sm">
+        <div class="card-body d-flex flex-column gap-2">
+            <div class="d-flex align-items-baseline justify-content-between gap-2">
+                <h2 class="h5 mb-0">Estoque de alimento</h2>
+                <a asp-controller="Estoque" asp-action="Index" class="small fw-semibold">Ver estoque</a>
+            </div>
+            @if (Model.EstoqueAcabandoPrimeiro.Count == 0)
+            {
+                <p class="text-muted mb-0">Cadastre os alimentos para acompanhar o estoque.</p>
+            }
+            else
+            {
+                foreach (var item in Model.EstoqueAcabandoPrimeiro)
+                {
+                    var dias = item.DiasRestantes;
+                    var zerado = item.Situacao == SituacaoEstoque.Zerado;
+                    var classe = zerado || dias <= 7 ? "barra-perigo" : dias <= 15 || item.Situacao == SituacaoEstoque.Baixo ? "barra-atencao" : "";
+                    var largura = zerado ? 0 : dias.HasValue ? Math.Clamp((int)(dias.Value / 30 * 100), 3, 100) : 100;
+                    var textoSaldo = $"{item.Saldo.ToString("N1", cultura)} {item.Alimento.UnidadeMedidaPadrao}"
+                        + (item.ConsumoMedioDiario > 0 ? $" · consumo de {item.ConsumoMedioDiario.ToString("N1", cultura)}/dia" : "");
+                    var textoDias = zerado ? "sem estoque" : dias.HasValue ? $"{Math.Floor(dias.Value):0} {Plural((int)Math.Floor(dias.Value), "dia", "dias")}" : "sem consumo";
+                    <div class="py-1">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span class="fw-semibold">@item.Alimento.Nome</span>
+                            <span class="fw-semibold @(classe == "barra-perigo" ? "text-danger-emphasis" : classe == "barra-atencao" ? "text-warning-emphasis" : "text-muted")">@textoDias</span>
+                        </div>
+                        <div class="barra @classe" role="progressbar" aria-label="@item.Alimento.Nome" aria-valuenow="@largura" aria-valuemin="0" aria-valuemax="100">
+                            <div class="barra-valor" style="width: @largura%"></div>
+                        </div>
+                        <div class="small text-muted mt-1">@textoSaldo</div>
                     </div>
                 }
-            </div>
+            }
         </div>
-    </div>
+    </section>
 </div>

@@ -1,0 +1,21 @@
+@page
+@model LogoutModel
+
+@{
+    ViewData["Title"] = "Sair";
+}
+
+<div class="text-center py-5">
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <h1 class="h3 mb-3">Deseja sair do AgroArca?</h1>
+        <form method="post" asp-route-returnUrl="@Url.Content("~/")">
+            <button type="submit" class="btn btn-agro">Sair</button>
+        </form>
+    }
+    else
+    {
+        <h1 class="h3 mb-3">Você saiu do sistema.</h1>
+        <a asp-page="./Login" class="btn btn-agro">Entrar novamente</a>
+    }
+</div>

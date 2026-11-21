@@ -70,7 +70,7 @@
     <div class="col-md-6">
         <div class="mb-3">
             <label asp-for="PesoAtual" class="form-label"></label>
-            <input asp-for="PesoAtual" class="form-control" inputmode="decimal" />
+            <input asp-for="PesoAtual" class="form-control" inputmode="decimal" value="@(Model.PesoAtual > 0 ? Model.PesoAtual.ToString("0.###") : "")" placeholder="Ex.: 350,5" />
             <span asp-validation-for="PesoAtual" class="text-danger"></span>
         </div>
     </div>

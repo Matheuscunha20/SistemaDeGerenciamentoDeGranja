@@ -44,7 +44,7 @@
         <div class="mb-3">
             <label asp-for="Quantidade" class="form-label"></label>
             <div class="input-group">
-                <input asp-for="Quantidade" class="form-control" inputmode="decimal" />
+                <input asp-for="Quantidade" class="form-control" inputmode="decimal" value="@(Model.Quantidade > 0 ? Model.Quantidade.ToString("0.###") : "")" placeholder="0" />
                 <span class="input-group-text" id="unidadeQuantidade">—</span>
             </div>
             <span asp-validation-for="Quantidade" class="text-danger"></span>

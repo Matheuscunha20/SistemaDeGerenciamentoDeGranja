@@ -1,0 +1,157 @@
+@model SistemaGranja.Services.ResumoPainel
+@using SistemaGranja.Services
+
+@{
+    ViewData["Title"] = "Painel";
+    var cultura = new System.Globalization.CultureInfo("pt-BR");
+    var hoje = DateTime.Today.ToString("dddd, d 'de' MMMM 'de' yyyy", cultura);
+    var corOcupacao = Model.OcupacaoPercentual >= 90 ? "bg-danger" : Model.OcupacaoPercentual >= 70 ? "bg-warning" : "bg-success";
+
+    // Alertas: só aparecem quando há algo a fazer
+    var alertas = new List<(string Classe, string Texto, string Controller, string Acao, string Botao)>();
+    if (Model.VacinasAtrasadas > 0)
+        alertas.Add(("danger", $"{Model.VacinasAtrasadas} dose(s) de vacina atrasada(s).", "Vacinacoes", "Index", "Ver agenda"));
+    if (Model.AlimentosComEstoqueBaixo.Any(s => s.Situacao == SituacaoEstoque.Zerado))
+        alertas.Add(("danger", $"Sem estoque: {string.Join(", ", Model.AlimentosComEstoqueBaixo.Where(s => s.Situacao == SituacaoEstoque.Zerado).Select(s => s.Alimento.Nome))}.", "Estoque", "Index", "Ver estoque"));
+    if (Model.AlimentosComEstoqueBaixo.Any(s => s.Situacao == SituacaoEstoque.Baixo))
+        alertas.Add(("warning", $"Estoque baixo: {string.Join(", ", Model.AlimentosComEstoqueBaixo.Where(s => s.Situacao == SituacaoEstoque.Baixo).Select(s => s.Alimento.Nome))}.", "Estoque", "Index", "Ver estoque"));
+    if (Model.GalpoesLotados.Count > 0)
+        alertas.Add(("warning", $"Galpão(ões) lotado(s): {string.Join(", ", Model.GalpoesLotados)}.", "Galpoes", "Index", "Ver galpões"));
+    if (Model.AnimaisEmAtencao > 0)
+        alertas.Add(("info", $"{Model.AnimaisEmAtencao} animal(is) em tratamento, quarentena ou observação.", "Saude", "Index", "Ver saúde"));
+    if (Model.VacinasProximos7Dias > 0)
+        alertas.Add(("info", $"{Model.VacinasProximos7Dias} dose(s) de vacina nos próximos 7 dias.", "Vacinacoes", "Index", "Ver agenda"));
+}
+
+<div class="page-header">
+    <div>
+        <h1>Painel</h1>
+        <div class="text-muted small text-capitalize-first">@hoje</div>
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Animais" asp-action="Create" class="btn btn-agro">+ Animal</a>
+        <a asp-controller="Vacinacoes" asp-action="Create" class="btn btn-outline-success">Vacinar</a>
+        <a asp-controller="Saude" asp-action="Create" class="btn btn-outline-secondary">Ocorrência de saúde</a>
+        <a asp-controller="Estoque" asp-action="Create" class="btn btn-outline-secondary">Movimentar estoque</a>
+    </div>
+</div>
+
+@if (alertas.Count == 0)
+{
+    <div class="alert alert-success d-flex align-items-center gap-2">
+        <span class="fs-5">✓</span>
+        <span>Tudo em dia: nenhuma vacina atrasada, nenhum estoque baixo e nenhum galpão lotado.</span>
+    </div>
+}
+else
+{
+    <div class="mb-4">
+        @foreach (var alerta in alertas)
+        {
+            <div class="alert alert-@alerta.Classe d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 mb-2">
+                <span>@alerta.Texto</span>
+                <a asp-controller="@alerta.Controller" asp-action="@alerta.Acao" class="btn btn-sm btn-light">@alerta.Botao</a>
+            </div>
+        }
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <a asp-controller="Animais" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card shadow-sm h-100 card-destaque destaque-success"><div class="card-body">
+                <div class="small text-muted">Animais</div>
+                <div class="fs-3 fw-semibold">@Model.TotalAnimais</div>
+                <div class="small text-muted">@Model.LotesAtivos lote(s) ativo(s)</div>
+            </div></div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <a asp-controller="Galpoes" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card shadow-sm h-100"><div class="card-body">
+                <div class="small text-muted">Ocupação dos galpões</div>
+                <div class="fs-3 fw-semibold">@Model.OcupacaoPercentual%</div>
+                <div class="progress my-1" style="height: 6px;" role="progressbar" aria-valuenow="@Model.OcupacaoPercentual" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar @corOcupacao" style="width: @(Math.Min(Model.OcupacaoPercentual, 100))%"></div>
+                </div>
+                <div class="small text-muted">@Model.AnimaisAlojados de @Model.CapacidadeTotal vagas · @Model.TotalGalpoes galpão(ões)</div>
+            </div></div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <a asp-controller="Vacinacoes" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card shadow-sm h-100 card-destaque @(Model.VacinasAtrasadas > 0 ? "destaque-danger" : "destaque-info")"><div class="card-body">
+                <div class="small text-muted">Vacinas atrasadas</div>
+                <div class="fs-3 fw-semibold">@Model.VacinasAtrasadas</div>
+                <div class="small text-muted">@Model.VacinasProximos7Dias nos próximos 7 dias</div>
+            </div></div>
+        </a>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <a asp-controller="Estoque" asp-action="Index" class="text-decoration-none text-reset">
+            <div class="card shadow-sm h-100 card-destaque @(Model.AlimentosComEstoqueBaixo.Count > 0 ? "destaque-warning" : "destaque-success")"><div class="card-body">
+                <div class="small text-muted">Alimentos com estoque baixo</div>
+                <div class="fs-3 fw-semibold">@Model.AlimentosComEstoqueBaixo.Count</div>
+                <div class="small text-muted">@Model.FuncionariosAtivos funcionário(s) ativo(s)</div>
+            </div></div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">Animais por espécie</div>
+            <div class="card-body">
+                @if (Model.TotalAnimais == 0)
+                {
+                    <p class="text-muted mb-2">Nenhum animal cadastrado ainda.</p>
+                    <a asp-controller="Animais" asp-action="Create" class="btn btn-sm btn-agro">Cadastrar o primeiro</a>
+                }
+                else
+                {
+                    foreach (var (especie, quantidade) in Model.AnimaisPorEspecie)
+                    {
+                        var percentual = (int)Math.Round(quantidade * 100.0 / Model.TotalAnimais);
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="fw-semibold">@especie</span>
+                                <span class="text-muted">@quantidade (@percentual%)</span>
+                            </div>
+                            <div class="progress" style="height: 8px;" role="progressbar" aria-label="@especie" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar bg-success" style="width: @percentual%"></div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">Estado de saúde do rebanho</div>
+            <div class="card-body">
+                @if (Model.TotalAnimais == 0)
+                {
+                    <p class="text-muted mb-0">Os estados de saúde aparecem quando houver animais.</p>
+                }
+                else
+                {
+                    <div class="row g-2">
+                        @foreach (var (estado, classe) in new[] { ("Saudável", "destaque-success"), ("Em observação", "destaque-info"), ("Em tratamento", "destaque-warning"), ("Em quarentena", "destaque-danger") })
+                        {
+                            <div class="col-6">
+                                <a asp-controller="Animais" asp-action="Index" asp-route-statusSaude="@estado" class="text-decoration-none text-reset">
+                                    <div class="border rounded p-2 card-destaque @classe">
+                                        <div class="small text-muted">@estado</div>
+                                        <div class="fs-5 fw-semibold">@Model.AnimaisPorEstadoDeSaude.GetValueOrDefault(estado)</div>
+                                    </div>
+                                </a>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

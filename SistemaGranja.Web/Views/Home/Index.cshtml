@@ -1,58 +1,31 @@
-﻿@{
+@{
     ViewData["Title"] = "Início";
 }
 
-<div class="text-center mb-5">
-    <h1 class="display-5 fw-bold">AgroArca</h1>
-    <p class="lead text-muted">Cuide do seu rebanho como um bom pastor.</p>
+<div class="text-center py-5">
+    <h1 class="display-4 fw-bold">AgroArca</h1>
+    <p class="lead text-muted mb-4">Cuide do seu rebanho como um bom pastor.</p>
+    <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-agro btn-lg me-2">Entrar</a>
+    <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-secondary btn-lg">Criar conta</a>
 </div>
 
-@if (User.Identity?.IsAuthenticated == true)
-{
-    <div class="row g-4">
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Animais</h5>
-                    <p class="card-text text-muted">Cadastre e acompanhe todos os seus animais.</p>
-                    <a asp-controller="Animais" asp-action="Index" class="btn btn-agro">Abrir</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Galpões</h5>
-                    <p class="card-text text-muted">Gerencie os galpões e suas capacidades.</p>
-                    <a asp-controller="Galpoes" asp-action="Index" class="btn btn-agro">Abrir</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Lotes</h5>
-                    <p class="card-text text-muted">Agrupe animais para manejo, engorda ou venda.</p>
-                    <a asp-controller="Lotes" asp-action="Index" class="btn btn-agro">Abrir</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 col-lg-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <h5 class="card-title">Tipos de Alimento</h5>
-                    <p class="card-text text-muted">Mantenha o cadastro de rações e alimentos.</p>
-                    <a asp-controller="TiposAlimento" asp-action="Index" class="btn btn-agro">Abrir</a>
-                </div>
-            </div>
-        </div>
+<div class="row g-4 pb-4">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm"><div class="card-body">
+            <h2 class="h5">Rebanho organizado</h2>
+            <p class="text-muted mb-0">Animais de qualquer espécie, com raça, idade, galpão e lote. Busca e filtros para achar qualquer um em segundos.</p>
+        </div></div>
     </div>
-}
-else
-{
-    <div class="text-center">
-        <p>Entre com sua conta para acessar o sistema.</p>
-        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-agro btn-lg me-2">Entrar</a>
-        <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-secondary btn-lg">Criar conta</a>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm"><div class="card-body">
+            <h2 class="h5">Sanidade em dia</h2>
+            <p class="text-muted mb-0">Agenda de vacinas com doses atrasadas, vacinação em grupo e histórico de saúde de cada animal.</p>
+        </div></div>
     </div>
-}
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm"><div class="card-body">
+            <h2 class="h5">Estoque sob controle</h2>
+            <p class="text-muted mb-0">Entradas e saídas de alimento, aviso de estoque baixo e previsão de quantos dias o estoque dura.</p>
+        </div></div>
+    </div>
+</div>

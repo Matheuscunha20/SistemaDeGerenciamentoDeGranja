@@ -152,6 +152,13 @@ O sistema fica na porta **8080**. O HTTPS é feito por um proxy na frente (Caddy
 - **Segurança**: cookies só por HTTPS, cabeçalhos de proteção, limite de 10 tentativas por minuto no login e no cadastro.
 - O GitHub Actions monta a imagem e sobe o sistema com MySQL a cada mudança, conferindo se as páginas abrem.
 
+### Publicação automática (servidor próprio)
+
+- `deploy/preparar-servidor.sh`: prepara um Ubuntu novo (Docker, firewall, swap, atualizações de segurança, usuário `deploy`, senhas do banco) em um único comando.
+- `deploy/docker-compose.servidor.yml` + `deploy/Caddyfile`: sistema, MySQL e Caddy (HTTPS automático com Let's Encrypt).
+- `.github/workflows/publicar.yml`: quando o CI passa na `master`, monta a imagem, envia para o GitHub Container Registry e atualiza o servidor, conferindo `/saude`. Precisa dos segredos `SERVIDOR_IP` e `SERVIDOR_CHAVE_SSH`.
+- Sem domínio ainda, o sistema fica em `https://<ip-com-traços>.sslip.io`.
+
 ## Testes
 
 ```bash

@@ -1,0 +1,58 @@
+# AgroArca no servidor: sistema + MySQL + Caddy (HTTPS).
+# Fica em /opt/agroarca no servidor, junto com o .env (senhas e domínio).
+# A publicação automática do GitHub atualiza o serviço "app" a cada mudança aprovada.
+services:
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMINIO: ${DOMINIO}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-dados:/data
+      - caddy-config:/config
+
+  app:
+    image: ghcr.io/matheuscunha20/agroarca:${VERSAO:-latest}
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=AgroArcaDB;User=agroarca;Password=${MYSQL_PASSWORD};"
+      Proxy__ConfiarEmCabecalhos: "true"
+      Email__Servidor: "${EMAIL_SERVIDOR:-}"
+      Email__Porta: "${EMAIL_PORTA:-587}"
+      Email__Usuario: "${EMAIL_USUARIO:-}"
+      Email__Senha: "${EMAIL_SENHA:-}"
+      Email__Remetente: "${EMAIL_REMETENTE:-}"
+    volumes:
+      - agroarca-chaves:/app/chaves
+
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: AgroArcaDB
+      MYSQL_USER: agroarca
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - agroarca-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  caddy-dados:
+  caddy-config:
+  agroarca-chaves:
+  agroarca-mysql:

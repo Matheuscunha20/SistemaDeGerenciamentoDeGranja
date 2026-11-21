@@ -1,0 +1,52 @@
+@model SistemaGranja.Domain.MovimentacaoEstoqueAlimento
+@using SistemaGranja.Domain
+
+@{
+    ViewData["Title"] = "Excluir movimentação";
+    var saldoDepois = ViewData["SaldoDepois"] as double? ?? 0;
+}
+
+<div class="page-header">
+    <h1>Excluir movimentação</h1>
+</div>
+
+@if (saldoDepois < 0)
+{
+    <div class="alert alert-info">
+        Esta entrada não pode ser excluída: parte dela já foi consumida e o estoque de
+        <strong>@Model.TipoAlimento?.Nome</strong> ficaria negativo (@saldoDepois.ToString("N2") @Model.UnidadeMedida).
+        Se a quantidade estava errada, edite a movimentação.
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-agro">Editar movimentação</a>
+        <a asp-action="Movimentacoes" class="btn btn-outline-secondary">Voltar</a>
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        Tem certeza que deseja excluir esta movimentação? O saldo de <strong>@Model.TipoAlimento?.Nome</strong>
+        passará a ser <strong>@saldoDepois.ToString("N2") @Model.UnidadeMedida</strong>.
+    </div>
+    <div class="card shadow-sm form-card mb-3">
+        <div class="card-body">
+            <dl class="row detalhes mb-0">
+                <dt class="col-sm-4">Data</dt>
+                <dd class="col-sm-8">@Model.DataMovimentacao.ToString("dd/MM/yyyy")</dd>
+                <dt class="col-sm-4">Tipo</dt>
+                <dd class="col-sm-8"><span class="badge @Model.TipoMovimentacao.CorExibicao()">@Model.TipoMovimentacao.NomeExibicao()</span></dd>
+                <dt class="col-sm-4">Alimento</dt>
+                <dd class="col-sm-8">@Model.TipoAlimento?.Nome</dd>
+                <dt class="col-sm-4">Quantidade</dt>
+                <dd class="col-sm-8">@Model.Quantidade.ToString("N2") @Model.UnidadeMedida</dd>
+            </dl>
+        </div>
+    </div>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Movimentacoes" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+}

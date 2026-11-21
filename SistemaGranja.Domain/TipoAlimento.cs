@@ -27,6 +27,11 @@ namespace SistemaGranja.Domain
         [DisplayFormat(ConvertEmptyStringToNull = false)]
         public string CodigoInterno { get; set; }
 
+        // Quando o saldo ficar igual ou abaixo deste valor, o sistema avisa. Vazio = sem aviso.
+        [Display(Name = "Estoque mínimo")]
+        [Range(0, 1_000_000_000, ErrorMessage = "O estoque mínimo não pode ser negativo.")]
+        public double? EstoqueMinimo { get; set; }
+
         public virtual ICollection<MovimentacaoEstoqueAlimento> MovimentacoesEstoque { get; set; }
 
         public TipoAlimento()

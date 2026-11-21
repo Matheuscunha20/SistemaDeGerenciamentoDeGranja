@@ -1,0 +1,114 @@
+@model IEnumerable<SistemaGranja.Services.SaldoAlimento>
+@using SistemaGranja.Domain
+@using SistemaGranja.Services
+
+@{
+    ViewData["Title"] = "Estoque";
+    var gasto = ViewData["GastoUltimos30Dias"] as decimal? ?? 0m;
+    var baixos = Model.Count(s => s.Situacao == SituacaoEstoque.Baixo);
+    var zerados = Model.Count(s => s.Situacao == SituacaoEstoque.Zerado);
+}
+
+<div class="page-header">
+    <h1>Estoque de alimento</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" asp-route-tipo="@TipoMovimentacaoEstoque.EntradaCompra" class="btn btn-agro">+ Entrada</a>
+        <a asp-action="Create" asp-route-tipo="@TipoMovimentacaoEstoque.SaidaConsumo" class="btn btn-outline-primary">− Saída</a>
+        <a asp-action="Movimentacoes" class="btn btn-outline-secondary">Movimentações</a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="small text-muted">Alimentos cadastrados</div>
+            <div class="fs-4 fw-semibold">@Model.Count()</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100 card-destaque destaque-warning"><div class="card-body">
+            <div class="small text-muted">Estoque baixo</div>
+            <div class="fs-4 fw-semibold">@baixos</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100 card-destaque destaque-danger"><div class="card-body">
+            <div class="small text-muted">Sem estoque</div>
+            <div class="fs-4 fw-semibold">@zerados</div>
+        </div></div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card shadow-sm h-100"><div class="card-body">
+            <div class="small text-muted">Compras nos últimos 30 dias</div>
+            <div class="fs-4 fw-semibold">@gasto.ToString("C2")</div>
+        </div></div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="card shadow-sm">
+        <div class="lista-vazia">
+            <p class="mb-3">Nenhum alimento cadastrado. Cadastre os tipos de alimento para controlar o estoque.</p>
+            <a asp-controller="TiposAlimento" asp-action="Create" class="btn btn-agro">Cadastrar alimento</a>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Alimento</th>
+                        <th class="text-end">Saldo</th>
+                        <th class="text-end">Mínimo</th>
+                        <th>Situação</th>
+                        <th class="text-end">Consumo/dia</th>
+                        <th class="text-end">Dura cerca de</th>
+                        <th class="text-end">Último preço</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model)
+                {
+                    var unidade = item.Alimento.UnidadeMedidaPadrao;
+                    <tr class="@(item.Situacao == SituacaoEstoque.Zerado ? "table-danger" : item.Situacao == SituacaoEstoque.Baixo ? "table-warning" : "")">
+                        <td class="fw-semibold">@item.Alimento.Nome</td>
+                        <td class="text-end">@item.Saldo.ToString("N2") @unidade</td>
+                        <td class="text-end">@(item.Alimento.EstoqueMinimo.HasValue ? $"{item.Alimento.EstoqueMinimo.Value:N2} {unidade}" : "—")</td>
+                        <td>
+                            @switch (item.Situacao)
+                            {
+                                case SituacaoEstoque.Zerado:
+                                    <span class="badge bg-danger">Sem estoque</span>
+                                    break;
+                                case SituacaoEstoque.Baixo:
+                                    <span class="badge bg-warning text-dark">Baixo</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-success">Normal</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-end">@(item.ConsumoMedioDiario > 0 ? $"{item.ConsumoMedioDiario:N2} {unidade}" : "—")</td>
+                        <td class="text-end">@(item.DiasRestantes.HasValue ? $"{Math.Floor(item.DiasRestantes.Value):N0} dia(s)" : "—")</td>
+                        <td class="text-end">@(item.UltimoPreco?.ToString("C2") ?? "—")</td>
+                        <td class="text-end acoes">
+                            <a asp-action="Create" asp-route-tipoAlimentoId="@item.Alimento.Id" asp-route-tipo="@TipoMovimentacaoEstoque.EntradaCompra" class="btn btn-sm btn-outline-success" title="Registrar entrada">+</a>
+                            <a asp-action="Create" asp-route-tipoAlimentoId="@item.Alimento.Id" asp-route-tipo="@TipoMovimentacaoEstoque.SaidaConsumo" class="btn btn-sm btn-outline-primary" title="Registrar saída">−</a>
+                            <a asp-action="Movimentacoes" asp-route-tipoAlimentoId="@item.Alimento.Id" class="btn btn-sm btn-outline-secondary">Histórico</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted mt-2 small">
+        O consumo por dia é a média das saídas para consumo nos últimos 30 dias.
+        Para receber o aviso de estoque baixo, defina o <a asp-controller="TiposAlimento" asp-action="Index">estoque mínimo</a> de cada alimento.
+    </p>
+}

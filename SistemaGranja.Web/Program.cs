@@ -54,6 +54,7 @@ builder.Services.AddScoped<IFuncionarioService, FuncionarioService>();
 builder.Services.AddScoped<ITipoVacinaService, TipoVacinaService>();
 builder.Services.AddScoped<IVacinacaoService, VacinacaoService>();
 builder.Services.AddScoped<ISaudeService, SaudeService>();
+builder.Services.AddScoped<IEstoqueService, EstoqueService>();
 
 var app = builder.Build();
 

@@ -1,0 +1,96 @@
+@model SistemaGranja.Domain.MovimentacaoEstoqueAlimento
+@using SistemaGranja.Domain
+@using SistemaGranja.Services
+
+@{
+    var saldos = ViewData["Alimentos"] as List<SaldoAlimento> ?? new List<SaldoAlimento>();
+    var invariante = System.Globalization.CultureInfo.InvariantCulture;
+}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="TipoMovimentacao" class="form-label"></label>
+            <select asp-for="TipoMovimentacao" class="form-select" asp-items="Html.GetEnumSelectList<TipoMovimentacaoEstoque>()"></select>
+            <span asp-validation-for="TipoMovimentacao" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="DataMovimentacao" class="form-label"></label>
+            <input asp-for="DataMovimentacao" class="form-control" />
+            <span asp-validation-for="DataMovimentacao" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="TipoAlimentoId" class="form-label"></label>
+            <select asp-for="TipoAlimentoId" class="form-select">
+                <option value="0">-- Selecione --</option>
+                @foreach (var s in saldos)
+                {
+                    <option value="@s.Alimento.Id"
+                            data-unidade="@s.Alimento.UnidadeMedidaPadrao"
+                            data-saldo="@s.Saldo.ToString(invariante)">@s.Alimento.Nome</option>
+                }
+            </select>
+            <div class="form-text" id="saldoDisponivel"></div>
+            <span asp-validation-for="TipoAlimentoId" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Quantidade" class="form-label"></label>
+            <div class="input-group">
+                <input asp-for="Quantidade" class="form-control" inputmode="decimal" />
+                <span class="input-group-text" id="unidadeQuantidade">—</span>
+            </div>
+            <span asp-validation-for="Quantidade" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row" id="camposCompra">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="PrecoUnitario" class="form-label"></label>
+            <div class="input-group">
+                <span class="input-group-text">R$</span>
+                <input asp-for="PrecoUnitario" class="form-control" inputmode="decimal" />
+            </div>
+            <div class="form-text" id="valorTotal"></div>
+            <span asp-validation-for="PrecoUnitario" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="NotaFiscal" class="form-label"></label>
+            <input asp-for="NotaFiscal" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="NotaFiscal" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="FornecedorOuDestino" class="form-label" id="rotuloFornecedorDestino"></label>
+            <input asp-for="FornecedorOuDestino" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="FornecedorOuDestino" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="FuncionarioId" class="form-label"></label>
+            <select asp-for="FuncionarioId" class="form-select" asp-items="ViewBag.Funcionarios">
+                <option value="">-- Não informado --</option>
+            </select>
+            <span asp-validation-for="FuncionarioId" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="Observacoes" class="form-label"></label>
+    <textarea asp-for="Observacoes" class="form-control" rows="2"></textarea>
+    <span asp-validation-for="Observacoes" class="text-danger"></span>
+</div>

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using SistemaGranja.Data;
 using SistemaGranja.Domain;
+using SistemaGranja.Web.Emails;
 
 namespace SistemaGranja.Web.Areas.Identity.Pages.Account
 {
@@ -16,13 +17,16 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly ILogger<RegisterModel> _logger;
         private readonly AppDbContext _db;
+        private readonly EmailsDaConta _emails;
 
         public RegisterModel(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             ILogger<RegisterModel> logger,
-            AppDbContext db)
+            AppDbContext db,
+            EmailsDaConta emails)
         {
+            _emails = emails;
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
@@ -97,6 +101,10 @@ namespace SistemaGranja.Web.Areas.Identity.Pages.Account
 
             await transacao.CommitAsync();
             _logger.LogInformation("Nova conta e fazenda criadas.");
+
+            // E-mail de confirmação: o acesso já fica liberado, a confirmação garante que o e-mail é real
+            if (await _emails.EnviarConfirmacaoAsync(usuario, Url, Request.Scheme))
+                TempData["Sucesso"] = $"Conta criada! Enviamos um e-mail para {usuario.Email} para confirmar o seu endereço.";
 
             await _signInManager.SignInAsync(usuario, isPersistent: false);
             return LocalRedirect(ReturnUrl);

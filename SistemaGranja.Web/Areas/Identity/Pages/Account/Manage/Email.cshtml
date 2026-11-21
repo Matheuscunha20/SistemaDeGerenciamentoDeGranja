@@ -1,0 +1,50 @@
+@page
+@model EmailModel
+
+@{
+    ViewData["Title"] = "E-mail";
+    ViewData["PaginaAtiva"] = "Email";
+}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="small text-muted">E-mail atual</div>
+        <div class="fs-5">
+            @Model.EmailAtual
+            @if (Model.EmailConfirmado)
+            {
+                <span class="badge bg-success-subtle text-success-emphasis align-middle">confirmado</span>
+            }
+            else
+            {
+                <span class="badge bg-warning text-dark align-middle">não confirmado</span>
+            }
+        </div>
+        @if (!Model.EmailConfirmado)
+        {
+            <form method="post" asp-page-handler="Reenviar" class="mt-2">
+                <button type="submit" class="btn btn-sm btn-outline-primary">Reenviar e-mail de confirmação</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="h6 mb-3">Trocar e-mail</h2>
+        <form method="post" asp-page-handler="Trocar">
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+            <div class="mb-3">
+                <label asp-for="Input.NovoEmail" class="form-label"></label>
+                <input asp-for="Input.NovoEmail" class="form-control" autocomplete="email" placeholder="novo@exemplo.com" />
+                <span asp-validation-for="Input.NovoEmail" class="text-danger"></span>
+                <div class="form-text">Vamos mandar um link para o novo e-mail. A troca só acontece depois que você clicar nele. O novo e-mail passa a ser usado no login.</div>
+            </div>
+            <button type="submit" class="btn btn-agro">Trocar e-mail</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

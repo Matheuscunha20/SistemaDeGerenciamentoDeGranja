@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Localization;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure; // Usado pelo Pomelo para MySqlServerVersion
 using SistemaGranja.Services;
 using SistemaGranja.Web.Identidade;
+using SistemaGranja.Web.Emails;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +37,18 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 // Fazenda do usuário logado: usada pelo AppDbContext para separar os dados de cada cliente
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IFazendaAtual, FazendaDoUsuarioLogado>();
+
+// E-mails (confirmação, esqueci a senha, convite). Os dados do servidor ficam na seção "Email"
+// (use dotnet user-secrets). Sem servidor configurado, em desenvolvimento os e-mails são salvos
+// como arquivos .html na pasta EmailsDeTeste do projeto, para você abrir e clicar nos links.
+builder.Services.Configure<ConfiguracaoEmail>(builder.Configuration.GetSection("Email"));
+builder.Services.PostConfigure<ConfiguracaoEmail>(config =>
+{
+    if (builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(config.PastaDeTeste))
+        config.PastaDeTeste = Path.Combine(builder.Environment.ContentRootPath, "EmailsDeTeste");
+});
+builder.Services.AddTransient<IEmailSender, EnviadorDeEmail>();
+builder.Services.AddScoped<EmailsDaConta>();
 
 // Perfis de acesso: quem pode fazer o quê
 builder.Services.AddAuthorization(options =>
@@ -114,6 +128,17 @@ app.UseRequestLocalization(new RequestLocalizationOptions
     SupportedUICultures = new[] { culturaBrasil }
 });
 app.UseStaticFiles();
+
+// Páginas de conta em inglês que ainda não usamos ficam fora do ar
+app.Use(async (context, next) =>
+{
+    if (!PaginasDaConta.EstaLiberada(context.Request.Path.Value))
+    {
+        context.Response.StatusCode = StatusCodes.Status404NotFound;
+        return;
+    }
+    await next();
+});
 
 app.UseRouting();
 

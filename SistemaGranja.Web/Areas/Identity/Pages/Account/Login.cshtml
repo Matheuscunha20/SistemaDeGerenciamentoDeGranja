@@ -33,9 +33,15 @@
                 </form>
             </div>
         </div>
-        <p class="text-center mt-3">
+        <p class="text-center mt-3 mb-1">
+            <a asp-page="./ForgotPassword">Esqueci minha senha</a>
+        </p>
+        <p class="text-center mb-1">
             Ainda não tem conta?
             <a asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl">Criar conta</a>
+        </p>
+        <p class="text-center small">
+            <a asp-page="./ResendEmailConfirmation" class="text-muted">Reenviar e-mail de confirmação</a>
         </p>
     </div>
 </div>

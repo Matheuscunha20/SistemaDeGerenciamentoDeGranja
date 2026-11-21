@@ -6,6 +6,7 @@ using SistemaGranja.Data;
 using SistemaGranja.Domain;
 using SistemaGranja.Services;
 using SistemaGranja.Web.Identidade;
+using SistemaGranja.Web.Emails;
 
 // Equipe da fazenda: só o dono vê e altera
 [Authorize(Policy = Politicas.Dono)]
@@ -13,11 +14,13 @@ public class EquipeController : Controller
 {
     private readonly IEquipeService _equipeService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly EmailsDaConta _emails;
 
-    public EquipeController(IEquipeService equipeService, UserManager<ApplicationUser> userManager)
+    public EquipeController(IEquipeService equipeService, UserManager<ApplicationUser> userManager, EmailsDaConta emails)
     {
         _equipeService = equipeService;
         _userManager = userManager;
+        _emails = emails;
     }
 
     public class NovoConvite
@@ -57,7 +60,14 @@ public class EquipeController : Controller
             var (convite, erro) = await _equipeService.CriarConviteAsync(novoConvite.Email, novoConvite.Perfil);
             if (convite != null)
             {
-                TempData["Sucesso"] = "Convite criado! Copie o link abaixo e envie para a pessoa.";
+                // Além do link para copiar/WhatsApp, o convite também vai por e-mail
+                var link = Url.Page("/Account/AceitarConvite", null, new { area = "Identity", token = convite.Token }, Request.Scheme)!;
+                var nomeFazenda = User.FindFirst(FazendaDoUsuarioLogado.ClaimFazendaNome)?.Value ?? "fazenda";
+                var (assunto, html) = ModelosDeEmail.Convite(nomeFazenda, convite.Perfil.NomeExibicao(), link, Convite.DiasDeValidade);
+
+                TempData["Sucesso"] = await _emails.EnviarAsync(convite.Email, assunto, html)
+                    ? $"Convite enviado por e-mail para {convite.Email}. Se preferir, copie o link abaixo e mande pelo WhatsApp."
+                    : "Convite criado, mas não foi possível enviar o e-mail. Copie o link abaixo e envie para a pessoa.";
                 return RedirectToAction(nameof(Index), new { conviteCriado = convite.Id });
             }
             ModelState.AddModelError("NovoConvite.Email", erro!);

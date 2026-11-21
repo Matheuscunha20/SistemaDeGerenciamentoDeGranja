@@ -1,5 +1,4 @@
-﻿// Arquivo: ITipoAlimentoService.cs (no projeto SistemaGranja.Services)
-using SistemaGranja.Domain; // Para usar a classe TipoAlimento
+using SistemaGranja.Domain;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -9,8 +8,12 @@ namespace SistemaGranja.Services
     {
         Task<IEnumerable<TipoAlimento>> ObterTodosAsync();
         Task<TipoAlimento?> ObterPorIdAsync(int id);
+        Task<bool> ExisteNomeAsync(string nome, int? ignorarId = null);
+        Task<int> ContarMovimentacoesAsync(int tipoAlimentoId);
         Task AdicionarAsync(TipoAlimento tipoAlimento);
         Task AtualizarAsync(TipoAlimento tipoAlimento);
-        Task RemoverAsync(int id);
+
+        // Retorna false se o alimento tiver movimentações de estoque
+        Task<bool> RemoverAsync(int id);
     }
 }

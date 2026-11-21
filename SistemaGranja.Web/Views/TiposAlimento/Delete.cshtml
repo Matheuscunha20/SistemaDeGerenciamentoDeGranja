@@ -2,36 +2,41 @@
 
 @{
     ViewData["Title"] = "Excluir";
+    var movimentacoes = ViewData["QuantidadeMovimentacoes"] as int? ?? 0;
 }
 
 <div class="page-header">
     <h1>Excluir tipo de alimento</h1>
 </div>
 
-<div class="alert alert-warning">
-    Tem certeza que deseja excluir este tipo de alimento? Esta ação não pode ser desfeita.
-</div>
-
-<div class="card shadow-sm form-card">
-    <div class="card-body">
-        <dl class="row detalhes">
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Nome)</dt>
-            <dd class="col-sm-8">@Model.Nome</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.UnidadeMedidaPadrao)</dt>
-            <dd class="col-sm-8">@Model.UnidadeMedidaPadrao</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Fabricante)</dt>
-            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Fabricante) ? "—" : Model.Fabricante)</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CodigoInterno)</dt>
-            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.CodigoInterno) ? "—" : Model.CodigoInterno)</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Descricao)</dt>
-            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Descricao) ? "—" : Model.Descricao)</dd>
-        </dl>
-        <form asp-action="Delete">
-            <input type="hidden" asp-for="Id" />
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-danger">Sim, excluir</button>
-                <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
-            </div>
-        </form>
+@if (movimentacoes > 0)
+{
+    <div class="alert alert-info">
+        O alimento <strong>@Model.Nome</strong> tem @movimentacoes movimentação(ões) de estoque e não pode ser excluído,
+        para não perder o histórico.
     </div>
-</div>
+    <a asp-action="Index" class="btn btn-outline-secondary">Voltar</a>
+}
+else
+{
+    <div class="alert alert-warning">
+        Tem certeza que deseja excluir o alimento <strong>@Model.Nome</strong>? Esta ação não pode ser desfeita.
+    </div>
+    <div class="card shadow-sm form-card mb-3">
+        <div class="card-body">
+            <dl class="row detalhes mb-0">
+                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.UnidadeMedidaPadrao)</dt>
+                <dd class="col-sm-8">@Model.UnidadeMedidaPadrao</dd>
+                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Fabricante)</dt>
+                <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Fabricante) ? "—" : Model.Fabricante)</dd>
+            </dl>
+        </div>
+    </div>
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-danger">Sim, excluir</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+    </form>
+}

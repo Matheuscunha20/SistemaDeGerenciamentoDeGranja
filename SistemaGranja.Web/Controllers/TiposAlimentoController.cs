@@ -43,6 +43,9 @@ public class TiposAlimentoController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("Nome,Descricao,UnidadeMedidaPadrao,Fabricante,CodigoInterno")] TipoAlimento tipoAlimento)
     {
+        ModelState.Remove(nameof(TipoAlimento.MovimentacoesEstoque));
+        await ValidarAsync(tipoAlimento);
+
         if (ModelState.IsValid)
         {
             await _tipoAlimentoService.AdicionarAsync(tipoAlimento);
@@ -68,6 +71,9 @@ public class TiposAlimentoController : Controller
     {
         if (id != tipoAlimento.Id) return NotFound();
 
+        ModelState.Remove(nameof(TipoAlimento.MovimentacoesEstoque));
+        await ValidarAsync(tipoAlimento);
+
         if (ModelState.IsValid)
         {
             try
@@ -91,6 +97,8 @@ public class TiposAlimentoController : Controller
         if (id == null) return NotFound();
         var tipoAlimento = await _tipoAlimentoService.ObterPorIdAsync(id.Value);
         if (tipoAlimento == null) return NotFound();
+
+        ViewData["QuantidadeMovimentacoes"] = await _tipoAlimentoService.ContarMovimentacoesAsync(tipoAlimento.Id);
         return View(tipoAlimento);
     }
 
@@ -99,8 +107,22 @@ public class TiposAlimentoController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        await _tipoAlimentoService.RemoverAsync(id);
+        if (!await _tipoAlimentoService.RemoverAsync(id))
+        {
+            TempData["Erro"] = "Este alimento tem movimentações de estoque e não pode ser excluído, para não perder o histórico.";
+            return RedirectToAction(nameof(Delete), new { id });
+        }
+
         TempData["Sucesso"] = "Tipo de alimento excluído com sucesso.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task ValidarAsync(TipoAlimento tipoAlimento)
+    {
+        if (!string.IsNullOrWhiteSpace(tipoAlimento.Nome)
+            && await _tipoAlimentoService.ExisteNomeAsync(tipoAlimento.Nome, tipoAlimento.Id == 0 ? null : tipoAlimento.Id))
+        {
+            ModelState.AddModelError(nameof(TipoAlimento.Nome), "Já existe um tipo de alimento com este nome.");
+        }
     }
 }

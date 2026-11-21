@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SistemaGranja.Domain;
 using SistemaGranja.Services;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -169,6 +170,21 @@ public class AnimaisController : Controller
         {
             ModelState.AddModelError(nameof(Animal.DataNascimento), "A data de nascimento não pode ser no futuro.");
         }
+
+        // Não deixa colocar o animal num galpão que já está lotado
+        if (animal.GalpaoId.HasValue)
+        {
+            var galpao = await _galpaoService.ObterPorIdAsync(animal.GalpaoId.Value);
+            if (galpao != null)
+            {
+                var ocupados = await _galpaoService.ContarAnimaisAsync(galpao.Id, animal.Id == 0 ? null : animal.Id);
+                if (ocupados >= galpao.CapacidadeMaxima)
+                {
+                    ModelState.AddModelError(nameof(Animal.GalpaoId),
+                        $"O galpão {galpao.NomeOuNumero} está lotado ({ocupados} de {galpao.CapacidadeMaxima}). Escolha outro galpão.");
+                }
+            }
+        }
     }
 
     // Os objetos relacionados não vêm do formulário, só os Ids
@@ -179,6 +195,31 @@ public class AnimaisController : Controller
         ModelState.Remove(nameof(Animal.Raca));
         ModelState.Remove(nameof(Animal.RegistrosSaude));
         ModelState.Remove(nameof(Animal.RegistrosVacinacao));
+    }
+
+    // Galpões com a ocupação no nome, ex.: "Galpão 1 (12/50)". Lotados ficam desabilitados,
+    // exceto o galpão onde o animal já está.
+    private async Task<List<SelectListItem>> MontarListaDeGalpoesAsync(Animal animal)
+    {
+        var ocupacao = await _galpaoService.ObterOcupacaoAsync();
+        var itens = new List<SelectListItem>();
+
+        foreach (var galpao in await _galpaoService.ObterTodosAsync())
+        {
+            var ocupados = ocupacao.GetValueOrDefault(galpao.Id);
+            var lotado = ocupados >= galpao.CapacidadeMaxima;
+            var ehGalpaoAtual = animal.GalpaoId == galpao.Id;
+
+            itens.Add(new SelectListItem
+            {
+                Value = galpao.Id.ToString(),
+                Text = $"{galpao.NomeOuNumero} ({ocupados}/{galpao.CapacidadeMaxima})" + (lotado ? " - lotado" : ""),
+                Selected = ehGalpaoAtual,
+                Disabled = lotado && !ehGalpaoAtual
+            });
+        }
+
+        return itens;
     }
 
     // Prepara as listas suspensas do formulário
@@ -197,7 +238,7 @@ public class AnimaisController : Controller
 
         ViewData["EspecieId"] = new SelectList(await _especieService.ObterTodasAsync(), "Id", "Nome", especieId);
         ViewData["RacaId"] = new SelectList(racas, "Id", "Nome", animal.RacaId);
-        ViewData["GalpaoId"] = new SelectList(await _galpaoService.ObterTodosAsync(), "Id", "NomeOuNumero", animal.GalpaoId);
+        ViewData["GalpaoId"] = await MontarListaDeGalpoesAsync(animal);
         ViewData["LoteId"] = new SelectList(await _loteService.ObterTodosAsync(), "Id", "CodigoLote", animal.LoteId);
     }
 }

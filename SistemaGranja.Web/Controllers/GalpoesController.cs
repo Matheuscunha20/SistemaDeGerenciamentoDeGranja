@@ -1,16 +1,16 @@
-using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SistemaGranja.Domain;    // Para Galpao
-using SistemaGranja.Services;  // Para IGalpaoService
-using Microsoft.AspNetCore.Authorization;
+using SistemaGranja.Domain;
+using SistemaGranja.Services;
+using System.Threading.Tasks;
 
 [Authorize]
 public class GalpoesController : Controller
 {
     private readonly IGalpaoService _galpaoService;
 
-    public GalpoesController(IGalpaoService galpaoService) // Injeção de Dependência do Serviço
+    public GalpoesController(IGalpaoService galpaoService)
     {
         _galpaoService = galpaoService;
     }
@@ -18,15 +18,15 @@ public class GalpoesController : Controller
     // GET: Galpoes
     public async Task<IActionResult> Index()
     {
-        var galpoes = await _galpaoService.ObterTodosAsync();
-        return View(galpoes); // Passa a lista de galpões para a View Index
+        ViewData["Ocupacao"] = await _galpaoService.ObterOcupacaoAsync();
+        return View(await _galpaoService.ObterTodosAsync());
     }
 
     // GET: Galpoes/Details/5
     public async Task<IActionResult> Details(int? id)
     {
         if (id == null) return NotFound();
-        var galpao = await _galpaoService.ObterPorIdAsync(id.Value);
+        var galpao = await _galpaoService.ObterComAnimaisAsync(id.Value);
         if (galpao == null) return NotFound();
         return View(galpao);
     }
@@ -34,21 +34,22 @@ public class GalpoesController : Controller
     // GET: Galpoes/Create
     public IActionResult Create()
     {
-        return View(new Galpao()); // Mostra o formulário de criação
+        return View(new Galpao());
     }
 
     // POST: Galpoes/Create
     [HttpPost]
-    [ValidateAntiForgeryToken] // Ajuda a prevenir ataques CSRF
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create([Bind("NomeOuNumero,TipoInstalacao,CapacidadeMaxima,LocalizacaoDescricao,Observacoes")] Galpao galpao)
     {
-        if (ModelState.IsValid) // Verifica se os dados do formulário são válidos
-        {
-            await _galpaoService.AdicionarAsync(galpao);
-            TempData["Sucesso"] = $"Galpão {galpao.NomeOuNumero} cadastrado com sucesso.";
-            return RedirectToAction(nameof(Index)); // Volta para a lista após criar
-        }
-        return View(galpao); // Se inválido, mostra o formulário novamente com os erros
+        ModelState.Remove(nameof(Galpao.Animais));
+        await ValidarAsync(galpao);
+
+        if (!ModelState.IsValid) return View(galpao);
+
+        await _galpaoService.AdicionarAsync(galpao);
+        TempData["Sucesso"] = $"Galpão {galpao.NomeOuNumero} cadastrado com sucesso.";
+        return RedirectToAction(nameof(Index));
     }
 
     // GET: Galpoes/Edit/5
@@ -57,7 +58,9 @@ public class GalpoesController : Controller
         if (id == null) return NotFound();
         var galpao = await _galpaoService.ObterPorIdAsync(id.Value);
         if (galpao == null) return NotFound();
-        return View(galpao); // Mostra o formulário de edição com os dados do galpão
+
+        ViewData["Ocupados"] = await _galpaoService.ContarAnimaisAsync(galpao.Id);
+        return View(galpao);
     }
 
     // POST: Galpoes/Edit/5
@@ -67,20 +70,25 @@ public class GalpoesController : Controller
     {
         if (id != galpao.Id) return NotFound();
 
+        ModelState.Remove(nameof(Galpao.Animais));
+        await ValidarAsync(galpao);
+
         if (ModelState.IsValid)
         {
             try
             {
                 await _galpaoService.AtualizarAsync(galpao);
             }
-            catch (DbUpdateConcurrencyException) // Trata concorrência se necessário
+            catch (DbUpdateConcurrencyException)
             {
                 if (await _galpaoService.ObterPorIdAsync(galpao.Id) == null) return NotFound();
-                else throw;
+                throw;
             }
             TempData["Sucesso"] = $"Galpão {galpao.NomeOuNumero} atualizado com sucesso.";
             return RedirectToAction(nameof(Index));
         }
+
+        ViewData["Ocupados"] = await _galpaoService.ContarAnimaisAsync(galpao.Id);
         return View(galpao);
     }
 
@@ -90,7 +98,9 @@ public class GalpoesController : Controller
         if (id == null) return NotFound();
         var galpao = await _galpaoService.ObterPorIdAsync(id.Value);
         if (galpao == null) return NotFound();
-        return View(galpao); // Mostra uma página de confirmação de exclusão
+
+        ViewData["Ocupados"] = await _galpaoService.ContarAnimaisAsync(galpao.Id);
+        return View(galpao);
     }
 
     // POST: Galpoes/Delete/5
@@ -98,8 +108,35 @@ public class GalpoesController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        await _galpaoService.RemoverAsync(id);
+        if (!await _galpaoService.RemoverAsync(id))
+        {
+            TempData["Erro"] = "Este galpão ainda tem animais. Mova os animais para outro galpão antes de excluir.";
+            return RedirectToAction(nameof(Delete), new { id });
+        }
+
         TempData["Sucesso"] = "Galpão excluído com sucesso.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task ValidarAsync(Galpao galpao)
+    {
+        var idAtual = galpao.Id == 0 ? (int?)null : galpao.Id;
+
+        if (!string.IsNullOrWhiteSpace(galpao.NomeOuNumero)
+            && await _galpaoService.ExisteNomeAsync(galpao.NomeOuNumero, idAtual))
+        {
+            ModelState.AddModelError(nameof(Galpao.NomeOuNumero), "Já existe um galpão com este nome ou número.");
+        }
+
+        // Não deixa reduzir a capacidade abaixo do número de animais que já estão lá
+        if (idAtual.HasValue)
+        {
+            var ocupados = await _galpaoService.ContarAnimaisAsync(idAtual.Value);
+            if (galpao.CapacidadeMaxima < ocupados)
+            {
+                ModelState.AddModelError(nameof(Galpao.CapacidadeMaxima),
+                    $"Este galpão já tem {ocupados} animal(is). A capacidade não pode ser menor que isso.");
+            }
+        }
     }
 }

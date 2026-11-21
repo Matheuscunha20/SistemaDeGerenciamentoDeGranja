@@ -16,6 +16,7 @@ public class AnimaisController : Controller
     private readonly ILoteService _loteService;
     private readonly IEspecieService _especieService;
     private readonly IRacaService _racaService;
+    private readonly IVacinacaoService _vacinacaoService;
 
     public static readonly string[] EstadosDeSaude = { "Saudável", "Em observação", "Em tratamento", "Em quarentena" };
 
@@ -24,13 +25,15 @@ public class AnimaisController : Controller
         IGalpaoService galpaoService,
         ILoteService loteService,
         IEspecieService especieService,
-        IRacaService racaService)
+        IRacaService racaService,
+        IVacinacaoService vacinacaoService)
     {
         _animalService = animalService;
         _galpaoService = galpaoService;
         _loteService = loteService;
         _especieService = especieService;
         _racaService = racaService;
+        _vacinacaoService = vacinacaoService;
     }
 
     // GET: Animais?busca=&especieId=&galpaoId=&statusSaude=
@@ -63,6 +66,8 @@ public class AnimaisController : Controller
         if (id == null) return NotFound();
         var animal = await _animalService.ObterPorIdComRelacionamentosAsync(id.Value);
         if (animal == null) return NotFound();
+
+        ViewData["Vacinacoes"] = (await _vacinacaoService.ObterHistoricoAsync(animalId: animal.Id)).ToList();
         return View(animal);
     }
 

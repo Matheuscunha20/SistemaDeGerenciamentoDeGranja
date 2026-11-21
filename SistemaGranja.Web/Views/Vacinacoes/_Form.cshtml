@@ -1,0 +1,10 @@
+@model SistemaGranja.Domain.RegistroVacinacao
+
+<div class="mb-3">
+    <label asp-for="AnimalId" class="form-label"></label>
+    <select asp-for="AnimalId" class="form-select" asp-items="ViewBag.Animais">
+        <option value="0">-- Selecione --</option>
+    </select>
+    <span asp-validation-for="AnimalId" class="text-danger"></span>
+</div>
+<partial name="_CamposVacina" model="Model" />

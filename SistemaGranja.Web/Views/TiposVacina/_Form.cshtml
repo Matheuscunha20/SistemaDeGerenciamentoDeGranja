@@ -1,0 +1,58 @@
+@model SistemaGranja.Domain.TipoVacina
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="NomeVacina" class="form-label"></label>
+            <input asp-for="NomeVacina" class="form-control" placeholder="Ex.: Raiva" />
+            <span asp-validation-for="NomeVacina" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Fabricante" class="form-label"></label>
+            <input asp-for="Fabricante" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="Fabricante" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="DoencaAlvo" class="form-label"></label>
+    <input asp-for="DoencaAlvo" class="form-control" />
+    <span asp-validation-for="DoencaAlvo" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="DosagemPadraoRecomendada" class="form-label"></label>
+            <input asp-for="DosagemPadraoRecomendada" class="form-control" placeholder="Ex.: 2 ml" />
+            <span asp-validation-for="DosagemPadraoRecomendada" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="ViaAdministracaoComum" class="form-label"></label>
+            <select asp-for="ViaAdministracaoComum" class="form-select">
+                <option value="">-- Selecione --</option>
+                @foreach (var via in new[] { "Subcutânea", "Intramuscular", "Intradérmica", "Oral", "Ocular", "Nasal", "Na água de bebida", "Spray", "Conforme bula" })
+                {
+                    <option value="@via">@via</option>
+                }
+                @if (!string.IsNullOrEmpty(Model?.ViaAdministracaoComum)
+                     && !new[] { "Subcutânea", "Intramuscular", "Intradérmica", "Oral", "Ocular", "Nasal", "Na água de bebida", "Spray", "Conforme bula" }.Contains(Model.ViaAdministracaoComum))
+                {
+                    <option value="@Model.ViaAdministracaoComum">@Model.ViaAdministracaoComum</option>
+                }
+            </select>
+            <span asp-validation-for="ViaAdministracaoComum" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="IntervaloReforcoDias" class="form-label"></label>
+            <input asp-for="IntervaloReforcoDias" class="form-control" placeholder="Vazio = dose única" />
+            <span asp-validation-for="IntervaloReforcoDias" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<p class="form-text">O intervalo serve para sugerir a data da próxima dose. Confirme sempre com a bula e com o médico-veterinário.</p>

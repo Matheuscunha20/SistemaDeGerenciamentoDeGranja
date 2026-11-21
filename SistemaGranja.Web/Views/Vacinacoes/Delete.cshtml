@@ -1,0 +1,36 @@
+@model SistemaGranja.Domain.RegistroVacinacao
+
+@{
+    ViewData["Title"] = "Excluir vacinação";
+}
+
+<div class="page-header">
+    <h1>Excluir registro de vacinação</h1>
+</div>
+
+<div class="alert alert-warning">
+    Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
+</div>
+
+<div class="card shadow-sm form-card mb-3">
+    <div class="card-body">
+        <dl class="row detalhes mb-0">
+            <dt class="col-sm-4">Animal</dt>
+            <dd class="col-sm-8">@Model.Animal?.TagIdentificacao</dd>
+            <dt class="col-sm-4">Vacina</dt>
+            <dd class="col-sm-8">@Model.TipoVacina?.NomeVacina</dd>
+            <dt class="col-sm-4">Data</dt>
+            <dd class="col-sm-8">@Model.DataVacinacao.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-4">Aplicado por</dt>
+            <dd class="col-sm-8">@(Model.Funcionario?.NomeCompleto ?? "—")</dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Sim, excluir</button>
+        <a asp-action="Historico" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>

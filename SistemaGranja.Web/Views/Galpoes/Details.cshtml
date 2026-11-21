@@ -2,6 +2,9 @@
 
 @{
     ViewData["Title"] = "Detalhes";
+    var ocupados = Model.Animais.Count;
+    var percentual = Model.CapacidadeMaxima > 0 ? (int)Math.Round(ocupados * 100.0 / Model.CapacidadeMaxima) : 0;
+    var corBarra = percentual >= 90 ? "bg-danger" : percentual >= 70 ? "bg-warning" : "bg-success";
 }
 
 <div class="page-header">
@@ -12,19 +15,67 @@
     </div>
 </div>
 
-<div class="card shadow-sm form-card">
-    <div class="card-body">
-        <dl class="row detalhes mb-0">
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.NomeOuNumero)</dt>
-            <dd class="col-sm-8">@Model.NomeOuNumero</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.TipoInstalacao)</dt>
-            <dd class="col-sm-8">@Model.TipoInstalacao</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CapacidadeMaxima)</dt>
-            <dd class="col-sm-8">@Model.CapacidadeMaxima animais</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.LocalizacaoDescricao)</dt>
-            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.LocalizacaoDescricao) ? "—" : Model.LocalizacaoDescricao)</dd>
-            <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Observacoes)</dt>
-            <dd class="col-sm-8">@(string.IsNullOrEmpty(Model.Observacoes) ? "—" : Model.Observacoes)</dd>
-        </dl>
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <dl class="row detalhes mb-0">
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.TipoInstalacao)</dt>
+                    <dd class="col-sm-7">@Model.TipoInstalacao</dd>
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.LocalizacaoDescricao)</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrEmpty(Model.LocalizacaoDescricao) ? "—" : Model.LocalizacaoDescricao)</dd>
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.CapacidadeMaxima)</dt>
+                    <dd class="col-sm-7">@Model.CapacidadeMaxima animais</dd>
+                    <dt class="col-sm-5">@Html.DisplayNameFor(model => model.Observacoes)</dt>
+                    <dd class="col-sm-7">@(string.IsNullOrEmpty(Model.Observacoes) ? "—" : Model.Observacoes)</dd>
+                </dl>
+                <hr />
+                <div class="d-flex justify-content-between small mb-1">
+                    <span>Ocupação: <strong>@ocupados de @Model.CapacidadeMaxima</strong></span>
+                    <span class="text-muted">@percentual%</span>
+                </div>
+                <div class="progress" style="height: 10px;" role="progressbar" aria-valuenow="@percentual" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar @corBarra" style="width: @(Math.Min(percentual, 100))%"></div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">@(Math.Max(Model.CapacidadeMaxima - ocupados, 0)) vaga(s) livre(s)</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">Animais neste galpão</div>
+            @if (ocupados == 0)
+            {
+                <div class="lista-vazia">Nenhum animal neste galpão.</div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Brinco / Tag</th>
+                                <th>Espécie</th>
+                                <th>Raça</th>
+                                <th>Sexo</th>
+                                <th>Saúde</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var animal in Model.Animais.OrderBy(a => a.TagIdentificacao))
+                        {
+                            <tr>
+                                <td><a asp-controller="Animais" asp-action="Details" asp-route-id="@animal.Id">@animal.TagIdentificacao</a></td>
+                                <td>@(animal.Raca?.Especie?.Nome ?? "—")</td>
+                                <td>@(animal.Raca?.Nome ?? "—")</td>
+                                <td>@animal.Sexo</td>
+                                <td>@animal.StatusSaude</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
     </div>
 </div>

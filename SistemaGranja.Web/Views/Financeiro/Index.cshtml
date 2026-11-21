@@ -5,6 +5,8 @@
     var periodos = new[] { ("mes", "Este mês"), ("mes-passado", "Mês passado"), ("30dias", "Últimos 30 dias"), ("ano", "Este ano") };
     var maiorCategoria = Model.Resumo.PorCategoria.Count > 0 ? Model.Resumo.PorCategoria.Max(c => c.Total) : 0m;
     var totalLista = Model.Lancamentos.Sum(l => l.ValorComSinal);
+    var hoje = DateTime.Today;
+    var textoSaldo = Model.Resumo.Saldo > 0 ? "Entrou mais do que saiu" : Model.Resumo.Saldo < 0 ? "Saiu mais do que entrou" : "Sem movimento no período";
 }
 
 <div class="page-header">
@@ -15,9 +17,10 @@
     <div class="d-flex flex-wrap gap-2">
         <a asp-action="Create" asp-route-tipo="@TipoLancamento.Receita" class="btn btn-agro">@Icones.Svg("mais", 18) Receita</a>
         <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-outline-danger">@Icones.Svg("mais", 18) Despesa</a>
-        <a asp-controller="CategoriasFinanceiras" asp-action="Index" class="btn btn-outline-secondary">Categorias</a>
     </div>
 </div>
+
+<partial name="_Abas" />
 
 <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Período">
     @foreach (var (codigo, nome) in periodos)
@@ -30,21 +33,30 @@
     }
 </div>
 
-<section class="painel-avisos mb-4" aria-label="Resumo do período">
+<section class="painel-avisos mb-2" aria-label="Resumo do período">
     <div class="aviso aviso-sucesso">
-        <span class="aviso-titulo">Receitas</span>
+        <span class="aviso-titulo">Recebido</span>
         <span class="aviso-numero">@Model.Resumo.Receitas.ToString("C")</span>
+        @if (Model.Resumo.AReceber > 0)
+        {
+            <span class="aviso-texto">+ @Model.Resumo.AReceber.ToString("C") a receber</span>
+        }
     </div>
     <div class="aviso aviso-perigo">
-        <span class="aviso-titulo">Despesas</span>
+        <span class="aviso-titulo">Pago</span>
         <span class="aviso-numero">@Model.Resumo.Despesas.ToString("C")</span>
+        @if (Model.Resumo.APagar > 0)
+        {
+            <span class="aviso-texto">+ @Model.Resumo.APagar.ToString("C") a pagar</span>
+        }
     </div>
     <div class="aviso @(Model.Resumo.Saldo >= 0 ? "aviso-neutro" : "aviso-atencao")">
         <span class="aviso-titulo">Saldo do período</span>
         <span class="aviso-numero @(Model.Resumo.Saldo < 0 ? "text-danger-emphasis" : "")">@Model.Resumo.Saldo.ToString("C")</span>
-        <span class="aviso-texto">@(Model.Resumo.Saldo >= 0 ? "Entrou mais do que saiu" : "Saiu mais do que entrou")</span>
+        <span class="aviso-texto">@textoSaldo</span>
     </div>
 </section>
+<p class="small text-muted mb-4">Recebido, pago e saldo contam só o que já foi pago ou recebido no período. As contas em aberto aparecem em "a receber" e "a pagar".</p>
 
 <div class="row g-4">
     <div class="col-xl-8">
@@ -65,18 +77,35 @@
                             <option value="">Receitas e despesas</option>
                             @foreach (var t in Enum.GetValues<TipoLancamento>())
                             {
+                                var nomeTipo = t == TipoLancamento.Receita ? "Só receitas" : "Só despesas";
                                 if (Model.Tipo == t)
                                 {
-                                    <option value="@t" selected>@(t == TipoLancamento.Receita ? "Só receitas" : "Só despesas")</option>
+                                    <option value="@t" selected>@nomeTipo</option>
                                 }
                                 else
                                 {
-                                    <option value="@t">@(t == TipoLancamento.Receita ? "Só receitas" : "Só despesas")</option>
+                                    <option value="@t">@nomeTipo</option>
                                 }
                             }
                         </select>
                     </div>
                     <div class="col-sm-6 col-lg-3">
+                        <label class="form-label small mb-1" for="situacao">Situação</label>
+                        <select class="form-select" id="situacao" name="situacao">
+                            @foreach (var (valor, nome) in new[] { ("", "Todas"), ("pagos", "Pagas / recebidas"), ("abertos", "Em aberto") })
+                            {
+                                if ((Model.Situacao ?? "") == valor)
+                                {
+                                    <option value="@valor" selected>@nome</option>
+                                }
+                                else
+                                {
+                                    <option value="@valor">@nome</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
                         <label class="form-label small mb-1" for="categoriaId">Categoria</label>
                         <select class="form-select" id="categoriaId" name="categoriaId">
                             <option value="">Todas</option>
@@ -94,7 +123,7 @@
                             }
                         </select>
                     </div>
-                    <div class="col-lg-9">
+                    <div class="col-sm-6 col-lg-5">
                         <label class="form-label small mb-1" for="busca">Buscar na descrição</label>
                         <input type="search" class="form-control" id="busca" name="busca" value="@Model.Busca" placeholder="Ex.: ração, venda de bezerros" />
                     </div>
@@ -124,9 +153,9 @@
                             <tr>
                                 <th>Descrição</th>
                                 <th>Data</th>
+                                <th>Situação</th>
                                 <th>Categoria</th>
                                 <th>Pagamento</th>
-                                <th>Lote</th>
                                 <th class="text-end">Valor</th>
                                 <th class="text-end">Ações</th>
                             </tr>
@@ -135,14 +164,31 @@
                         @foreach (var item in Model.Lancamentos)
                         {
                             var receita = item.Tipo == TipoLancamento.Receita;
-                            <tr>
+                            <tr class="@(item.Vencida(hoje) ? "table-danger" : "")">
                                 <td class="fw-semibold">@item.Descricao</td>
                                 <td>@item.Data.ToString("dd/MM/yyyy")</td>
+                                <td>
+                                    @if (item.Pago)
+                                    {
+                                        <span class="selo selo-sucesso">@(receita ? "Recebida" : "Paga")</span>
+                                    }
+                                    else if (item.Vencida(hoje))
+                                    {
+                                        <span class="selo selo-perigo">Vencida</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="selo selo-atencao">Em aberto</span>
+                                    }
+                                </td>
                                 <td>@item.Categoria?.Nome</td>
                                 <td>@item.FormaPagamento.NomeExibicao()</td>
-                                <td>@(item.Lote?.CodigoLote ?? "—")</td>
                                 <td class="text-end fw-semibold text-nowrap @(receita ? "text-success-emphasis" : "text-danger-emphasis")">@(receita ? "+" : "−") @item.Valor.ToString("C")</td>
                                 <td class="text-end acoes">
+                                    @if (!item.Pago)
+                                    {
+                                        <partial name="_BotaoPagar" model="item" />
+                                    }
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Excluir</a>
                                 </td>
@@ -153,11 +199,7 @@
                 </div>
             </div>
             <p class="text-muted mt-2 small">
-                @Model.Lancamentos.Count lançamento(s)
-                @if (Model.FiltroExtra)
-                {
-                    <text>· total da lista: <strong class="@(totalLista >= 0 ? "text-success-emphasis" : "text-danger-emphasis")">@totalLista.ToString("C")</strong></text>
-                }
+                @Model.Lancamentos.Count lançamento(s) · total da lista: <strong class="@(totalLista >= 0 ? "text-success-emphasis" : "text-danger-emphasis")">@totalLista.ToString("C")</strong>
             </p>
         }
     </div>
@@ -168,7 +210,7 @@
                 <h2 class="h5 mb-1">Por categoria</h2>
                 @if (Model.Resumo.PorCategoria.Count == 0)
                 {
-                    <p class="text-muted mb-0">Sem lançamentos no período.</p>
+                    <p class="text-muted mb-0">Nada pago ou recebido no período.</p>
                 }
                 else
                 {

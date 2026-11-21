@@ -132,6 +132,106 @@ namespace SistemaGranja.Tests.Servicos
         }
 
         [Fact]
+        public async Task Conta_em_aberto_fica_fora_do_realizado_ate_ser_paga()
+        {
+            using var db = BancoDeTeste.Criar();
+            var (servico, _, racao) = await PrepararAsync(db);
+            var hoje = DateTime.Today;
+            var conta = Novo(TipoLancamento.Despesa, racao, 400m, hoje, "Boleto da ração");
+            conta.Pago = false;
+            conta.DataPagamento = hoje; // ignorado: conta em aberto não tem data de pagamento
+            Assert.Null(await servico.SalvarLancamentoAsync(conta));
+            Assert.Null(conta.DataPagamento);
+
+            var antes = await servico.ObterResumoAsync(hoje, hoje);
+            Assert.Equal(0m, antes.Despesas);
+            Assert.Equal(400m, antes.APagar);
+
+            Assert.Null(await servico.MarcarComoPagoAsync(conta.Id, hoje));
+            Assert.NotNull(await servico.MarcarComoPagoAsync(conta.Id, hoje)); // já estava paga
+
+            var depois = await servico.ObterResumoAsync(hoje, hoje);
+            Assert.Equal(400m, depois.Despesas);
+            Assert.Equal(0m, depois.APagar);
+        }
+
+        [Fact]
+        public async Task Repetir_cria_uma_conta_por_mes_e_as_seguintes_ficam_em_aberto()
+        {
+            using var db = BancoDeTeste.Criar();
+            var (servico, _, racao) = await PrepararAsync(db);
+            var data = new DateTime(2026, 1, 31);
+
+            Assert.Null(await servico.SalvarLancamentoAsync(Novo(TipoLancamento.Despesa, racao, 250m, data, "Financiamento"), 3));
+
+            var parcelas = db.LancamentosFinanceiros.OrderBy(l => l.Data).ToList();
+            Assert.Equal(3, parcelas.Count);
+            Assert.Equal("Financiamento (1/3)", parcelas[0].Descricao);
+            Assert.Equal("Financiamento (3/3)", parcelas[2].Descricao);
+            Assert.Equal(new DateTime(2026, 2, 28), parcelas[1].Data); // fevereiro não tem dia 31
+            Assert.True(parcelas[0].Pago);
+            Assert.False(parcelas[1].Pago);
+            Assert.False(parcelas[2].Pago);
+
+            Assert.NotNull(await servico.SalvarLancamentoAsync(Novo(TipoLancamento.Despesa, racao, 1m, data), 99));
+        }
+
+        [Fact]
+        public async Task Contas_em_aberto_separadas_por_urgencia()
+        {
+            using var db = BancoDeTeste.Criar();
+            var (servico, venda, racao) = await PrepararAsync(db);
+            var hoje = DateTime.Today;
+            foreach (var (dias, categoria, tipo) in new[] { (-5, racao, TipoLancamento.Despesa), (3, racao, TipoLancamento.Despesa), (20, venda, TipoLancamento.Receita) })
+            {
+                var conta = Novo(tipo, categoria, 100m, hoje.AddDays(dias));
+                conta.Pago = false;
+                await servico.SalvarLancamentoAsync(conta);
+            }
+            await servico.SalvarLancamentoAsync(Novo(TipoLancamento.Despesa, racao, 999m, hoje)); // paga: não aparece
+
+            var contas = await servico.ObterContasEmAbertoAsync(null, hoje);
+
+            Assert.Single(contas.Vencidas);
+            Assert.Single(contas.ProximosSeteDias);
+            Assert.Single(contas.Depois);
+            Assert.Equal(200m, contas.TotalAPagar);
+            Assert.Equal(100m, contas.TotalAReceber);
+            Assert.Single((await servico.ObterContasEmAbertoAsync(TipoLancamento.Receita, hoje)).Todas);
+        }
+
+        [Fact]
+        public async Task Fluxo_de_caixa_acumula_saldo_e_preve_contas_em_aberto()
+        {
+            using var db = BancoDeTeste.Criar();
+            var (servico, venda, racao) = await PrepararAsync(db);
+            var hoje = new DateTime(2026, 6, 15);
+
+            await servico.SalvarLancamentoAsync(Novo(TipoLancamento.Receita, venda, 1000m, new DateTime(2026, 1, 10))); // antes do período
+            await servico.SalvarLancamentoAsync(Novo(TipoLancamento.Despesa, racao, 300m, new DateTime(2026, 5, 5)));   // mês passado
+            var vencida = Novo(TipoLancamento.Despesa, racao, 100m, new DateTime(2026, 5, 20));                         // vencida: entra em junho
+            vencida.Pago = false;
+            await servico.SalvarLancamentoAsync(vencida);
+            var futura = Novo(TipoLancamento.Receita, venda, 500m, new DateTime(2026, 8, 1));                           // a receber em agosto
+            futura.Pago = false;
+            await servico.SalvarLancamentoAsync(futura);
+
+            var fluxo = await servico.ObterFluxoDeCaixaAsync(hoje, mesesAntes: 2, mesesDepois: 3);
+
+            Assert.Equal(6, fluxo.Meses.Count);                    // abril a setembro
+            Assert.Equal(1000m, fluxo.SaldoInicial);
+            Assert.Equal(700m, fluxo.SaldoAtual);
+            var maio = fluxo.Meses.Single(m => m.Mes.Month == 5);
+            Assert.Equal(300m, maio.SaidasRealizadas);
+            Assert.Equal(0m, maio.SaidasPrevistas);
+            var junho = fluxo.Meses.Single(m => m.Atual);
+            Assert.Equal(100m, junho.SaidasPrevistas);
+            Assert.Equal(600m, junho.SaldoAcumulado);
+            Assert.Equal(500m, fluxo.Meses.Single(m => m.Mes.Month == 8).EntradasPrevistas);
+            Assert.Equal(1100m, fluxo.Meses.Last().SaldoAcumulado);
+        }
+
+        [Fact]
         public void Periodos_prontos_do_financeiro()
         {
             var hoje = new DateTime(2026, 3, 15);

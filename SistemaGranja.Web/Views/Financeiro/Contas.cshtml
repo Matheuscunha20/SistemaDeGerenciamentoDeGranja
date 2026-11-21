@@ -1,0 +1,106 @@
+@model SistemaGranja.Services.ContasEmAberto
+
+@{
+    ViewData["Title"] = "Contas a pagar e receber";
+    var tipo = ViewData["Tipo"] as TipoLancamento?;
+    var hoje = DateTime.Today;
+    var somaVencidas = Model.Vencidas.Sum(l => l.Valor).ToString("C");
+    var grupos = new[]
+    {
+        ("Vencidas", Model.Vencidas, "selo-perigo"),
+        ("Próximos 7 dias", Model.ProximosSeteDias, "selo-atencao"),
+        ("Mais adiante", Model.Depois, "selo-neutro")
+    };
+}
+
+<div class="page-header">
+    <h1>Financeiro</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Receita" class="btn btn-agro">@Icones.Svg("mais", 18) Receita</a>
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-outline-danger">@Icones.Svg("mais", 18) Despesa</a>
+    </div>
+</div>
+
+<partial name="_Abas" />
+
+<div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Mostrar">
+    <a asp-action="Contas" class="btn btn-sm @(tipo == null ? "btn-agro" : "btn-outline-secondary")">Todas</a>
+    <a asp-action="Contas" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-sm @(tipo == TipoLancamento.Despesa ? "btn-agro" : "btn-outline-secondary")">A pagar</a>
+    <a asp-action="Contas" asp-route-tipo="@TipoLancamento.Receita" class="btn btn-sm @(tipo == TipoLancamento.Receita ? "btn-agro" : "btn-outline-secondary")">A receber</a>
+</div>
+
+<section class="painel-avisos mb-4" aria-label="Totais em aberto">
+    @if (tipo != TipoLancamento.Receita)
+    {
+        <div class="aviso aviso-perigo">
+            <span class="aviso-titulo">A pagar</span>
+            <span class="aviso-numero">@Model.TotalAPagar.ToString("C")</span>
+            <span class="aviso-texto">@Model.Todas.Count(l => l.Tipo == TipoLancamento.Despesa) conta(s) em aberto</span>
+        </div>
+    }
+    @if (tipo != TipoLancamento.Despesa)
+    {
+        <div class="aviso aviso-sucesso">
+            <span class="aviso-titulo">A receber</span>
+            <span class="aviso-numero">@Model.TotalAReceber.ToString("C")</span>
+            <span class="aviso-texto">@Model.Todas.Count(l => l.Tipo == TipoLancamento.Receita) conta(s) em aberto</span>
+        </div>
+    }
+    <div class="aviso @(Model.Vencidas.Any() ? "aviso-atencao" : "aviso-neutro")">
+        <span class="aviso-titulo">Vencidas</span>
+        <span class="aviso-numero">@Model.Vencidas.Count</span>
+        <span class="aviso-texto">@(Model.Vencidas.Any() ? "Somam " + somaVencidas : "Nenhuma conta atrasada")</span>
+    </div>
+</section>
+
+@if (!Model.Todas.Any())
+{
+    <div class="card shadow-sm">
+        <div class="lista-vazia">
+            <p class="mb-2">Nenhuma conta em aberto.</p>
+            <p class="small mb-3">Para lançar uma conta a pagar ou a receber, crie uma receita ou despesa e desligue "Já foi pago".</p>
+            <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-agro">Lançar conta a pagar</a>
+        </div>
+    </div>
+}
+
+@foreach (var (titulo, contas, selo) in grupos)
+{
+    if (!contas.Any()) { continue; }
+    <h2 class="h5 mt-4 mb-2">@titulo <span class="text-muted fw-normal fs-6">(@contas.Count)</span></h2>
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table tabela-cartoes table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Descrição</th>
+                        <th>Vencimento</th>
+                        <th>Tipo</th>
+                        <th>Categoria</th>
+                        <th class="text-end">Valor</th>
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in contas)
+                {
+                    var receita = item.Tipo == TipoLancamento.Receita;
+                    var dias = (item.Data.Date - hoje).Days;
+                    var quando = dias < 0 ? $"há {-dias} dia(s)" : dias == 0 ? "hoje" : dias == 1 ? "amanhã" : $"em {dias} dias";
+                    <tr>
+                        <td class="fw-semibold">@item.Descricao</td>
+                        <td>@item.Data.ToString("dd/MM/yyyy") <span class="selo @selo ms-1">@quando</span></td>
+                        <td>@(receita ? "A receber" : "A pagar")</td>
+                        <td>@item.Categoria?.Nome</td>
+                        <td class="text-end fw-semibold text-nowrap @(receita ? "text-success-emphasis" : "text-danger-emphasis")">@item.Valor.ToString("C")</td>
+                        <td class="text-end acoes">
+                            <partial name="_BotaoPagar" model="item" />
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

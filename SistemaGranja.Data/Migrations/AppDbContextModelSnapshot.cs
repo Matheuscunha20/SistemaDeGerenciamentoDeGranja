@@ -1134,6 +1134,14 @@ namespace SistemaGranja.Data.Migrations
 
                     b.Navigation("Lote");
                 });
+            modelBuilder.Entity("SistemaGranja.Domain.LancamentoFinanceiro", b =>
+                {
+                    b.Property<DateTime?>("DataPagamento")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("Pago")
+                        .HasColumnType("tinyint(1)");
+                });
 #pragma warning restore 612, 618
         }
     }

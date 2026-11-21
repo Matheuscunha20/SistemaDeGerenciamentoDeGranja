@@ -77,10 +77,20 @@ namespace SistemaGranja.Domain
         [DisplayFormat(DataFormatString = "{0:C}")]
         public decimal Valor { get; set; }
 
-        [Display(Name = "Data")]
+        // Data em que o dinheiro entra/sai; numa conta em aberto, é o vencimento
+        [Display(Name = "Data / vencimento")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}")]
         public DateTime Data { get; set; } = DateTime.Today;
+
+        // false = conta a pagar (despesa) ou a receber (receita) ainda em aberto
+        [Display(Name = "Já foi pago / recebido")]
+        public bool Pago { get; set; } = true;
+
+        [Display(Name = "Pago / recebido em")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}")]
+        public DateTime? DataPagamento { get; set; }
 
         [Display(Name = "Categoria")]
         [Required(ErrorMessage = "Selecione a categoria.")]
@@ -108,5 +118,8 @@ namespace SistemaGranja.Domain
 
         // Valor com sinal: receita soma, despesa subtrai
         public decimal ValorComSinal => Tipo == TipoLancamento.Receita ? Valor : -Valor;
+
+        // Conta em aberto com vencimento já passado
+        public bool Vencida(DateTime hoje) => !Pago && Data.Date < hoje.Date;
     }
 }

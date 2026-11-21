@@ -1,0 +1,84 @@
+@model SistemaGranja.Services.FluxoDeCaixa
+
+@{
+    ViewData["Title"] = "Fluxo de caixa";
+    var cultura = new System.Globalization.CultureInfo("pt-BR");
+    var maior = Model.Meses.Count > 0 ? Model.Meses.Max(m => Math.Max(m.Entradas, m.Saidas)) : 0m;
+    int Largura(decimal valor) => maior > 0 && valor > 0 ? Math.Max((int)(valor / maior * 100), 2) : 0;
+    string NomeMes(DateTime mes) => cultura.TextInfo.ToTitleCase(mes.ToString("MMM/yyyy", cultura).Replace(".", ""));
+}
+
+<div class="page-header">
+    <h1>Financeiro</h1>
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Receita" class="btn btn-agro">@Icones.Svg("mais", 18) Receita</a>
+        <a asp-action="Create" asp-route-tipo="@TipoLancamento.Despesa" class="btn btn-outline-danger">@Icones.Svg("mais", 18) Despesa</a>
+    </div>
+</div>
+
+<partial name="_Abas" />
+
+<section class="painel-avisos mb-2" aria-label="Saldos">
+    <div class="aviso @(Model.SaldoAtual >= 0 ? "aviso-sucesso" : "aviso-perigo")">
+        <span class="aviso-titulo">Saldo hoje</span>
+        <span class="aviso-numero">@Model.SaldoAtual.ToString("C")</span>
+        <span class="aviso-texto">Tudo que entrou menos tudo que saiu até hoje</span>
+    </div>
+    @if (Model.Meses.Count > 0)
+    {
+        var ultimo = Model.Meses.Last();
+        <div class="aviso @(ultimo.SaldoAcumulado >= 0 ? "aviso-neutro" : "aviso-atencao")">
+            <span class="aviso-titulo">Previsão para o fim de @NomeMes(ultimo.Mes)</span>
+            <span class="aviso-numero @(ultimo.SaldoAcumulado < 0 ? "text-danger-emphasis" : "")">@ultimo.SaldoAcumulado.ToString("C")</span>
+            <span class="aviso-texto">Contando as contas em aberto</span>
+        </div>
+    }
+</section>
+<p class="small text-muted mb-4">Meses passados mostram o que foi pago e recebido. O mês atual e os próximos somam também as contas em aberto (as vencidas entram no mês atual).</p>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table tabela-cartoes mb-0">
+            <thead>
+                <tr>
+                    <th>Mês</th>
+                    <th>Entradas</th>
+                    <th>Saídas</th>
+                    <th class="text-end">Saldo do mês</th>
+                    <th class="text-end">Saldo acumulado</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var mes in Model.Meses)
+            {
+                <tr class="@(mes.Atual ? "fluxo-atual" : "")">
+                    <td class="fw-semibold text-nowrap">
+                        @NomeMes(mes.Mes)
+                        @if (mes.Atual) { <span class="selo selo-sucesso ms-1">atual</span> }
+                        else if (!mes.Passado) { <span class="selo selo-neutro ms-1">previsão</span> }
+                    </td>
+                    <td>
+                        <div class="fluxo-valor text-success-emphasis">@mes.Entradas.ToString("C")</div>
+                        <div class="barra fluxo-barra"><div class="barra-valor" style="width: @Largura(mes.Entradas)%"></div></div>
+                        @if (mes.EntradasPrevistas > 0)
+                        {
+                            <div class="small text-muted">@mes.EntradasPrevistas.ToString("C") a receber</div>
+                        }
+                    </td>
+                    <td>
+                        <div class="fluxo-valor text-danger-emphasis">@mes.Saidas.ToString("C")</div>
+                        <div class="barra barra-perigo fluxo-barra"><div class="barra-valor" style="width: @Largura(mes.Saidas)%"></div></div>
+                        @if (mes.SaidasPrevistas > 0)
+                        {
+                            <div class="small text-muted">@mes.SaidasPrevistas.ToString("C") a pagar</div>
+                        }
+                    </td>
+                    <td class="text-end fw-semibold text-nowrap @(mes.SaldoDoMes < 0 ? "text-danger-emphasis" : "")">@mes.SaldoDoMes.ToString("C")</td>
+                    <td class="text-end fw-semibold text-nowrap @(mes.SaldoAcumulado < 0 ? "text-danger-emphasis" : "")">@mes.SaldoAcumulado.ToString("C")</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+<p class="small text-muted mt-2">Saldo antes de @NomeMes(Model.Meses.First().Mes): @Model.SaldoInicial.ToString("C")</p>

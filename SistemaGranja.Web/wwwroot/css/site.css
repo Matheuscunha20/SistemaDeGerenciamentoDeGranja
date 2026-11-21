@@ -1024,3 +1024,32 @@ a.selo:hover { filter: brightness(0.96); }
     border-radius: inherit;
   }
 }
+
+/* Fluxo de caixa */
+.fluxo-barra {
+  height: 6px;
+  margin: 0.25rem 0;
+  min-width: 120px;
+}
+
+.fluxo-valor {
+  font-weight: 600;
+}
+
+.tabela-cartoes tr.fluxo-atual > td {
+  background-color: var(--aa-verde-suave);
+}
+
+@media (max-width: 767.98px) {
+  .tabela-cartoes > tbody > tr > td > .fluxo-valor + .fluxo-barra {
+    display: none;
+  }
+
+  .tabela-cartoes tr.fluxo-atual {
+    background-color: var(--aa-verde-suave);
+  }
+
+  .tabela-cartoes tr.fluxo-atual > td {
+    background-color: transparent;
+  }
+}

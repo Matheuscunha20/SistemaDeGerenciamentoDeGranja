@@ -65,12 +65,21 @@ namespace SistemaGranja.Services
             var proximasDoses = await _vacinacaoService.ObterProximasDosesAsync(7);
             resumo.VacinasAtrasadas = proximasDoses.Count(r => r.DataProximaDoseRecomendada!.Value.Date < hoje);
             resumo.VacinasProximos7Dias = proximasDoses.Count() - resumo.VacinasAtrasadas;
+            resumo.ProximasDoses = proximasDoses.Take(5).ToList();
 
             // Estoque: alimentos baixos ou zerados
             var saldos = await _estoqueService.ObterSaldosAsync();
             resumo.AlimentosComEstoqueBaixo = saldos
                 .Where(s => s.Situacao != SituacaoEstoque.Normal)
                 .OrderBy(s => s.Saldo)
+                .ToList();
+
+            // Zerados primeiro; depois os que duram menos dias; quem não tem consumo registrado fica por último
+            resumo.EstoqueAcabandoPrimeiro = saldos
+                .OrderBy(s => s.Situacao == SituacaoEstoque.Zerado ? 0 : 1)
+                .ThenBy(s => s.DiasRestantes ?? double.MaxValue)
+                .ThenBy(s => s.Alimento.Nome)
+                .Take(4)
                 .ToList();
 
             return resumo;

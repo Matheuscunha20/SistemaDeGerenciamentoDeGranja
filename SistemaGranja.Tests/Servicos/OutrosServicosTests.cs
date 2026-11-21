@@ -171,5 +171,39 @@ namespace SistemaGranja.Tests.Servicos
             Assert.Equal(1, resumo.AnimaisEmAtencao);
             Assert.Equal("Milho", Assert.Single(resumo.AlimentosComEstoqueBaixo).Alimento.Nome);
         }
+
+        [Fact]
+        public async Task Painel_mostra_doses_atrasadas_e_o_alimento_que_acaba_primeiro()
+        {
+            using var db = BancoDeTeste.Criar();
+            var animal = BancoDeTeste.NovoAnimal(db, "001");
+            var raiva = new TipoVacina { NomeVacina = "Raiva", DoencaAlvo = "Raiva", IntervaloReforcoDias = 365 };
+            db.TiposVacina.Add(raiva);
+            db.SaveChanges();
+            db.RegistrosVacinacao.Add(new RegistroVacinacao
+            {
+                AnimalId = animal.Id,
+                TipoVacinaId = raiva.Id,
+                DataVacinacao = DateTime.Today.AddYears(-1).AddDays(-3),
+                DataProximaDoseRecomendada = DateTime.Today.AddDays(-3)
+            });
+            db.SaveChanges();
+
+            var milho = BancoDeTeste.NovoAlimento(db, "Milho");
+            BancoDeTeste.NovoAlimento(db, "Sal mineral"); // nunca teve entrada: zerado
+            var estoque = new EstoqueService(db);
+            await estoque.AdicionarAsync(new MovimentacaoEstoqueAlimento
+            {
+                TipoAlimentoId = milho.Id,
+                TipoMovimentacao = TipoMovimentacaoEstoque.EntradaCompra,
+                Quantidade = 100
+            });
+
+            var resumo = await new PainelService(db, new GalpaoService(db), new VacinacaoService(db), estoque).ObterResumoAsync();
+
+            Assert.Equal("Raiva", Assert.Single(resumo.ProximasDoses).TipoVacina!.NomeVacina);
+            Assert.Equal(1, resumo.VacinasAtrasadas);
+            Assert.Equal("Sal mineral", resumo.EstoqueAcabandoPrimeiro.First().Alimento.Nome);
+        }
     }
 }

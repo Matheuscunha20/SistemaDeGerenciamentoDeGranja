@@ -32,3 +32,16 @@ document.addEventListener('click', function (evento) {
     var cor = document.querySelector('meta[name="theme-color"]');
     if (cor) cor.setAttribute('content', novo === 'dark' ? '#131B16' : '#1F3A26');
 });
+
+// Listas em cartões no celular: cada célula recebe o nome da sua coluna (data-rotulo),
+// que o CSS mostra ao lado do valor. Vale para toda <table class="tabela-cartoes">.
+document.querySelectorAll('table.tabela-cartoes').forEach(function (tabela) {
+    var titulos = Array.prototype.map.call(tabela.querySelectorAll('thead th'), function (th) {
+        return th.textContent.trim();
+    });
+    tabela.querySelectorAll('tbody tr').forEach(function (linha) {
+        Array.prototype.forEach.call(linha.children, function (celula, indice) {
+            if (!celula.hasAttribute('data-rotulo')) celula.setAttribute('data-rotulo', titulos[indice] || '');
+        });
+    });
+});

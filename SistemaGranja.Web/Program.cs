@@ -53,6 +53,7 @@ builder.Services.AddScoped<IRacaService, RacaService>();
 builder.Services.AddScoped<IFuncionarioService, FuncionarioService>();
 builder.Services.AddScoped<ITipoVacinaService, TipoVacinaService>();
 builder.Services.AddScoped<IVacinacaoService, VacinacaoService>();
+builder.Services.AddScoped<ISaudeService, SaudeService>();
 
 var app = builder.Build();
 

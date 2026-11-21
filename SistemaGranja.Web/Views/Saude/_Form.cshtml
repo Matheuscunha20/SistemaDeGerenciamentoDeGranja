@@ -1,0 +1,70 @@
+@model SistemaGranja.Domain.RegistroSaude
+@using SistemaGranja.Domain
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="mb-3">
+            <label asp-for="AnimalId" class="form-label"></label>
+            <select asp-for="AnimalId" class="form-select" asp-items="ViewBag.Animais">
+                <option value="0">-- Selecione --</option>
+            </select>
+            <span asp-validation-for="AnimalId" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label asp-for="DataOcorrencia" class="form-label"></label>
+            <input asp-for="DataOcorrencia" class="form-control" />
+            <span asp-validation-for="DataOcorrencia" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="TipoOcorrencia" class="form-label"></label>
+            <select asp-for="TipoOcorrencia" class="form-select" asp-items="Html.GetEnumSelectList<TipoOcorrenciaSaude>()"></select>
+            <span asp-validation-for="TipoOcorrencia" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="FuncionarioId" class="form-label"></label>
+            <select asp-for="FuncionarioId" class="form-select" asp-items="ViewBag.Funcionarios">
+                <option value="">-- Não informado --</option>
+            </select>
+            <span asp-validation-for="FuncionarioId" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="DescricaoDetalhada" class="form-label"></label>
+    <textarea asp-for="DescricaoDetalhada" class="form-control" rows="3" placeholder="Sintomas, detalhes do ferimento, resultado do exame..."></textarea>
+    <span asp-validation-for="DescricaoDetalhada" class="text-danger"></span>
+</div>
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Diagnostico" class="form-label"></label>
+            <input asp-for="Diagnostico" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="Diagnostico" class="text-danger"></span>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="MedicamentosAdministrados" class="form-label"></label>
+            <input asp-for="MedicamentosAdministrados" class="form-control" placeholder="Opcional" />
+            <span asp-validation-for="MedicamentosAdministrados" class="text-danger"></span>
+        </div>
+    </div>
+</div>
+<div class="mb-3">
+    <label asp-for="TratamentoRealizado" class="form-label"></label>
+    <textarea asp-for="TratamentoRealizado" class="form-control" rows="2" placeholder="Opcional"></textarea>
+    <span asp-validation-for="TratamentoRealizado" class="text-danger"></span>
+</div>
+<div class="mb-3">
+    <label asp-for="ObservacoesAdicionais" class="form-label"></label>
+    <textarea asp-for="ObservacoesAdicionais" class="form-control" rows="2" placeholder="Opcional"></textarea>
+    <span asp-validation-for="ObservacoesAdicionais" class="text-danger"></span>
+</div>

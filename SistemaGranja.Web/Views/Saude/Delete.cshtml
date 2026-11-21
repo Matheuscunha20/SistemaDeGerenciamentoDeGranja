@@ -1,0 +1,28 @@
+@model SistemaGranja.Domain.RegistroSaude
+
+@{
+    ViewData["Title"] = "Excluir ocorrência";
+}
+
+<div class="page-header">
+    <h1>Excluir ocorrência de saúde</h1>
+</div>
+
+<div class="alert alert-warning">
+    Tem certeza que deseja excluir esta ocorrência? Esta ação não pode ser desfeita.
+    O estado de saúde atual do animal não muda.
+</div>
+
+<div class="card shadow-sm mb-3" style="max-width: 820px;">
+    <div class="card-body">
+        <partial name="_Resumo" model="Model" />
+    </div>
+</div>
+
+<form asp-action="Delete">
+    <input type="hidden" asp-for="Id" />
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger">Sim, excluir</button>
+        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    </div>
+</form>

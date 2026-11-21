@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1F3A26" />
+    <title>Sem conexão - AgroArca</title>
+    <link rel="icon" href="/icones/icone.svg" type="image/svg+xml" />
+    <style>
+        :root { color-scheme: light dark; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            box-sizing: border-box;
+            font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+            background: #F4F6F1;
+            color: #17231A;
+            text-align: center;
+        }
+        .caixa { max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+        img { width: 72px; height: 72px; border-radius: 18px; }
+        h1 { margin: 0; font-size: 24px; }
+        p { margin: 0; color: #5B6B5E; line-height: 1.5; }
+        button {
+            margin-top: 8px;
+            min-height: 48px;
+            padding: 0 28px;
+            border: 0;
+            border-radius: 12px;
+            background: #2F6B3A;
+            color: #FFFFFF;
+            font: inherit;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: #0F1511; color: #E6EDE7; }
+            p { color: #9DAFA2; }
+            button { background: #7BC883; color: #0F1511; }
+        }
+    </style>
+</head>
+<body>
+    <div class="caixa">
+        <img src="/icones/icone-192.png" alt="" />
+        <h1>Sem conexão</h1>
+        <p>O AgroArca precisa de internet para mostrar os dados da sua fazenda. Confira o sinal ou o Wi-Fi e tente de novo.</p>
+        <button type="button" onclick="location.reload()">Tentar de novo</button>
+    </div>
+</body>
+</html>
